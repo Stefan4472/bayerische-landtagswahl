@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    
+      <!-- FontAwesome icons -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Site Icon -->
+    <!-- <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}"> -->
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+      integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+      crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+      integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+      crossorigin="anonymous"></script>
+    <!-- Google Charts -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <title>Landtagswahl</title>
+  </head>
+
+  <body>
+    <!-- Banner -->
+    <div id="page-banner" class="jumbotron" style="margin-bottom: 0rem; text-align: center; background-image: url('bavarian-flag.png'); background-size: cover;">
+      <h1 class="display-4"><a href="/" class="link-override">Bayerische Landtagswahl System</a></h1>
+    </div>
+
+    <div class="container">
+      <!-- Navbar -->
+
+      <!-- Content -->
+      <div class="row">
+        <div class="col-md-12">
+          <h2>Landesweite Ergebnisse</h2>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div id="piechart-bayern"></div>
+            </div>
+            <div class="col-md-6">
+              <div class="row">
+                <table style="width:100%">
+                  <tr>
+                    <th>Partei</th>
+                    <th>Sitze</th>
+                    <th>Erststimmen (%)</th>
+                    <th>Gesamtstimmen (%)</th>
+                  </tr>
+                  <tr>
+                    <td>CSU</td>
+                    <td>85</td>
+                    <td>36.7</td>
+                    <td>37.2</td>
+                  </tr>
+                  <tr>
+                    <td>SPD</td>
+                    <td>22</td>
+                    <td>10.0</td>
+                    <td>9.7</td>
+                  </tr>
+                  <tr>
+                    <td>Freie Waehler</td>
+                    <td>27</td>
+                    <td>11.9</td>
+                    <td>11.6</td>
+                  </tr>
+                  <tr>
+                    <td>Gruene</td>
+                    <td>38</td>
+                    <td>17.6</td>
+                    <td>17.6</td>
+                  </tr>
+                  <tr>
+                    <td>FDP</td>
+                    <td>11</td>
+                    <td>5.2</td>
+                    <td>5.1</td>
+                  </tr>
+                  <tr>
+                    <td>Die Linke</td>
+                    <td>0</td>
+                    <td>3.2</td>
+                    <td>3.2</td>
+                  </tr>
+                  <tr>
+                    <td>AfD</td>
+                    <td>22</td>
+                    <td>10.3</td>
+                    <td>10.2</td>
+                  </tr>
+                  <tr>
+                    <td>Sonstige</td>
+                    <td>0</td>
+                    <td>5.0</td>
+                    <td>5.4</td>
+                  </tr>
+                </table> 
+              </div>
+              <div class="row">
+                <!-- Float right: https://stackoverflow.com/a/54136616 -->
+                <div class="ml-auto mr-3">
+                  <a href="#" class="float-right" style="float: right;">Sehe alle Kandidaten</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <h2>Wahlkreis Ergebnisse</h2>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div id="piechart-region"></div>
+            </div>
+            <div class="col-md-6">
+              <div class="row">
+                <table style="width:100%">
+                  <tr>
+                    <th>Partei</th>
+                    <th>Sitze</th>
+                    <th>Erststimmen (%)</th>
+                    <th>Gesamtstimmen (%)</th>
+                  </tr>
+                  <tr>
+                    <td>CSU</td>
+                    <td>26</td>
+                    <td>33.1</td>
+                    <td>33.7</td>
+                  </tr>
+                  <tr>
+                    <td>SPD</td>
+                    <td>7</td>
+                    <td>9.5</td>
+                    <td>9.4</td>
+                  </tr>
+                  <tr>
+                    <td>Freie Waehler</td>
+                    <td>8</td>
+                    <td>11.1</td>
+                    <td>10.4</td>
+                  </tr>
+                  <tr>
+                    <td>Gruene</td>
+                    <td>17</td>
+                    <td>22.2</td>
+                    <td>22.3</td>
+                  </tr>
+                  <tr>
+                    <td>FDP</td>
+                    <td>5</td>
+                    <td>6.5</td>
+                    <td>6.4</td>
+                  </tr>
+                  <tr>
+                    <td>Die Linke</td>
+                    <td>0</td>
+                    <td>3.1</td>
+                    <td>3.2</td>
+                  </tr>
+                  <tr>
+                    <td>AfD</td>
+                    <td>6</td>
+                    <td>8.6</td>
+                    <td>8.6</td>
+                  </tr>
+                  <tr>
+                    <td>Sonstige</td>
+                    <td>0</td>
+                    <td>5.7</td>
+                    <td>6.1</td>
+                  </tr>
+                </table> 
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <form>
+                <div class="form-group">
+                  <label for="exampleFormControlSelect1">Wahlkreis Auswahl</label>
+                  <select class="form-control" id="exampleFormControlSelect1">
+                    <option>Oberbayern</option>
+                    <option>Niederbayern</option>
+                    <option>Schwaben</option>
+                    <option>Unterfranken</option>
+                    <option>Oberfranken</option>
+                    <option>Mittelfranken</option>
+                    <option>Oberpfalz</option>
+                  </select>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      
+    </div>
+  </body>
+
+  <!-- Chart of statewide results -->
+  <script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+      var data = google.visualization.arrayToDataTable([
+        ['Partei', 'Sitze'],
+        ['CSU', 85],
+        ['Gruene', 38],
+        ['FD', 27],
+        ['SPD', 22],
+        ['AfD', 22],
+        ['FDP', 11]
+      ]);
+
+      var options = {
+        title: 'Sitzverteilung Bayern (2018)',
+        width: 'auto',
+        height: '400'
+      };
+
+      var chart = new google.visualization.PieChart(document.getElementById('piechart-bayern'));
+
+      chart.draw(data, options);
+    }
+  </script>
+
+  <!-- Chart of results by Stimmkreis -->
+  <script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+      var data = google.visualization.arrayToDataTable([
+        ['Partei', 'Sitze'],
+        ['CSU', 26],
+        ['Gruene', 17],
+        ['FD', 8],
+        ['SPD', 7],
+        ['AfD', 6],
+        ['FDP', 5]
+      ]);
+
+      var options = {
+        title: 'Sitzverteilung Oberbayern (2018)',
+        width: 'auto',
+        height: '400'
+      };
+
+      var chart = new google.visualization.PieChart(document.getElementById('piechart-region'));
+
+      chart.draw(data, options);
+    }
+  </script>
+</html>

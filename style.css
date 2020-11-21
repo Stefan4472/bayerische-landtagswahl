@@ -1,0 +1,62 @@
+.link-override {
+  text-decoration: none; 
+  color: black;
+  font-weight: bold;
+}
+
+.link-override:hover {
+  text-decoration: none; 
+  color: black;
+  font-weight: bold;
+}
+
+.carousel-image {    
+  max-height: 500px;
+  max-width: 100%;
+  height: auto;
+  width: auto;
+  margin: 0 auto;
+}
+
+.carousel-div {
+  background-color: rgba(0, 0, 0, 0.8);
+  text-align: center;
+}
+
+pre {
+  background-color: #d9d9d9;
+  padding: 1rem;
+}
+
+.resume {
+  margin-bottom: 0rem;
+  margin-top: 0 rem;
+}
+
+.figure {
+  width: 100%;
+}
+
+.figure-caption {
+  max-width: 70%;
+  margin: 0 auto;
+  font-style: italic;
+}
+
+/* W3 example: https://www.w3schools.com/html/tryit.asp?filename=tryhtml_table_intro */
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+  
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
