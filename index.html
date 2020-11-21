@@ -35,21 +35,42 @@
 
   <body>
     <!-- Banner -->
+    <!-- Image source: https://commons.wikimedia.org/wiki/File:Flag_of_Bavaria_(lozengy).svg -->
     <div id="page-banner" class="jumbotron" style="margin-bottom: 0rem; text-align: center; background-image: url('bavarian-flag.png'); background-size: cover;">
       <h1 class="display-4"><a href="/" class="link-override">Bayerische Landtagswahl System</a></h1>
     </div>
 
     <div class="container">
       <!-- Navbar -->
+      <nav class="navbar navbar-expand-lg navbar-light bg-light rounded" style="margin-bottom: 2rem;">
+        <div class="collapse navbar-collapse">
+          <ul class="navbar-nav justify-content-center">
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Ergebnisse <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Daten</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Vergleichung</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="#">About</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
 
       <!-- Content -->
       <div class="row">
         <div class="col-md-12">
-          <h2>Landesweite Ergebnisse</h2>
+          <h2>Das Bayerische Landesamt für Statistik</h2>
+          <p>Das Bayerische Landesamt für Statistik ist eine dem Bayerischen Staatsministerium des Innern, für Bau und Verkehr unmittelbar nachgeordnete Landesoberbehörde und die zentrale Behörde für die amtliche Statistik in Bayern. Zu den Hauptaufgaben gehören vor allem die Erhebung und Aufbereitung von über 350 gesetzlich angeordneten Statistiken und weitere Aufgaben aus Bereichen wie Bevölkerung, Wirtschaft oder Preise.</p>
         </div>
       </div>
       <div class="card">
         <div class="card-body">
+          <h2 class="card-title">Landesweit Ergebnisse</h5>
           <div class="row">
             <div class="col-md-6">
               <div id="piechart-bayern"></div>
@@ -124,13 +145,9 @@
         </div>
       </div>
 
-      <div class="row">
-        <div class="col-md-12">
-          <h2>Wahlkreis Ergebnisse</h2>
-        </div>
-      </div>
       <div class="card">
         <div class="card-body">
+          <h2 class="card-title">Wahlkreis Ergebnisse</h2>
           <div class="row">
             <div class="col-md-6">
               <div id="piechart-region"></div>
