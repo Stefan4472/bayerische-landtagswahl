@@ -40,7 +40,7 @@
       <h1 class="display-4"><a href="/" class="link-override">Bayerische Landtagswahl System</a></h1>
     </div>
 
-    <div class="container">
+    <div class="container mb-2">
       <!-- Navbar -->
       <nav class="navbar navbar-expand-lg navbar-light bg-light rounded" style="margin-bottom: 2rem;">
         <div class="collapse navbar-collapse">
@@ -86,16 +86,13 @@
           <div class="row mb-2">
             <div class="col-md-12">
               <div class="form-group">
-                <label for="select-year"><h3>Wahlkreis Auswahl</h3></label>
-                <select class="form-control" id="select-wahlkreis">
-                  <option>Oberbayern</option>
-                  <option>Niederbayern</option>
-                  <option>Schwaben</option>
-                  <option>Unterfranken</option>
-                  <option>Oberfranken</option>
-                  <option>Mittelfranken</option>
-                  <option>Oberpfalz</option>
-                </select>
+                <label for="stimmkreis-select"><h3>Stimmkreis Auswahl</h3></label>
+                  <select class="form-control" id="stimmkreis-select">
+                    <option>Muenchen-Moosach (105)</option>
+                    <option>Muenchen-Pasing (106)</option>
+                    <option>Muenchen-Land-Sued (124)</option>
+                    <option>...</option>
+                  </select>
               </div>
             </div>
           </div>
@@ -104,7 +101,7 @@
 
       <div class="row">
         <div class="col-md-12">
-          <h2>Oberbayern (2018)</h2>
+          <h2>Muenchen-Moosach (2018)</h2>
         </div>
       </div>
 
@@ -113,43 +110,67 @@
           <table style="width:100%">
             <tr>
               <th>Partei</th>
-              <th>Sitze insgesamt</th>
-              <th>Directsitze</th>
-              <th>Listensitze</th>
-              <th>ErstimmenAnteil (%)</th>
-              <th>GesamtstimmenAnteil (%)</th>
+              <th>Kandidat</th>
+              <th>Erstimmen</th>
+              <th>Erstimmen diff</th>
+              <th>Gesamtstimmen</th>
+              <th>Gesamtstimmen diff</th>
             </tr>
             <tr>
               <td>CSU</td>
-              <td>26 (-7)</td>
-              <td>26 (-3)</td>
-              <td>0 (-4)</td>
-              <td>33.1 (-12.5)</td>
-              <td>33.7 (-13.4)</td>
+              <td>Mechthilde Wittmann</td>
+              <td>17.495</td>
+              <td></td>
+              <td></td>
+              <td></td>
             </tr>
             <tr>
               <td>SPD</td>
-              <td>7 (-8)</td>
-              <td>0 (-1)</td>
-              <td>7 (-7)</td>
-              <td>9.5 (-10.6)</td>
-              <td>9.4 (-12.7)</td>
+              <td>Diana Stachowitz</td>
+              <td>9.996</td>
+              <td></td>
+              <td></td>
+              <td></td>
             </tr>
             <tr>
               <td>Freie Waehler</td>
-              <td>8 (+3)</td>
-              <td>0 (+0)</td>
-              <td>8 (+3)</td>
-              <td>11.1 (+2.5)</td>
-              <td>10.4 (+3.3)</td>
+              <td>Lilian Edenhofer</td>
+              <td>4.462</td>
+              <td></td>
+              <td></td>
+              <td></td>
             </tr>
             <tr>
-              <td>...</td>
-              <td>...</td>
-              <td>...</td>
-              <td>...</td>
-              <td>...</td>
-              <td>...</td>
+              <td>Gruene</td>
+              <td>Benjamin Adjei</td>
+              <td>17.573</td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>FDP</td>
+              <td>Albert Duin</td>
+              <td>5.285</td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Die Linke</td>
+              <td>Tony Luis Guerra</td>
+              <td>2.790</td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>AfD</td>
+              <td>Michael Groß</td>
+              <td>5.462</td>
+              <td></td>
+              <td></td>
+              <td></td>
             </tr>
           </table> 
         </div>
@@ -158,6 +179,5 @@
 
       <!-- Footer -->
       
-    </div>
   </body>
 </html>
