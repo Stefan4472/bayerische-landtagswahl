@@ -1,6 +1,8 @@
 ## Bayerische Landtagswahl Pflichtenheft
+
 *Vlad Kolesnykov & Stefan Kussmaul*
-DatenbankSysteme (Prof. Kemper) Aufgabe #2
+
+DatenbankSysteme (Prof. Kemper)
 
 ## 1. User Interfaces
 
