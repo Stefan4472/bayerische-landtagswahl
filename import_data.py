@@ -3,7 +3,7 @@ import dataclasses
 import enum
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=True, frozen=True)
 class Candidate:
     first_name: str
     last_name: str
@@ -15,6 +15,13 @@ class DirectCandidate:
     candidate: Candidate
     region_key: int
     num_votes: int
+
+
+@dataclasses.dataclass
+class ListCandidate:
+    candidate: Candidate
+    # Results: a tuple of (region_key, num_votes)
+    results: list[tuple[int, int]] = dataclasses.field(default_factory=list)
 
 
 class VoteType(enum.Enum):
@@ -40,8 +47,8 @@ region_key_to_name: dict[int, str] = {}
 
 # Get the name and key for each region
 for region_data in soup.Ergebnisse.find_all('Regionaleinheit'):
-    key = region_data.Allgemeine_Angaben.Schluesselnummer.contents[0]
-    name = region_data.Allgemeine_Angaben.Name_der_Regionaleinheit.contents[0]
+    key = int(region_data.Allgemeine_Angaben.Schluesselnummer.contents[0].strip())
+    name = region_data.Allgemeine_Angaben.Name_der_Regionaleinheit.contents[0].strip()
     region_key_to_name[key] = name
 
 print('Got region keys {}'.format(region_key_to_name))
@@ -50,18 +57,22 @@ print('Got region keys {}'.format(region_key_to_name))
 with open('data/wahl-2018-ergebnisse-sample.xml') as f:
     soup = bs4.BeautifulSoup(f, 'lxml-xml')
 
-candidates: list[Candidate] = []
-# TODO: map by candidate key
-direct_candidates: list[DirectCandidate] = []
+# Track set of found political groups/parties
 parties: set[str] = set()
+# Build list of Candidates found
+candidates: list[Candidate] = []
+# Map Candidate->DirectCandidate results
+direct_candidates: dict[Candidate, DirectCandidate] = {}
+# Map Candidate->ListCandidate results
+list_candidates: dict[Candidate, ListCandidate] = {}
 
+# Iterate over Wahlkreise
 for wahlkreis_data in soup.Ergebnisse.find_all('Wahlkreis'):
-    wahlkreis_name = wahlkreis_data.Name.contents[0]
-    print(wahlkreis_name)
+    wahlkreis_name = wahlkreis_data.Name.contents[0].strip()
 
     # Iterate over parties in the Wahlkreis
     for party_data in wahlkreis_data.find_all('Partei'):
-        party_name = party_data.Name.contents[0]
+        party_name = party_data.Name.contents[0].strip()
         parties.add(party_name)
     
         # Iterate over candidates in the party
@@ -77,18 +88,29 @@ for wahlkreis_data in soup.Ergebnisse.find_all('Wahlkreis'):
             # zweit_stimmen = candidate_data.Zweitstimmen.contents[0]
             is_direct: bool = False
             is_list: bool = False
+            as_list_candidate = ListCandidate(candidate)
 
             # Iterate over Stimmkreise that the candidate appeared in
             for stimmkreis_data in candidate_data.find_all('Stimmkreis'):
-                region_key = stimmkreis_data.NrSK.contents[0]
-                num_votes = stimmkreis_data.NumStimmen.contents[0]
+                region_key = int(stimmkreis_data.NrSK.contents[0].strip())
+                num_votes = int(stimmkreis_data.NumStimmen.contents[0].strip())
                 vote_type = get_vote_type(stimmkreis_data.NumStimmen['Stimmentyp'])
 
                 if vote_type == VoteType.Erst:
                     is_direct = True
-                    print('Found direct candidate: {}'.format(candidate))
-                    direct_candidates.append(DirectCandidate(
+                    direct_candidates[candidate] = DirectCandidate(
                         candidate,
                         region_key,
                         num_votes,
+                    )
+                elif vote_type == VoteType.Zweit:
+                    is_list = True
+                    as_list_candidate.results.append((
+                        region_key, 
+                        num_votes,
                     ))
+
+            if is_list:
+                list_candidates[candidate] = as_list_candidate
+
+    print(list_candidates.values())
