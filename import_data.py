@@ -11,14 +11,14 @@ class Candidate:
 
 
 @dataclasses.dataclass
-class DirectCandidate:
+class DirectResult:
     candidate: Candidate
     region_key: int
     num_votes: int
 
 
 @dataclasses.dataclass
-class ListCandidate:
+class ListResults:
     candidate: Candidate
     # Results: a tuple of (region_key, num_votes)
     results: list[tuple[int, int]] = dataclasses.field(default_factory=list)
@@ -62,9 +62,9 @@ parties: set[str] = set()
 # Build list of Candidates found
 candidates: list[Candidate] = []
 # Map Candidate->DirectCandidate results
-direct_candidates: dict[Candidate, DirectCandidate] = {}
+all_direct_results: dict[Candidate, DirectResult] = {}
 # Map Candidate->ListCandidate results
-list_candidates: dict[Candidate, ListCandidate] = {}
+all_list_results: dict[Candidate, ListResults] = {}
 
 # Iterate over Wahlkreise
 for wahlkreis_data in soup.Ergebnisse.find_all('Wahlkreis'):
@@ -77,6 +77,7 @@ for wahlkreis_data in soup.Ergebnisse.find_all('Wahlkreis'):
     
         # Iterate over candidates in the party
         for candidate_data in party_data.find_all('Kandidat'):
+            # Instantiate a `Candidate` instance
             candidate = Candidate(
                 candidate_data.Vorname.contents[0].strip(),
                 candidate_data.Nachname.contents[0].strip(),
@@ -84,11 +85,9 @@ for wahlkreis_data in soup.Ergebnisse.find_all('Wahlkreis'):
             )
             candidates.append(candidate)
 
-            # gesamt_stimmen = candidate_data.Gesamtstimmen.contents[0]
-            # zweit_stimmen = candidate_data.Zweitstimmen.contents[0]
             is_direct: bool = False
             is_list: bool = False
-            as_list_candidate = ListCandidate(candidate)
+            list_results = ListResults(candidate)
 
             # Iterate over Stimmkreise that the candidate appeared in
             for stimmkreis_data in candidate_data.find_all('Stimmkreis'):
@@ -96,21 +95,47 @@ for wahlkreis_data in soup.Ergebnisse.find_all('Wahlkreis'):
                 num_votes = int(stimmkreis_data.NumStimmen.contents[0].strip())
                 vote_type = get_vote_type(stimmkreis_data.NumStimmen['Stimmentyp'])
 
+                # Candidate received "Erststimmen" in this Stimmkreis:
+                # Mark them as a direct candidate for this `region_key`
                 if vote_type == VoteType.Erst:
                     is_direct = True
-                    direct_candidates[candidate] = DirectCandidate(
+                    all_direct_results[candidate] = DirectResult(
                         candidate,
                         region_key,
                         num_votes,
                     )
+                # Candidate received "Zweitstimmen" in this Stimmkreis:
+                # Mark them as a list candidate and add the results for this
+                # Stimmkreis to their "ListCandidate" results
                 elif vote_type == VoteType.Zweit:
                     is_list = True
-                    as_list_candidate.results.append((
+                    list_results.results.append((
                         region_key, 
                         num_votes,
                     ))
 
             if is_list:
-                list_candidates[candidate] = as_list_candidate
+                all_list_results[candidate] = list_results
 
-    print(list_candidates.values())
+    # print(list_results.values())
+
+# Store ZweitStimmen without a listed candidate for each party, for each Stimmkreis.
+# dict[(str) partei][(int) region_key] = (int) num_votes
+# Init with empty dictionaries for each known party.
+zweit_ohne_kandidat: dict[str, dict[int, int]] = {
+    party_name: {} for party_name in parties
+}
+
+# Iterate over Wahlkreise
+for wahlkreis_data in soup.Ergebnisse.find_all('Wahlkreis'):
+    # Iterate over parties in the Wahlkreis
+    for party_data in wahlkreis_data.find_all('Partei'):
+        party_name = party_data.Name.contents[0].strip()
+        # Iterate over the Stimmkreise in the *first* candidate listed
+        for stimmkreis_data in party_data.Kandidat.find_all('Stimmkreis'):
+            region_key = int(stimmkreis_data.NrSK.contents[0].strip())
+            votes_no_candidate = int(stimmkreis_data.ZweitSohneKandidat.contents[0].strip())
+            # Add to map
+            zweit_ohne_kandidat[party_name][region_key] = votes_no_candidate
+
+print(zweit_ohne_kandidat)
