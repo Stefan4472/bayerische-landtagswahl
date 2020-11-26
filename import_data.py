@@ -1,5 +1,6 @@
 import bs4
 import dataclasses
+import enum
 
 
 @dataclasses.dataclass
@@ -7,6 +8,27 @@ class Candidate:
     first_name: str
     last_name: str
     party: str
+
+
+@dataclasses.dataclass
+class DirectCandidate:
+    candidate: Candidate
+    region_key: int
+    num_votes: int
+
+
+class VoteType(enum.Enum):
+    Erst = 1
+    Zweit = 2
+
+
+def get_vote_type(stimmentype: str) -> VoteType:
+    if stimmentype == 'Zweitstimmen':
+        return VoteType.Zweit
+    elif stimmentype == 'Erststimmen':
+        return VoteType.Erst
+    else:
+        raise ValueError('Unrecognized "stimmentype": {}'.format(stimmentype))
 
 
 with open('data/wahl-2018-overview-sample.xml') as f:
@@ -28,25 +50,45 @@ print('Got region keys {}'.format(region_key_to_name))
 with open('data/wahl-2018-ergebnisse-sample.xml') as f:
     soup = bs4.BeautifulSoup(f, 'lxml-xml')
 
-candidates_list: list[Candidate] = []
-parties_set: set[str] = set()
+candidates: list[Candidate] = []
+# TODO: map by candidate key
+direct_candidates: list[DirectCandidate] = []
+parties: set[str] = set()
 
 for wahlkreis_data in soup.Ergebnisse.find_all('Wahlkreis'):
     wahlkreis_name = wahlkreis_data.Name.contents[0]
     print(wahlkreis_name)
+
     # Iterate over parties in the Wahlkreis
     for party_data in wahlkreis_data.find_all('Partei'):
         party_name = party_data.Name.contents[0]
-        parties_set.add(party_name)
+        parties.add(party_name)
+    
         # Iterate over candidates in the party
         for candidate_data in party_data.find_all('Kandidat'):
-            candidates_list.append(Candidate(
+            candidate = Candidate(
                 candidate_data.Vorname.contents[0].strip(),
                 candidate_data.Nachname.contents[0].strip(),
                 party_name,
-            ))
+            )
+            candidates.append(candidate)
 
-print(parties_set)
-print('Candidates:')
-for c in candidates_list:
-    print(c)
+            # gesamt_stimmen = candidate_data.Gesamtstimmen.contents[0]
+            # zweit_stimmen = candidate_data.Zweitstimmen.contents[0]
+            is_direct: bool = False
+            is_list: bool = False
+
+            # Iterate over Stimmkreise that the candidate appeared in
+            for stimmkreis_data in candidate_data.find_all('Stimmkreis'):
+                region_key = stimmkreis_data.NrSK.contents[0]
+                num_votes = stimmkreis_data.NumStimmen.contents[0]
+                vote_type = get_vote_type(stimmkreis_data.NumStimmen['Stimmentyp'])
+
+                if vote_type == VoteType.Erst:
+                    is_direct = True
+                    print('Found direct candidate: {}'.format(candidate))
+                    direct_candidates.append(DirectCandidate(
+                        candidate,
+                        region_key,
+                        num_votes,
+                    ))
