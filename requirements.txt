@@ -1,3 +1,4 @@
 lxml
 beautifulsoup4
 mysql-connector-python
+click
