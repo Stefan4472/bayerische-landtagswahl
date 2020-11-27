@@ -6,12 +6,12 @@ from util import StimmKreis, Candidate, DirectResult, \
     ListResults, VoteType, get_vote_type
 
 
-class InfoResult(typing.NamedTuple):
+class ParsedInfoXML(typing.NamedTuple):
     stimmkreis_name_lookup: dict[int, str]
     stimmkreise: dict[int, StimmKreis]
 
 
-def parse_info_xml(filepath: pathlib.Path) -> InfoResult: 
+def parse_info_xml(filepath: pathlib.Path) -> ParsedInfoXML: 
     # Parse the XML using the lxml parser (very fast)
     with open(filepath) as f:
         soup = bs4.BeautifulSoup(f, 'lxml-xml')
@@ -34,13 +34,21 @@ def parse_info_xml(filepath: pathlib.Path) -> InfoResult:
             int(region_data.Allgemeine_Angaben.Waehler.contents[0].strip()),
         )
 
-    return InfoResult(
+    return ParsedInfoXML(
         stimmkreis_name_lookup, 
         stimmkreise,
     )
 
 
-def parse_results_xml(filepath: pathlib.Path):
+class ParsedResultsXML(typing.NamedTuple):
+    parties: set[str]
+    candidates: list[Candidate]
+    direct_results: dict[Candidate, DirectResult]
+    list_results: dict[Candidate, ListResults]
+    party_only_votes: dict[str, dict[int, int]]
+
+
+def parse_results_xml(filepath: pathlib.Path) -> ParsedResultsXML:
     with open(filepath) as f:
         soup = bs4.BeautifulSoup(f, 'lxml-xml')
 
@@ -125,5 +133,22 @@ def parse_results_xml(filepath: pathlib.Path):
                 # Add to map
                 zweit_ohne_kandidat[party_name][region_key] = votes_no_candidate
 
+    return ParsedResultsXML(
+        parties,
+        candidates,
+        all_direct_results,
+        all_list_results,
+        zweit_ohne_kandidat,
+    )
+
+
+def write_to_json(
+    year: int,
+    xml_info: ParsedInfoXML,
+    xml_results: ParsedResultsXML,
+):
+    return
+
+    
 print(parse_info_xml(pathlib.Path('../data/2018-info.xml')))
-parse_results_xml(pathlib.Path('../data/wahl-2018-ergebnisse-sample.xml'))
+print(parse_results_xml(pathlib.Path('../data/wahl-2018-ergebnisse-sample.xml')))
