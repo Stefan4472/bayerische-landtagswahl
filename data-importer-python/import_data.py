@@ -2,6 +2,7 @@ import bs4
 import dataclasses
 import pathlib
 import typing
+import json
 from util import StimmKreis, Candidate, DirectResult, \
     ListResults, VoteType, get_vote_type
 
@@ -146,9 +147,30 @@ def write_to_json(
     year: int,
     xml_info: ParsedInfoXML,
     xml_results: ParsedResultsXML,
+    dump_file: pathlib.Path,
 ):
-    return
+    root_dict: dict[str, typing.Any] = {}
+    root_dict['year'] = year
+    root_dict['stimmkreis_ids'] = xml_info.stimmkreis_name_lookup
+    root_dict['stimmkreis_data'] = \
+        {key: dataclasses.asdict(s) for key, s in xml_info.stimmkreise.items()}
+    root_dict['parties'] = list(xml_results.parties)
+    root_dict['candidates'] = \
+        [dataclasses.asdict(c) for c in xml_results.candidates]
+    root_dict['list_results'] = \
+        [dataclasses.asdict(r) for r in xml_results.list_results]
+    root_dict['direct_results'] = \
+        [dataclasses.asdict(r) for r in xml_results.direct_results]
+    root_dict['party_only_votes'] = xml_results.party_only_votes
+    # TODO: MAKE SURE FILES ARE READ IN UTF-8
 
-    
-print(parse_info_xml(pathlib.Path('../data/2018-info.xml')))
-print(parse_results_xml(pathlib.Path('../data/wahl-2018-ergebnisse-sample.xml')))
+    # Write out to specified file
+    with open(dump_file, 'w', encoding='utf-8') as f:
+        json.dump(root_dict, f, ensure_ascii=False, indent=2)
+
+
+year = 2018
+xml_info = parse_info_xml(pathlib.Path('../data/2018-info.xml'))
+xml_results = parse_results_xml(pathlib.Path('../data/wahl-2018-ergebnisse-sample.xml'))
+
+write_to_json(year, xml_info, xml_results, pathlib.Path('../data/wahl-2018.json'))
