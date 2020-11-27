@@ -78,11 +78,11 @@ def parse_results_xml(filepath: pathlib.Path) -> ParsedResultsXML:
                     candidate_data.Vorname.contents[0].strip(),
                     candidate_data.Nachname.contents[0].strip(),
                     party_name,
+                    wahlkreis_name,
                 )
                 candidates.append(candidate)
 
-                is_direct: bool = False
-                is_list: bool = False
+                # Instantiate `ListResults` object to collect their results
                 list_results = ListResults(candidate)
 
                 # Iterate over Stimmkreise that the candidate appeared in
@@ -92,28 +92,24 @@ def parse_results_xml(filepath: pathlib.Path) -> ParsedResultsXML:
                     vote_type = get_vote_type(stimmkreis_data.NumStimmen['Stimmentyp'])
 
                     # Candidate received "Erststimmen" in this Stimmkreis:
-                    # Mark them as a direct candidate for this `region_key`
+                    # Add their direct results for this `region_key`
                     if vote_type == VoteType.Erst:
-                        is_direct = True
                         all_direct_results[candidate] = DirectResult(
                             candidate,
                             region_key,
                             num_votes,
                         )
                     # Candidate received "Zweitstimmen" in this Stimmkreis:
-                    # Mark them as a list candidate and add the results for this
-                    # Stimmkreis to their "ListCandidate" results
+                    # Add the results for this Stimmkreis to their "ListResults" 
+                    # instance
                     elif vote_type == VoteType.Zweit:
-                        is_list = True
                         list_results.results.append((
                             region_key, 
                             num_votes,
                         ))
 
-                if is_list:
-                    all_list_results[candidate] = list_results
-
-        # print(list_results.values())
+                # Add results to the mapping
+                all_list_results[candidate] = list_results
 
     # Store ZweitStimmen without a listed candidate for each party, for each Stimmkreis.
     # dict[(str) partei][(int) region_key] = (int) num_votes
@@ -170,6 +166,6 @@ def write_to_json(
 
 year = 2018
 xml_info = parse_info_xml(pathlib.Path('../data/2018-info.xml'))
-xml_results = parse_results_xml(pathlib.Path('../data/wahl-2018-ergebnisse-sample.xml'))
+xml_results = parse_results_xml(pathlib.Path('../data/2018-results.xml'))
 
 write_to_json(year, xml_info, xml_results, pathlib.Path('../data/wahl-2018.json'))
