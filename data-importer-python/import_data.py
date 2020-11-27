@@ -14,7 +14,7 @@ class ParsedInfoXML(typing.NamedTuple):
 
 def parse_info_xml(filepath: pathlib.Path) -> ParsedInfoXML: 
     # Parse the XML using the lxml parser (very fast)
-    with open(filepath) as f:
+    with open(filepath, encoding='utf-8') as f:
         soup = bs4.BeautifulSoup(f, 'lxml-xml')
 
     # Map stimmkreis ID to name
@@ -50,7 +50,7 @@ class ParsedResultsXML(typing.NamedTuple):
 
 
 def parse_results_xml(filepath: pathlib.Path) -> ParsedResultsXML:
-    with open(filepath) as f:
+    with open(filepath, encoding='utf-8') as f:
         soup = bs4.BeautifulSoup(f, 'lxml-xml')
 
     # Track set of found political groups/parties
@@ -162,7 +162,6 @@ def write_to_json(
     root_dict['direct_results'] = \
         [dataclasses.asdict(r) for r in xml_results.direct_results]
     root_dict['party_only_votes'] = xml_results.party_only_votes
-    # TODO: MAKE SURE FILES ARE READ IN UTF-8
 
     # Write out to specified file
     with open(dump_file, 'w', encoding='utf-8') as f:
