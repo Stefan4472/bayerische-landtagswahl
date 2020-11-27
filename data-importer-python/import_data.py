@@ -1,56 +1,15 @@
 import bs4
 import dataclasses
-import enum
-
-
-@dataclasses.dataclass(eq=True, frozen=True)
-class StimmKreis:
-    region_id: int
-    num_eligible_voters: int
-    num_who_voted: int
-
-
-@dataclasses.dataclass(eq=True, frozen=True)
-class Candidate:
-    first_name: str
-    last_name: str
-    party: str
-
-
-@dataclasses.dataclass
-class DirectResult:
-    candidate: Candidate
-    region_key: int
-    num_votes: int
-
-
-@dataclasses.dataclass
-class ListResults:
-    candidate: Candidate
-    # Results: a tuple of (region_key, num_votes)
-    results: list[tuple[int, int]] = dataclasses.field(default_factory=list)
-
-
-class VoteType(enum.Enum):
-    Erst = 1
-    Zweit = 2
-
-
-def get_vote_type(stimmentype: str) -> VoteType:
-    if stimmentype == 'Zweitstimmen':
-        return VoteType.Zweit
-    elif stimmentype == 'Erststimmen':
-        return VoteType.Erst
-    else:
-        raise ValueError('Unrecognized "stimmentype": {}'.format(stimmentype))
+from util import StimmKreis, Candidate, DirectResult, \
+    ListResults, VoteType, get_vote_type
 
 
 with open('../data/2018-info.xml') as f:
     # Parse the XML using the lxml parser (very fast)
     soup = bs4.BeautifulSoup(f, 'lxml-xml')
 
-# Map region keys to names
-region_key_to_name: dict[int, str] = {}
+# Map stimmkreis ID to name
+stimmkreis_name_lookup: dict[int, str] = {}
 # Build map of stimmkreis_id->Stimmkreis
 stimmkreise: dict[int, StimmKreis] = {}
 
@@ -58,14 +17,14 @@ stimmkreise: dict[int, StimmKreis] = {}
 for region_data in soup.Ergebnisse.find_all('Regionaleinheit'):
     key = int(region_data.Allgemeine_Angaben.Schluesselnummer.contents[0].strip())
     name = region_data.Allgemeine_Angaben.Name_der_Regionaleinheit.contents[0].strip()
-    region_key_to_name[key] = name
+    stimmkreis_name_lookup[key] = name
     stimmkreise[key] = StimmKreis(
         key,
         int(region_data.Allgemeine_Angaben.Stimmberechtigte.contents[0].strip()),
         int(region_data.Allgemeine_Angaben.Waehler.contents[0].strip()),
     )
 
-print('Got region keys {}'.format(region_key_to_name))
+print('Got region keys {}'.format(stimmkreis_name_lookup))
 print('Got Stimmkreise {}'.format(stimmkreise))
 
 with open('../data/wahl-2018-ergebnisse-sample.xml') as f:
