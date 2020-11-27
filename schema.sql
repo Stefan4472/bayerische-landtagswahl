@@ -1,5 +1,16 @@
+DROP TABLE IF EXISTS Kandidaten
+
+CREATE TABLE Wahl(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    jahr INT NOT NULL
+);
+
 CREATE TABLE Kandidaten(
     id INT AUTO_INCREMENT PRIMARY KEY,
+    wahl INT,  -- TODO: HOW TO SET 'NOT NULL'?
     vorname VARCHAR(30) NOT NULL, 
-    nachname VARCHAR(30) NOT NULL
+    nachname VARCHAR(30) NOT NULL,
+    CONSTRAINT FOREIGN KEY (wahl)
+        REFERENCES Wahl(id)
+        ON DELETE SET NULL
 );
