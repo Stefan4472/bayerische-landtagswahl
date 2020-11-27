@@ -38,7 +38,7 @@ def get_vote_type(stimmentype: str) -> VoteType:
         raise ValueError('Unrecognized "stimmentype": {}'.format(stimmentype))
 
 
-with open('data/wahl-2018-overview-sample.xml') as f:
+with open('../data/wahl-2018-overview-sample.xml') as f:
     # Parse the XML using the lxml parser (very fast)
     soup = bs4.BeautifulSoup(f, 'lxml-xml')
 
@@ -54,7 +54,7 @@ for region_data in soup.Ergebnisse.find_all('Regionaleinheit'):
 print('Got region keys {}'.format(region_key_to_name))
 
 
-with open('data/wahl-2018-ergebnisse-sample.xml') as f:
+with open('../data/wahl-2018-ergebnisse-sample.xml') as f:
     soup = bs4.BeautifulSoup(f, 'lxml-xml')
 
 # Track set of found political groups/parties
