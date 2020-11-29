@@ -2,11 +2,35 @@ import dataclasses
 import enum
 
 
+# TODO: WAHLKREIS SHOULD BE AN ENUM
+def determine_wahlkreis(stimmkreis_nr: int) -> str:
+    if stimmkreis_nr >= 100 and stimmkreis_nr < 200:
+        return 'Oberbayern'
+    elif stimmkreis_nr >= 200 and stimmkreis_nr < 300:
+        return 'Niederbayern'
+    elif stimmkreis_nr >= 300 and stimmkreis_nr < 400:
+        return 'Oberpfalz'
+    elif stimmkreis_nr >= 400 and stimmkreis_nr < 500:
+        return 'Oberfranken'
+    elif stimmkreis_nr >= 500 and stimmkreis_nr < 600:
+        return 'Mittelfranken'
+    elif stimmkreis_nr >= 600 and stimmkreis_nr < 700:
+        return 'Unterfranken'
+    elif stimmkreis_nr >= 700 and stimmkreis_nr < 800:
+        return 'Schwaben'
+    else:
+        raise ValueError('Invalid stimmkreis number')
+
+
+# TODO: ADD 'NAME'
 @dataclasses.dataclass(eq=True, frozen=True)
 class StimmKreis:
     region_id: int
     num_eligible_voters: int
     num_who_voted: int
+
+    def get_wahlkreis(self) -> int:
+        return determine_wahlkreis(self.region_id)
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
@@ -24,6 +48,7 @@ class DirectResult:
     num_votes: int
 
 
+# TODO: MAKE RESULTS A LIST OF NAMEDTUPLE
 @dataclasses.dataclass
 class ListResults:
     candidate: Candidate
@@ -43,22 +68,3 @@ def get_vote_type(stimmentype: str) -> VoteType:
         return VoteType.Erst
     else:
         raise ValueError('Unrecognized "stimmentype": {}'.format(stimmentype))
-
-
-def determine_wahlkreis(stimmkreis_nr: int) -> str:
-    if stimmkreis_nr >= 100 and stimmkreis_nr < 200:
-        return 'Oberbayern'
-    elif stimmkreis_nr >= 200 and stimmkreis_nr < 300:
-        return 'Niederbayern'
-    elif stimmkreis_nr >= 300 and stimmkreis_nr < 400:
-        return 'Oberpfalz'
-    elif stimmkreis_nr >= 400 and stimmkreis_nr < 500:
-        return 'Oberfranken'
-    elif stimmkreis_nr >= 500 and stimmkreis_nr < 600:
-        return 'Mittelfranken'
-    elif stimmkreis_nr >= 600 and stimmkreis_nr < 700:
-        return 'Unterfranken'
-    elif stimmkreis_nr >= 700 and stimmkreis_nr < 800:
-        return 'Schwaben'
-    else:
-        raise ValueError('Invalid stimmkreis number')
