@@ -12,11 +12,22 @@ def run_import(
 ):
     cur = database.get_cursor()
 
+    # Add Wahl to database and get wahlID
     if database.has_wahl(year):
         wahl_id = database.get_wahl_id(year)
     else:
         database.add_wahl(year)
         wahl_id = database.get_wahl_id(year)
-
     print(wahl_id)
-        
+    
+    # Add Stimmkreis data
+    for stimmkreis in info_xml.stimmkreise.values():
+        print(stimmkreis)
+        # Note: (TODO): This is pretty hacky right now
+        stimmkreis_id = database.add_stimmkreis(
+            wahl_id,
+            '',  # TODO: HOW TO GET STIMMKREIS NAMES?
+            stimmkreis.region_id % 100,
+            stimmkreis.region_id,
+        )
+        print(stimmkreis_id)

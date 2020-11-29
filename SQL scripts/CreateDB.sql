@@ -45,16 +45,20 @@ CREATE TABLE KandidatZuWahl (
 )ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE Wahlkreis (
-	ID int AUTO_INCREMENT,
+	ID int NOT NULL UNIQUE,
     Name varchar(255) NOT NULL UNIQUE,
     PRIMARY KEY (ID)
 )ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- TODO: MAKE 'Name' UNIQUE
 CREATE TABLE Stimmkreis (
 	ID int AUTO_INCREMENT,
-    Name varchar(255) NOT NULL UNIQUE,
+    Name varchar(255) NOT NULL,
     Wahlkreis int NOT NULL,
+    Nummer int NOT NULL,
+    WahlID int NOT NULL,
 	FOREIGN KEY (Wahlkreis) REFERENCES Wahlkreis(ID) on update cascade on delete cascade,
+    FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade,
     PRIMARY KEY (ID)
 )ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -88,3 +92,12 @@ CREATE TABLE ZweitstimmePartei (
     FOREIGN KEY (Partei) REFERENCES Partei(ID) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (Wahl) REFERENCES Wahl(ID) ON UPDATE CASCADE ON DELETE CASCADE
 )ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO Wahlkreis(ID, Name) VALUES
+    (1, "Oberbayern"),
+    (2, "Niederbayern"),
+    (3, "Oberpfalz"),
+    (4, "Oberfranken"),
+    (5, "Mittelfranken"),
+    (6, "Unterfranken"),
+    (7, "Schwaben");
