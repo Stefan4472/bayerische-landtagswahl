@@ -1,4 +1,5 @@
 import mysql.connector
+import time
 import database as db
 import util
 import data_parser

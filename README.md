@@ -19,3 +19,13 @@ This script is in early stages, and does not currently take arguments (a command
 `all_direct_results`: maps `Candidate` instances to their direct vote results **for those candidates who ran as direct candidates**
 `all_list_results`: maps `Candidate` instances to their list vote results, which stores the number of second votes they received in each Stimmkreis
 `zweit_ohne_kandidat`: maps party name->(Stimmkreis, number of second votes received that did not name a candidate)
+
+
+## Unofficial data
+Sample dataset:
+with console print: data-import: 43.3 sec
+without print: data-import: 42.5 sec
+without print, with bulk-insert=5000: 42.4 sec
+without print, with bulk-insert=10000: 43.4 sec
+without print, with bulk-insert=2000: 40.67 sec
+without print, with bulk-insert=1000: 41.01 sec

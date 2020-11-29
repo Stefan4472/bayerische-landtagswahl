@@ -84,7 +84,7 @@ class Database:
         wahl_id: int,
         stimmkreis: util.StimmKreis,
     ) -> int:
-        print('Adding Stimmkreis {}'.format(stimmkreis))
+        # print('Adding Stimmkreis {}'.format(stimmkreis))
         sql = 'INSERT INTO Stimmkreis (Name, Wahlkreis, Nummer, NumBerechtigter, WahlID) ' \
                 'VALUES (%s, %s, %s, %s, %s)'
         # TODO:
@@ -108,7 +108,7 @@ class Database:
         wahl_id: int,
         party_name: str,
     ) -> int:
-        print('Adding Party {}'.format(party_name))
+        # print('Adding Party {}'.format(party_name))
         sql = 'INSERT INTO Partei (ParteiName, WahlID) ' \
                 'VALUES (%s, %s)'
         vals = (party_name, wahl_id,)
@@ -122,7 +122,7 @@ class Database:
         candidate: util.Candidate,
         party_id: int,
     ) -> int:
-        print('Adding Candidate {}'.format(candidate))
+        # print('Adding Candidate {}'.format(candidate))
         sql = 'INSERT INTO Kandidat (VorName, Nachname, Partei, WahlID) ' \
                 'VALUES (%s, %s, %s, %s)'
         vals = (
@@ -142,11 +142,11 @@ class Database:
         stimmkreis_id: int,
         num_votes: int,
     ):
-        print('Generating {} ErstStimmen for candidate {} in {}'.format(
-            num_votes,
-            candidate_id,
-            stimmkreis_id,
-        ))
+        # print('Generating {} ErstStimmen for candidate {} in {}'.format(
+        #     num_votes,
+        #     candidate_id,
+        #     stimmkreis_id,
+        # ))
 
         self._bulk_insert(
             'Erststimme',
@@ -155,8 +155,6 @@ class Database:
             num_votes,
         )
 
-        print(self._cursor.lastrowid)
-
     def generate_zweit_stimmen(
         self,
         wahl_id: int,
@@ -164,11 +162,11 @@ class Database:
         stimmkreis_id: int,
         num_votes: int,
     ):
-        print('Generating {} ZweitStimmen for candidate {} in {}'.format(
-            num_votes,
-            candidate_id,
-            stimmkreis_id,
-        ))
+        # print('Generating {} ZweitStimmen for candidate {} in {}'.format(
+        #     num_votes,
+        #     candidate_id,
+        #     stimmkreis_id,
+        # ))
 
         self._bulk_insert(
             'Zweitstimme',
@@ -177,8 +175,6 @@ class Database:
             num_votes,
         )
 
-        print(self._cursor.lastrowid)
-
     def generate_zweit_stimmen_ohne_kandidat(
         self,
         wahl_id: int,
@@ -186,11 +182,11 @@ class Database:
         stimmkreis_id: int,
         num_votes: int,
     ):
-        print('Generating {} ZweitStimmen for party {} in {}'.format(
-            num_votes,
-            party_id,
-            stimmkreis_id,
-        ))
+        # print('Generating {} ZweitStimmen for party {} in {}'.format(
+        #     num_votes,
+        #     party_id,
+        #     stimmkreis_id,
+        # ))
 
         self._bulk_insert(
             'ZweitstimmePartei',
@@ -199,19 +195,18 @@ class Database:
             num_votes,
         )
 
-        print(self._cursor.lastrowid)
-
     def _bulk_insert(
         self,
         table_name: str,
         col_names: tuple[str],
         _tuple: tuple[typing.Any],
         num_inserts: int,
-        # inserts_per_call: typing.Optional[int] = None,
+        inserts_per_call: typing.Optional[int] = 2000,
     ):
         """Here we do a bulk insert.
         See: https://medium.com/@benmorel/high-speed-inserts-with-mysql-9d3dcd76f723
-        Note: Performance might be improved by reducing to 1000 tuples per insert
+        Note: Performance might be improved by reducing the number of tuples per insert
+        TODO: IS THE `INSERTS_PER_CALL` OPTIMIZATION WORTH THE ADDED CODE COMPLEXITY?
         """
         if num_inserts == 0:
             return
@@ -220,16 +215,42 @@ class Database:
         columns_string = ','.join(col_names)
         # Form single tuple string
         tuple_string = '(' + ','.join([str(t) for t in _tuple]) + ')'
-        # Create bulk insertion string
-        bulk_insert = (tuple_string + ',') * (num_inserts - 1) + tuple_string
-
-        # inserts_per_call = inserts_per_call if inserts_per_call else num_inserts
-
-        # Form SQL statement
-        sql = 'INSERT INTO {}({}) VALUES {};'.format(
-            table_name,
-            columns_string,
-            bulk_insert,
-        )
         
-        self._cursor.execute(sql)
+        if num_inserts < inserts_per_call:
+            # Create bulk insertion string
+            bulk_insert = (tuple_string + ',') * (num_inserts - 1) + tuple_string
+            # Form SQL statement
+            sql = 'INSERT INTO {}({}) VALUES {};'.format(
+                table_name,
+                columns_string,
+                bulk_insert,
+            )
+            # Execute    
+            self._cursor.execute(sql)
+        # Split the insert into a number of calls, each of size `inserts_per_call`
+        else:
+            inserts_remaining = num_inserts
+            # Create bulk insertion string
+            bulk_insert = (tuple_string + ',') * (inserts_per_call - 1) + tuple_string
+            # Form SQL statement
+            sql = 'INSERT INTO {}({}) VALUES {};'.format(
+                table_name,
+                columns_string,
+                bulk_insert,
+            )
+            # Loop
+            while inserts_remaining > inserts_per_call:
+                self._cursor.execute(sql)
+                inserts_remaining -= inserts_per_call
+            # Insert the remaining number of tuples
+            # Create bulk insertion string
+            bulk_insert = (tuple_string + ',') * (inserts_remaining - 1) + tuple_string
+            # Form SQL statement
+            sql = 'INSERT INTO {}({}) VALUES {};'.format(
+                table_name,
+                columns_string,
+                bulk_insert,
+            )
+            # Execute    
+            self._cursor.execute(sql)
+

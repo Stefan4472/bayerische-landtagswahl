@@ -2,6 +2,7 @@
 # Will provide functions to import election results from XML.
 import click
 import pathlib
+import time
 import database as db
 import data_parser
 import data_importer
@@ -59,9 +60,15 @@ def cmd_import_data(
     password: str,
     db_name: str,
 ):
+    click.echo('Reading xml...', nl=False)
+    start_xml_time = time.time()
+    # Parse xml files
     xml_info = data_parser.parse_info_xml(pathlib.Path(info_path))
     xml_results = data_parser.parse_results_xml(pathlib.Path(results_path))
-    
+    # Report results
+    end_xml_time = time.time()
+    click.echo('Done ({} seconds)'.format(end_xml_time - start_xml_time))
+
     click.echo('Connecting to database...')
     database = db.Database(
         host,
@@ -70,12 +77,17 @@ def cmd_import_data(
         database_name=db_name,
     )
 
+    # TODO: WOULD BE SUPER COOL TO HAVE PROGRESS INDICATORS
+    click.echo('Importing data and generating vote records...', nl=False)
+    start_import_time = time.time()
     data_importer.run_import(
         database,
         xml_info,
         xml_results,
         year,
     )
+    end_import_time = time.time()
+    click.echo('Done ({} seconds)'.format(end_import_time - start_import_time))
 
 
 if __name__ == '__main__':
