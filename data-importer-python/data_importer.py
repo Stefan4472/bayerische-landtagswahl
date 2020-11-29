@@ -51,3 +51,16 @@ def run_import(
             party_id_lookup[candidate.party],
         )
         candidate_id_lookup[candidate] = candidate_id
+
+    # Generate Erst-Stimmen
+    for candidate, direct_result in results_xml.direct_results.items():
+        candidate_id = candidate_id_lookup[candidate]
+        stimmkreis_id = stimmkreis_id_lookup[direct_result.stimmkreis_id]
+        num_votes = direct_result.num_votes
+        
+        database.generate_erst_stimmen(
+            wahl_id,
+            candidate_id,
+            stimmkreis_id,
+            num_votes,
+        )

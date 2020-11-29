@@ -133,3 +133,26 @@ class Database:
         self._cursor.execute(sql, vals)
         self._db.commit()
         return self._cursor.lastrowid
+
+    def generate_erst_stimmen(
+        self,
+        wahl_id: int,
+        candidate_id: int,
+        stimmkreis_id: int,
+        num_votes: int,
+    ):
+        print('Generating {} votes for candidate {} in {}'.format(
+            num_votes,
+            candidate_id,
+            stimmkreis_id,
+        ))
+
+        # Here we do a bulk insert.
+        # See: https://medium.com/@benmorel/high-speed-inserts-with-mysql-9d3dcd76f723
+        # Note: Performance might be improved by reducing to 1000 tuples per insert
+        single_tuple = '({},{},{})'.format(candidate_id, stimmkreis_id, wahl_id)
+        bulk_insert = (single_tuple + ',') * (num_votes - 1) + single_tuple
+        sql = 'INSERT INTO Erststimme(Kandidat, Stimmkreis, Wahl) VALUES ' + bulk_insert + ';'
+        self._cursor.execute(sql)
+        self._db.commit()
+        print(self._cursor.lastrowid)
