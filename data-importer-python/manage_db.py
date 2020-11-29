@@ -1,8 +1,8 @@
 # Command-line interface for managing our MySQL Landtagswahl database.
 # Will provide functions to import election results from XML.
 import click
-import mysql.connector
 import pathlib
+import database as db
 import data_parser
 import data_importer
 
@@ -30,16 +30,14 @@ def cmd_reset_database(
         schema_script = sql_file.read()
 
     click.echo('Connecting to database...')
-    mydb = mysql.connector.connect(
-        host=host,
-        user=user,
-        password=password,
+    database = db.Database(
+        host,
+        user,
+        password,
     )
 
     click.echo('Executing script..')
-    mycursor = mydb.cursor()
-    mycursor.execute(schema_script, multi=True)
-    mydb.commit()
+    database.execute_script(schema_script)
     click.echo('Done')
 
 
@@ -63,14 +61,20 @@ def cmd_import_data(
 ):
     xml_info = data_parser.parse_info_xml(pathlib.Path(info_path))
     xml_results = data_parser.parse_results_xml(pathlib.Path(results_path))
-    data_importer.import_data(
-        xml_info,
-        xml_results,
-        year,
+    
+    click.echo('Connecting to database...')
+    database = db.Database(
         host,
         user,
         password,
-        db_name,
+        database_name=db_name,
+    )
+
+    data_importer.run_import(
+        database,
+        xml_info,
+        xml_results,
+        year,
     )
 
 

@@ -1,29 +1,22 @@
 import mysql.connector
+import database as db
 import data_parser
 
 
 # TODO: SOME KIND OF "ELECTION_RESULTS" CONTAINER TO AGGREGATE ALL INFO FROM INFO AND RESULTS XML (AND YEAR)
-def import_data(
+def run_import(
+    database: db.Database,
     info_xml: data_parser.ParsedInfoXML,
     results_xml: data_parser.ParsedResultsXML,
     year: int,
-    host: str,
-    user: str,
-    password: str,
-    db_name: str,
 ):
-    mydb = mysql.connector.connect(
-        host=host,
-        user=user,
-        password=password,
-    )
+    cur = database.get_cursor()
 
-    mycursor = mydb.cursor()
-
-    # # Insert
-    # sql = 'INSERT INTO Wahl (jahr) VALUES (%s)'
+    # Insert
+    # sql = 'INSERT INTO Wahl (Jahr) VALUES (%s)'
     # val = (2018,)
-    # mycursor.execute(sql, val)
+    # cur.execute(sql, val)
+    # database.commit()
 
     # sql = 'INSERT INTO Kandidaten (id, vorname, nachname) VALUES (%s, %s, %s)'
     # val = (1, 'Vlad', 'Kolesnykov')
@@ -32,8 +25,8 @@ def import_data(
     # mydb.commit()
 
     # Select
-    mycursor.execute('SELECT * FROM Kandidaten')
-    for record in mycursor.fetchall():
+    cur.execute('SELECT * FROM Wahl')
+    for record in cur.fetchall():
         print(record)
 
         
