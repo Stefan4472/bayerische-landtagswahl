@@ -56,6 +56,7 @@ CREATE TABLE Stimmkreis (
     Name varchar(255) NOT NULL,
     Wahlkreis int NOT NULL,
     Nummer int NOT NULL,
+    NumBerechtigter int NOT NULL,
     WahlID int NOT NULL,
 	FOREIGN KEY (Wahlkreis) REFERENCES Wahlkreis(ID) on update cascade on delete cascade,
     FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade,

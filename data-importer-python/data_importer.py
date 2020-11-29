@@ -22,12 +22,10 @@ def run_import(
     
     # Add Stimmkreis data
     for stimmkreis in info_xml.stimmkreise.values():
-        print(stimmkreis)
         # Note: (TODO): This is pretty hacky right now
+        # TODO: HOW TO GET STIMMKREIS NAMES?
         stimmkreis_id = database.add_stimmkreis(
             wahl_id,
-            '',  # TODO: HOW TO GET STIMMKREIS NAMES?
-            stimmkreis.region_id % 100,
-            stimmkreis.region_id,
+            stimmkreis,
         )
         print(stimmkreis_id)

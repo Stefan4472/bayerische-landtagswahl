@@ -1,4 +1,5 @@
 import mysql.connector
+import util
 
 
 class Database:
@@ -79,13 +80,22 @@ class Database:
     def add_stimmkreis(
         self,
         wahl_id: int,
-        name: str,
-        wahlkreis_id: int,
-        nummer: int,
+        stimmkreis: util.StimmKreis,
     ) -> int:
-        sql = 'INSERT INTO Stimmkreis (Name, Wahlkreis, Nummer, WahlID) ' \
-                'VALUES (%s, %s, %s, %s)'
-        val = (name, wahlkreis_id, nummer, wahl_id,)
-        self._cursor.execute(sql, val)
+        print('Adding Stimmkreis {}'.format(stimmkreis))
+        sql = 'INSERT INTO Stimmkreis (Name, Wahlkreis, Nummer, NumBerechtigter, WahlID) ' \
+                'VALUES (%s, %s, %s, %s, %s)'
+        # TODO:
+        # - GET STIMMKREIS NAME FROM SOMEWHERE
+        # - RENAME 'REGION_ID' TO 'STIMMKREIS_NR'
+        # - BETTER LOOKUP OF WAHLKREIS ID'S (CURRENTLY HARDCODED)
+        vals = (
+            '', 
+            int(stimmkreis.region_id / 100), 
+            stimmkreis.region_id,
+            stimmkreis.num_eligible_voters,
+            wahl_id,
+        )
+        self._cursor.execute(sql, vals)
         self._db.commit()
         return self._cursor.lastrowid
