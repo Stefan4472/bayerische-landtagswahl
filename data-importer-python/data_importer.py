@@ -64,3 +64,5 @@ def run_import(
             stimmkreis_id,
             num_votes,
         )
+
+    database.commit()

@@ -1,4 +1,5 @@
 import mysql.connector
+import typing
 import util
 
 
@@ -147,12 +148,50 @@ class Database:
             stimmkreis_id,
         ))
 
+        self._bulk_insert(
+            'Erststimme',
+            ('Kandidat', 'Stimmkreis', 'Wahl'),
+            (candidate_id, stimmkreis_id, wahl_id),
+            num_votes,
+        )
+
         # Here we do a bulk insert.
         # See: https://medium.com/@benmorel/high-speed-inserts-with-mysql-9d3dcd76f723
         # Note: Performance might be improved by reducing to 1000 tuples per insert
-        single_tuple = '({},{},{})'.format(candidate_id, stimmkreis_id, wahl_id)
-        bulk_insert = (single_tuple + ',') * (num_votes - 1) + single_tuple
-        sql = 'INSERT INTO Erststimme(Kandidat, Stimmkreis, Wahl) VALUES ' + bulk_insert + ';'
-        self._cursor.execute(sql)
-        self._db.commit()
+        # single_tuple = '({},{},{})'.format(candidate_id, stimmkreis_id, wahl_id)
+        # bulk_insert = (single_tuple + ',') * (num_votes - 1) + single_tuple
+        # sql = 'INSERT INTO Erststimme(Kandidat, Stimmkreis, Wahl) VALUES ' + bulk_insert + ';'
+        # self._cursor.execute(sql)
+        # self._db.commit()
         print(self._cursor.lastrowid)
+
+    def _bulk_insert(
+        self,
+        table_name: str,
+        col_names: tuple[str],
+        _tuple: tuple[typing.Any],
+        num_inserts: int,
+        # inserts_per_call: typing.Optional[int] = None,
+    ):
+        """Here we do a bulk insert.
+        See: https://medium.com/@benmorel/high-speed-inserts-with-mysql-9d3dcd76f723
+        Note: Performance might be improved by reducing to 1000 tuples per insert
+        """
+        columns_string = ','.join(col_names)
+        # Form single tuple string
+        tuple_string = '(' + ','.join([str(t) for t in _tuple]) + ')'
+        # Create bulk insertion string
+        bulk_insert = (tuple_string + ',') * (num_inserts - 1) + tuple_string
+
+        # inserts_per_call = inserts_per_call if inserts_per_call else num_inserts
+
+        # Form SQL statement
+        sql = 'INSERT INTO {}({}) VALUES {};'.format(
+            table_name,
+            columns_string,
+            bulk_insert,
+        )
+        
+        self._cursor.execute(sql)
+        # self._db.commit()
+        # print(sql)
