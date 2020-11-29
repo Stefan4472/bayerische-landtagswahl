@@ -139,6 +139,7 @@ def parse_results_xml(filepath: pathlib.Path) -> ParsedResultsXML:
     )
 
 
+# NOTE: THIS METHOD WILL BE REMOVED
 def write_to_json(
     year: int,
     xml_info: ParsedInfoXML,
@@ -164,8 +165,9 @@ def write_to_json(
         json.dump(root_dict, f, ensure_ascii=False, indent=2)
 
 
-year = 2018
-xml_info = parse_info_xml(pathlib.Path('../data/2018-info.xml'))
-xml_results = parse_results_xml(pathlib.Path('../data/2018-results.xml'))
+if __name__ == '__main__':
+    year = 2018
+    xml_info = parse_info_xml(pathlib.Path('../data/2018-info.xml'))
+    xml_results = parse_results_xml(pathlib.Path('../data/2018-results.xml'))
 
-write_to_json(year, xml_info, xml_results, pathlib.Path('../data/wahl-2018.json'))
+    write_to_json(year, xml_info, xml_results, pathlib.Path('../data/wahl-2018.json'))

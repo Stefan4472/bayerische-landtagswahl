@@ -2,7 +2,8 @@
 # Will provide functions to import election results from XML.
 import click
 import mysql.connector
-import test_db
+import pathlib
+import data_parser
 
 
 @click.group()
@@ -43,20 +44,26 @@ def cmd_reset_database(
 
 # Note: We could use the `click.password_option()` to hide the password in console
 @click_cli.command(name='import_data')
-@click.argument('datafile', type=click.Path(exists=True, readable=True))
+@click.argument('info_path', type=click.Path(exists=True, readable=True))
+@click.argument('results_path', type=click.Path(exists=True, readable=True))
+@click.option('--year', type=int, required=True)
+@click.option('--password', type=str, required=True)  
+@click.option('--db_name', type=str, required=True)
 @click.option('--host', type=str, default='localhost')
 @click.option('--user', type=str, default='root')
-@click.option('--pwd', type=str, required=True)  
-@click.option('--database', type=str, required=True)
-def cmd_load_datafile(
-    datafile: str,
+def cmd_import_data(
+    info_path: str,
+    results_path: str,
+    year: int,
     host: str,
     user: str,
-    pwd: str,
-    database: str,
+    password: str,
+    db_name: str,
 ):
-    test_db.run_db_test(host, user, pwd, database)
-    click.echo('Completed database test successfully')
+    xml_info = data_parser.parse_info_xml(pathlib.Path(info_path))
+    print(xml_info)
+    xml_results = data_parser.parse_results_xml(pathlib.Path('../data/2018-results.xml'))
+    print(xml_results)
 
 
 if __name__ == '__main__':
