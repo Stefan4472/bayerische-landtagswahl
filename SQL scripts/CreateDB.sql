@@ -94,6 +94,7 @@ CREATE TABLE Zweitstimme (
 CREATE TABLE ZweitstimmePartei (
 	StimmeID int AUTO_INCREMENT,
     Partei int NOT NULL,
+    Stimmkreis int NOT NULL,
 	Wahl int NOT NULL,
     PRIMARY KEY (StimmeID),
     FOREIGN KEY (Partei) REFERENCES Partei(ID) ON UPDATE CASCADE ON DELETE CASCADE,

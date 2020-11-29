@@ -80,4 +80,19 @@ def run_import(
                 num_votes,
             )
 
+    # Generate Zweit-Stimmen for which no candidate was specified
+    for party_name, votes_by_stimmkreis in results_xml.party_only_votes.items():
+        party_id = party_id_lookup[party_name]
+        # Iterate over Stimmkreise for this party
+        for stimmkreis_num, num_votes in votes_by_stimmkreis.items():
+            stimmkreis_id = stimmkreis_id_lookup[stimmkreis_num]
+            num_votes = num_votes
+        
+            database.generate_zweit_stimmen_ohne_kandidat(
+                wahl_id,
+                party_id,
+                stimmkreis_id,
+                num_votes,
+            )
+
     database.commit()

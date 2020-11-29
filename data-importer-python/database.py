@@ -179,6 +179,28 @@ class Database:
 
         print(self._cursor.lastrowid)
 
+    def generate_zweit_stimmen_ohne_kandidat(
+        self,
+        wahl_id: int,
+        party_id: int,
+        stimmkreis_id: int,
+        num_votes: int,
+    ):
+        print('Generating {} ZweitStimmen for party {} in {}'.format(
+            num_votes,
+            party_id,
+            stimmkreis_id,
+        ))
+
+        self._bulk_insert(
+            'ZweitstimmePartei',
+            ('Partei', 'Stimmkreis', 'Wahl'),
+            (party_id, stimmkreis_id, wahl_id),
+            num_votes,
+        )
+
+        print(self._cursor.lastrowid)
+
     def _bulk_insert(
         self,
         table_name: str,
@@ -191,6 +213,10 @@ class Database:
         See: https://medium.com/@benmorel/high-speed-inserts-with-mysql-9d3dcd76f723
         Note: Performance might be improved by reducing to 1000 tuples per insert
         """
+        if num_inserts == 0:
+            return
+
+        # Create string to define columns in SQL
         columns_string = ','.join(col_names)
         # Form single tuple string
         tuple_string = '(' + ','.join([str(t) for t in _tuple]) + ')'
