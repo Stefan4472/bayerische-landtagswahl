@@ -48,6 +48,7 @@ class DirectResult:
     num_votes: int
 
 
+# TODO: MAKE RESULTS A LIST OF NAMEDTUPLE
 @dataclasses.dataclass
 class ListResults:
     candidate: Candidate

@@ -65,4 +65,19 @@ def run_import(
             num_votes,
         )
 
+    # Generate Zweit-Stimmen
+    for candidate, list_results in results_xml.list_results.items():
+        candidate_id = candidate_id_lookup[candidate]
+        # Iterate over Stimmkreise for this candidate
+        for stimmkreis_result in list_results.results:
+            stimmkreis_id = stimmkreis_id_lookup[stimmkreis_result[0]]
+            num_votes = stimmkreis_result[1]
+        
+            database.generate_zweit_stimmen(
+                wahl_id,
+                candidate_id,
+                stimmkreis_id,
+                num_votes,
+            )
+
     database.commit()
