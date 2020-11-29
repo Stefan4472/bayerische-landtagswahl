@@ -12,21 +12,11 @@ def run_import(
 ):
     cur = database.get_cursor()
 
-    # Insert
-    # sql = 'INSERT INTO Wahl (Jahr) VALUES (%s)'
-    # val = (2018,)
-    # cur.execute(sql, val)
-    # database.commit()
+    if database.has_wahl(year):
+        wahl_id = database.get_wahl_id(year)
+    else:
+        database.add_wahl(year)
+        wahl_id = database.get_wahl_id(year)
 
-    # sql = 'INSERT INTO Kandidaten (id, vorname, nachname) VALUES (%s, %s, %s)'
-    # val = (1, 'Vlad', 'Kolesnykov')
-    # mycursor.execute(sql, val)
-
-    # mydb.commit()
-
-    # Select
-    cur.execute('SELECT * FROM Wahl')
-    for record in cur.fetchall():
-        print(record)
-
+    print(wahl_id)
         
