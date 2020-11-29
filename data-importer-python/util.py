@@ -2,6 +2,7 @@ import dataclasses
 import enum
 
 
+# TODO: WAHLKREIS SHOULD BE AN ENUM
 def determine_wahlkreis(stimmkreis_nr: int) -> str:
     if stimmkreis_nr >= 100 and stimmkreis_nr < 200:
         return 'Oberbayern'
@@ -20,7 +21,8 @@ def determine_wahlkreis(stimmkreis_nr: int) -> str:
     else:
         raise ValueError('Invalid stimmkreis number')
 
-    
+
+# TODO: ADD 'NAME'
 @dataclasses.dataclass(eq=True, frozen=True)
 class StimmKreis:
     region_id: int

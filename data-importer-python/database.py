@@ -27,6 +27,7 @@ class Database:
     ):
         # Note: Code from StackOverflow: cursor.execute(script, multi=True) 
         # doesn't seem to work correctly.
+        # NOTE: THIS DOES NOT ALLOW MULTI-LINE COMMENTS!!
         # https://stackoverflow.com/a/19159041
         import re
         statement = ''
@@ -96,6 +97,20 @@ class Database:
             stimmkreis.num_eligible_voters,
             wahl_id,
         )
+        self._cursor.execute(sql, vals)
+        self._db.commit()
+        return self._cursor.lastrowid
+
+    # TODO: REMOVE AUTOMATIC COMMIT() CALLS
+    def add_party(
+        self,
+        wahl_id: int,
+        party_name: str,
+    ) -> int:
+        print('Adding Party {}'.format(party_name))
+        sql = 'INSERT INTO Partei (ParteiName, WahlID) ' \
+                'VALUES (%s, %s)'
+        vals = (party_name, wahl_id,)
         self._cursor.execute(sql, vals)
         self._db.commit()
         return self._cursor.lastrowid

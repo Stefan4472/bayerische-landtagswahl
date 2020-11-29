@@ -20,12 +20,16 @@ def run_import(
         wahl_id = database.get_wahl_id(year)
     print(wahl_id)
     
-    # Add Stimmkreis data
+    # Add Stimmkreis data and TODO: record IDs
     for stimmkreis in info_xml.stimmkreise.values():
-        # Note: (TODO): This is pretty hacky right now
-        # TODO: HOW TO GET STIMMKREIS NAMES?
         stimmkreis_id = database.add_stimmkreis(
             wahl_id,
             stimmkreis,
         )
-        print(stimmkreis_id)
+
+    # Add Party data and TODO: record IDs
+    for party_name in results_xml.parties:
+        party_id = database.add_party(
+            wahl_id,
+            party_name,
+        )
