@@ -28,8 +28,18 @@ def run_import(
         )
 
     # Add Party data and TODO: record IDs
+    party_id_lookup: dict[str, int] = {}
     for party_name in results_xml.parties:
         party_id = database.add_party(
             wahl_id,
             party_name,
+        )
+        party_id_lookup[party_name] = party_id
+
+    # Add Candidate data and TODO: record IDs
+    for candidate in results_xml.candidates:
+        candidate_id = database.add_candidate(
+            wahl_id,
+            candidate,
+            party_id_lookup[candidate.party],
         )

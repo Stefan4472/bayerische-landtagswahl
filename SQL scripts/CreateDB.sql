@@ -34,18 +34,21 @@ CREATE TABLE Kandidat (
     Vorname varchar(255) NOT NULL,
     Nachname varchar(255) NOT NULL,
     Partei int,
-    PRIMARY KEY (ID),
-    FOREIGN KEY (Partei) REFERENCES Partei(ID) ON UPDATE CASCADE ON DELETE SET NULL
-)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE KandidatZuWahl (
-    ID int NOT NULL AUTO_INCREMENT,
-    Kandidat int NOT NULL,
     WahlID int,
     PRIMARY KEY (ID),
-    FOREIGN KEY (Kandidat) REFERENCES Kandidat(ID) on update cascade on delete cascade,
+    FOREIGN KEY (Partei) REFERENCES Partei(ID) ON UPDATE CASCADE ON DELETE SET NULL,
     FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade
 )ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--TODO (this has been removed for now for simplification... will be added back next week when we have more time.
+--CREATE TABLE KandidatZuWahl (
+--    ID int NOT NULL AUTO_INCREMENT,
+--    Kandidat int NOT NULL,
+--    WahlID int,
+--    PRIMARY KEY (ID),
+--    FOREIGN KEY (Kandidat) REFERENCES Kandidat(ID) on update cascade on delete cascade,
+--    FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade
+--)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE Wahlkreis (
 	ID int NOT NULL UNIQUE,

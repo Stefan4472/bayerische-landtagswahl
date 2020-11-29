@@ -114,3 +114,22 @@ class Database:
         self._cursor.execute(sql, vals)
         self._db.commit()
         return self._cursor.lastrowid
+
+    def add_candidate(
+        self,
+        wahl_id: int,
+        candidate: util.Candidate,
+        party_id: int,
+    ) -> int:
+        print('Adding Candidate {}'.format(candidate))
+        sql = 'INSERT INTO Kandidat (VorName, Nachname, Partei, WahlID) ' \
+                'VALUES (%s, %s, %s, %s)'
+        vals = (
+            candidate.first_name, 
+            candidate.last_name,
+            party_id,
+            wahl_id,
+        )
+        self._cursor.execute(sql, vals)
+        self._db.commit()
+        return self._cursor.lastrowid
