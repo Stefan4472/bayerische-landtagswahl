@@ -4,6 +4,7 @@ import click
 import mysql.connector
 import pathlib
 import data_parser
+import data_importer
 
 
 @click.group()
@@ -61,9 +62,16 @@ def cmd_import_data(
     db_name: str,
 ):
     xml_info = data_parser.parse_info_xml(pathlib.Path(info_path))
-    print(xml_info)
-    xml_results = data_parser.parse_results_xml(pathlib.Path('../data/2018-results.xml'))
-    print(xml_results)
+    xml_results = data_parser.parse_results_xml(pathlib.Path(results_path))
+    data_importer.import_data(
+        xml_info,
+        xml_results,
+        year,
+        host,
+        user,
+        password,
+        db_name,
+    )
 
 
 if __name__ == '__main__':
