@@ -46,7 +46,6 @@ class Database:
                     print("\n[WARN] MySQLError during execute statement \n\tArgs: '{}'".format(str(e.args)))
                 statement = ""
         # self._cursor.execute(script, multi=True)
-        self._db.commit()
 
     def commit(self):
         self._db.commit()
@@ -76,7 +75,6 @@ class Database:
         sql = 'INSERT INTO Wahl (Jahr) VALUES (%s)'
         val = (2018,)
         self._cursor.execute(sql, val)
-        self._db.commit()
         return self._cursor.lastrowid
 
     def add_stimmkreis(
@@ -99,10 +97,8 @@ class Database:
             wahl_id,
         )
         self._cursor.execute(sql, vals)
-        self._db.commit()
         return self._cursor.lastrowid
 
-    # TODO: REMOVE AUTOMATIC COMMIT() CALLS
     def add_party(
         self,
         wahl_id: int,
@@ -113,7 +109,6 @@ class Database:
                 'VALUES (%s, %s)'
         vals = (party_name, wahl_id,)
         self._cursor.execute(sql, vals)
-        self._db.commit()
         return self._cursor.lastrowid
 
     def add_candidate(
@@ -132,7 +127,6 @@ class Database:
             wahl_id,
         )
         self._cursor.execute(sql, vals)
-        self._db.commit()
         return self._cursor.lastrowid
 
     def generate_erst_stimmen(
