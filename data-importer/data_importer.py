@@ -28,7 +28,7 @@ def run_import(
             wahl_id,
             stimmkreis,
         )
-        stimmkreis_id_lookup[stimmkreis.region_id] = stimmkreis_id
+        stimmkreis_id_lookup[stimmkreis.number] = stimmkreis_id
 
     # Map party names to in-database ID
     party_id_lookup: dict[str, int] = {}

@@ -24,13 +24,16 @@ def parse_info_xml(filepath: pathlib.Path) -> ParsedInfoXML:
 
     # Parse region data
     for region_data in soup.Ergebnisse.find_all('Regionaleinheit'):
-        key = int(region_data.Allgemeine_Angaben.Schluesselnummer.contents[0].strip())
-        name = region_data.Allgemeine_Angaben.Name_der_Regionaleinheit.contents[0].strip()
+        stimmkreis_nr = \
+            int(region_data.Allgemeine_Angaben.Schluesselnummer.contents[0].strip())
+        stimmkreis_name = \
+            region_data.Allgemeine_Angaben.Name_der_Regionaleinheit.contents[0].strip()
         # Add key to lookup
-        stimmkreis_name_lookup[key] = name
+        stimmkreis_name_lookup[stimmkreis_nr] = stimmkreis_name
         # Create Stimmkreis instance and add to mapping
-        stimmkreise[key] = StimmKreis(
-            key,
+        stimmkreise[stimmkreis_nr] = StimmKreis(
+            stimmkreis_name,
+            stimmkreis_nr,
             int(region_data.Allgemeine_Angaben.Stimmberechtigte.contents[0].strip()),
             int(region_data.Allgemeine_Angaben.Waehler.contents[0].strip()),
         )

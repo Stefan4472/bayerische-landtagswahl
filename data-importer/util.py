@@ -22,15 +22,15 @@ def determine_wahlkreis(stimmkreis_nr: int) -> str:
         raise ValueError('Invalid stimmkreis number')
 
 
-# TODO: ADD 'NAME'
 @dataclasses.dataclass(eq=True, frozen=True)
 class StimmKreis:
-    region_id: int
+    name: str
+    number: int
     num_eligible_voters: int
     num_who_voted: int
 
     def get_wahlkreis(self) -> int:
-        return determine_wahlkreis(self.region_id)
+        return determine_wahlkreis(self.number)
 
 
 @dataclasses.dataclass(eq=True, frozen=True)

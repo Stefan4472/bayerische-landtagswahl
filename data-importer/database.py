@@ -82,17 +82,15 @@ class Database:
         wahl_id: int,
         stimmkreis: util.StimmKreis,
     ) -> int:
-        # print('Adding Stimmkreis {}'.format(stimmkreis))
+        print('Adding Stimmkreis {}'.format(stimmkreis))
         sql = 'INSERT INTO Stimmkreis (Name, Wahlkreis, Nummer, NumBerechtigter, WahlID) ' \
                 'VALUES (%s, %s, %s, %s, %s)'
         # TODO:
-        # - GET STIMMKREIS NAME FROM SOMEWHERE
-        # - RENAME 'REGION_ID' TO 'STIMMKREIS_NR'
         # - BETTER LOOKUP OF WAHLKREIS ID'S (CURRENTLY HARDCODED)
         vals = (
-            '', 
-            int(stimmkreis.region_id / 100), 
-            stimmkreis.region_id,
+            stimmkreis.name, 
+            int(stimmkreis.number / 100), 
+            stimmkreis.number,
             stimmkreis.num_eligible_voters,
             wahl_id,
         )
