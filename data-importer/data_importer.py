@@ -71,14 +71,14 @@ def run_import(
         candidate_id = candidate_id_lookup[candidate]
         # Iterate over Stimmkreise for this candidate
         for stimmkreis_result in list_results.results:
-            stimmkreis_id = stimmkreis_id_lookup[stimmkreis_result[0]]
-            num_votes = stimmkreis_result[1]
+            # Look up the in-database ID of the stimmkreis
+            stimmkreis_id = stimmkreis_id_lookup[stimmkreis_result.stimmkreis_nr]
         
             database.generate_zweit_stimmen(
                 wahl_id,
                 candidate_id,
                 stimmkreis_id,
-                num_votes,
+                stimmkreis_result.num_votes,
             )
 
     # Generate Zweit-Stimmen for which no candidate was specified

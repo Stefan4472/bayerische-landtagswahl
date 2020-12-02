@@ -3,7 +3,7 @@ import dataclasses
 import pathlib
 import typing
 import json
-from util import StimmKreis, Candidate, DirectResult, \
+from util import StimmKreis, Candidate, DirectResult, StimmkreisResult, \
     ListResults, VoteType, get_vote_type
 
 
@@ -106,7 +106,7 @@ def parse_results_xml(filepath: pathlib.Path) -> ParsedResultsXML:
                     # Add the results for this Stimmkreis to their "ListResults" 
                     # instance
                     elif vote_type == VoteType.Zweit:
-                        list_results.results.append((
+                        list_results.results.append(StimmkreisResult(
                             region_key, 
                             num_votes,
                         ))

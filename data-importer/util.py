@@ -50,6 +50,12 @@ class Candidate:
     wahlkreis: str
 
 
+@dataclasses.dataclass(eq=True, frozen=True)
+class StimmkreisResult:
+    stimmkreis_nr: int
+    num_votes: int
+
+    
 @dataclasses.dataclass
 class DirectResult:
     candidate: Candidate
@@ -57,12 +63,10 @@ class DirectResult:
     num_votes: int
 
 
-# TODO: MAKE RESULTS A LIST OF NAMEDTUPLE
 @dataclasses.dataclass
 class ListResults:
     candidate: Candidate
-    # Results: a tuple of (region_key, num_votes)
-    results: list[tuple[int, int]] = dataclasses.field(default_factory=list)
+    results: list[StimmkreisResult] = dataclasses.field(default_factory=list)
 
 
 class VoteType(enum.Enum):
