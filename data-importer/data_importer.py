@@ -41,6 +41,10 @@ def run_import(
             party_id = database.add_party(
                 party_name,
             )
+        database.add_party_to_election(
+            party_id,
+            wahl_id,
+        )
         party_id_lookup[party_name] = party_id
 
     # Map Candidate instances to in-database ID

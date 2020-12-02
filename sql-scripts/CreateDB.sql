@@ -14,15 +14,16 @@ CREATE TABLE Partei (
     PRIMARY KEY (ID)
 );
 
---TODO (this has been removed for now for simplification... will be added back next week when we have more time.
---CREATE TABLE ParteiZuWahl (
---    ID int AUTO_INCREMENT,
---    Partei int NOT NULL,
---    WahlID int,
---    PRIMARY KEY (ID),
---    FOREIGN KEY (Partei) REFERENCES Partei(ID) on update cascade on delete cascade,
---    FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade
---)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- Map Partei to Wahl in which the party took part
+CREATE TABLE ParteiZuWahl (
+    ID int AUTO_INCREMENT,
+    Partei int NOT NULL,
+    WahlID int NOT NULL,
+    PRIMARY KEY (ID),
+    FOREIGN KEY (Partei) REFERENCES Partei(ID) on update cascade on delete cascade,
+    FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade,
+    UNIQUE(Partei, WahlID)
+);
 
 CREATE TABLE Kandidat (
     ID int AUTO_INCREMENT,
@@ -51,7 +52,7 @@ CREATE TABLE Wahlkreis (
     PRIMARY KEY (ID)
 );
 
--- TODO: MAKE 'Name' UNIQUE
+-- TODO: MAKE 'Name, WahlID' AND 'Nummer, WahlID' UNIQUE
 CREATE TABLE Stimmkreis (
 	ID int AUTO_INCREMENT,
     Name varchar(255) NOT NULL,

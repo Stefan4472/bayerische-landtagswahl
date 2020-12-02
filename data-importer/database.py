@@ -125,6 +125,15 @@ class Database:
         self._cursor.execute(sql, vals)
         return self._cursor.lastrowid
 
+    def add_party_to_election(
+        self,
+        party_id: int,
+        wahl_id: int,
+    ):
+        sql = 'INSERT INTO ParteiZuWahl (Partei, WahlID) VALUES (%s, %s)'
+        vals = (party_id, wahl_id,)
+        self._cursor.execute(sql, vals)
+
     def add_candidate(
         self,
         wahl_id: int,
