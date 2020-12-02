@@ -89,7 +89,7 @@ class Database:
         # - BETTER LOOKUP OF WAHLKREIS ID'S (CURRENTLY HARDCODED)
         vals = (
             stimmkreis.name, 
-            int(stimmkreis.number / 100), 
+            stimmkreis.get_wahlkreis().value, 
             stimmkreis.number,
             stimmkreis.num_eligible_voters,
             wahl_id,
