@@ -1,5 +1,6 @@
 import dataclasses
 import enum
+import typing
 
 
 class Wahlkreis(enum.Enum):
@@ -42,12 +43,20 @@ class StimmKreis:
         return determine_wahlkreis(self.number)
 
 
-@dataclasses.dataclass(eq=True, frozen=True)
+@dataclasses.dataclass(eq=True)
 class Candidate:
     first_name: str
     last_name: str
     party: str
     wahlkreis: Wahlkreis
+    # Is the candidate a direct candidate?
+    is_direct: bool = False
+    # The stimmkreis number where this candidate is a direct candidate
+    # (if `is_direct` = True)
+    direct_stimmkreis: typing.Optional[int] = None
+
+    def __hash__(self):
+        return hash((self.first_name, self.last_name, self.party, self.wahlkreis))
 
 
 @dataclasses.dataclass(eq=True, frozen=True)

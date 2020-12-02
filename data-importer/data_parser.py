@@ -83,23 +83,26 @@ def parse_results_xml(filepath: pathlib.Path) -> ParsedResultsXML:
                     party_name,
                     Wahlkreis[wahlkreis_name],
                 )
-                candidates.append(candidate)
 
                 # Instantiate `ListResults` object to collect their results
                 list_results = ListResults(candidate)
 
                 # Iterate over Stimmkreise that the candidate appeared in
                 for stimmkreis_data in candidate_data.find_all('Stimmkreis'):
-                    region_key = int(stimmkreis_data.NrSK.contents[0].strip())
+                    stimmkreis_nr = int(stimmkreis_data.NrSK.contents[0].strip())
                     num_votes = int(stimmkreis_data.NumStimmen.contents[0].strip())
                     vote_type = get_vote_type(stimmkreis_data.NumStimmen['Stimmentyp'])
 
                     # Candidate received "Erststimmen" in this Stimmkreis:
                     # Add their direct results for this `region_key`
                     if vote_type == VoteType.Erst:
+                        # Mark candidate as a direct candidate
+                        candidate.is_direct = True
+                        candidate.direct_stimmkreis = stimmkreis_nr
+
                         all_direct_results[candidate] = DirectResult(
                             candidate,
-                            region_key,
+                            stimmkreis_nr,
                             num_votes,
                         )
                     # Candidate received "Zweitstimmen" in this Stimmkreis:
@@ -107,12 +110,14 @@ def parse_results_xml(filepath: pathlib.Path) -> ParsedResultsXML:
                     # instance
                     elif vote_type == VoteType.Zweit:
                         list_results.results.append(StimmkreisResult(
-                            region_key, 
+                            stimmkreis_nr, 
                             num_votes,
                         ))
 
                 # Add results to the mapping
                 all_list_results[candidate] = list_results
+                # Add candidate to list
+                candidates.append(candidate)
 
     # Store ZweitStimmen without a listed candidate for each party, for each Stimmkreis.
     # dict[(str) partei][(int) region_key] = (int) num_votes
