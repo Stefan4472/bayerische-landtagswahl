@@ -10,9 +10,7 @@ CREATE TABLE Wahl (
 
 CREATE TABLE Partei (
     ID int AUTO_INCREMENT,
-    ParteiName varchar(255) NOT NULL,
-    WahlID int,
-    FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade,
+    ParteiName varchar(255) NOT NULL UNIQUE,
     PRIMARY KEY (ID)
 );
 

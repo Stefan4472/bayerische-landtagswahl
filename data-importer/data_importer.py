@@ -35,10 +35,12 @@ def run_import(
 
     # Add Party data and record IDs
     for party_name in results_xml.parties:
-        party_id = database.add_party(
-            wahl_id,
-            party_name,
-        )
+        if database.has_party(party_name):
+            party_id = database.get_party_id(party_name)
+        else:
+            party_id = database.add_party(
+                party_name,
+            )
         party_id_lookup[party_name] = party_id
 
     # Map Candidate instances to in-database ID

@@ -97,15 +97,31 @@ class Database:
         self._cursor.execute(sql, vals)
         return self._cursor.lastrowid
 
+    def has_party(
+        self,
+        party_name: str,
+    ) -> bool:
+        sql = 'SELECT * FROM Partei where ParteiName = %s'
+        values = (party_name,)
+        self._cursor.execute(sql, values)
+        return bool(self._cursor.fetchall())
+
+    def get_party_id(
+        self,
+        party_name: str,
+    ) -> int:
+        sql = 'SELECT * FROM Partei where ParteiName = %s'
+        values = (party_name,)
+        self._cursor.execute(sql, values)
+        return self._cursor.fetchone()[0]
+
     def add_party(
         self,
-        wahl_id: int,
         party_name: str,
     ) -> int:
         # print('Adding Party {}'.format(party_name))
-        sql = 'INSERT INTO Partei (ParteiName, WahlID) ' \
-                'VALUES (%s, %s)'
-        vals = (party_name, wahl_id,)
+        sql = 'INSERT INTO Partei (ParteiName) VALUES (%s)'
+        vals = (party_name,)
         self._cursor.execute(sql, vals)
         return self._cursor.lastrowid
 

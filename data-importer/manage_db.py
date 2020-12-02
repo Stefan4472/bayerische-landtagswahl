@@ -90,6 +90,8 @@ def cmd_import_data(
     end_import_time = time.time()
     click.echo('Done ({} seconds)'.format(end_import_time - start_import_time))
 
+    database.get_cursor().execute('SELECT * FROM Partei')
+    print(database.get_cursor().fetchall())
 
 if __name__ == '__main__':
     click_cli()
