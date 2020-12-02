@@ -39,6 +39,7 @@ def cmd_reset_database(
 
     click.echo('Executing script..')
     database.execute_script(schema_script)
+    database.commit()
     click.echo('Done')
 
 

@@ -2,14 +2,11 @@ DROP DATABASE IF EXISTS bayerische_landtagswahl;
 CREATE DATABASE bayerische_landtagswahl;
 USE bayerische_landtagswahl;
 
-SET NAMES utf8;
-SET character_set_client = utf8mb4;
-
 CREATE TABLE Wahl (
 	ID int AUTO_INCREMENT,
     Jahr year NOT NULL UNIQUE,
     PRIMARY KEY (ID)
-) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+);
 
 CREATE TABLE Partei (
     ID int AUTO_INCREMENT,
@@ -17,7 +14,7 @@ CREATE TABLE Partei (
     WahlID int,
     FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade,
     PRIMARY KEY (ID)
-)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+);
 
 --TODO (this has been removed for now for simplification... will be added back next week when we have more time.
 --CREATE TABLE ParteiZuWahl (
@@ -38,7 +35,7 @@ CREATE TABLE Kandidat (
     PRIMARY KEY (ID),
     FOREIGN KEY (Partei) REFERENCES Partei(ID) ON UPDATE CASCADE ON DELETE SET NULL,
     FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade
-)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+);
 
 --TODO (this has been removed for now for simplification... will be added back next week when we have more time.
 --CREATE TABLE KandidatZuWahl (
@@ -54,7 +51,7 @@ CREATE TABLE Wahlkreis (
 	ID int NOT NULL UNIQUE,
     Name varchar(255) NOT NULL UNIQUE,
     PRIMARY KEY (ID)
-)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+);
 
 -- TODO: MAKE 'Name' UNIQUE
 CREATE TABLE Stimmkreis (
@@ -67,7 +64,7 @@ CREATE TABLE Stimmkreis (
 	FOREIGN KEY (Wahlkreis) REFERENCES Wahlkreis(ID) on update cascade on delete cascade,
     FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade,
     PRIMARY KEY (ID)
-)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+);
 
 CREATE TABLE Erststimme (
 	StimmeID int AUTO_INCREMENT,
@@ -78,7 +75,7 @@ CREATE TABLE Erststimme (
     FOREIGN KEY (Kandidat) REFERENCES Kandidat(ID) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (Stimmkreis) REFERENCES Stimmkreis(ID) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (Wahl) REFERENCES Wahl(ID) ON UPDATE CASCADE ON DELETE CASCADE
-)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+);
 
 CREATE TABLE Zweitstimme (
 	StimmeID int NOT NULL AUTO_INCREMENT,
@@ -89,7 +86,7 @@ CREATE TABLE Zweitstimme (
     FOREIGN KEY (Kandidat) REFERENCES Kandidat(ID) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (Stimmkreis) REFERENCES Stimmkreis(ID) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (Wahl) REFERENCES Wahl(ID) ON UPDATE CASCADE ON DELETE CASCADE
-)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+);
 
 CREATE TABLE ZweitstimmePartei (
 	StimmeID int AUTO_INCREMENT,
@@ -99,7 +96,7 @@ CREATE TABLE ZweitstimmePartei (
     PRIMARY KEY (StimmeID),
     FOREIGN KEY (Partei) REFERENCES Partei(ID) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (Wahl) REFERENCES Wahl(ID) ON UPDATE CASCADE ON DELETE CASCADE
-)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+);
 
 INSERT INTO Wahlkreis(ID, Name) VALUES
     (1, "Oberbayern"),

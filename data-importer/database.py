@@ -86,7 +86,7 @@ class Database:
         sql = 'INSERT INTO Stimmkreis (Name, Wahlkreis, Nummer, NumBerechtigter, WahlID) ' \
                 'VALUES (%s, %s, %s, %s, %s)'
         # TODO:
-        # - BETTER LOOKUP OF WAHLKREIS ID'S (CURRENTLY HARDCODED)
+        # - BETTER LOOKUP OF WAHLKREIS ID'S (CURRENTLY HARDCODED)\
         vals = (
             stimmkreis.name, 
             stimmkreis.get_wahlkreis().value, 
