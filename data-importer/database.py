@@ -119,7 +119,7 @@ class Database:
         self,
         party_name: str,
     ) -> int:
-        # print('Adding Party {}'.format(party_name))
+        print('Adding Party {}'.format(party_name))
         sql = 'INSERT INTO Partei (ParteiName) VALUES (%s)'
         vals = (party_name,)
         self._cursor.execute(sql, vals)
@@ -140,14 +140,15 @@ class Database:
         candidate: util.Candidate,
         party_id: int,
     ) -> int:
-        # print('Adding Candidate {}'.format(candidate))
-        sql = 'INSERT INTO Kandidat (VorName, Nachname, Partei, WahlID) ' \
-                'VALUES (%s, %s, %s, %s)'
+        print('Adding Candidate {}'.format(candidate))
+        sql = 'INSERT INTO Kandidat (VorName, Nachname, Partei, WahlID, Wahlkreis) ' \
+                'VALUES (%s, %s, %s, %s, %s)'
         vals = (
             candidate.first_name, 
             candidate.last_name,
             party_id,
             wahl_id,
+            candidate.wahlkreis.value,
         )
         self._cursor.execute(sql, vals)
         return self._cursor.lastrowid

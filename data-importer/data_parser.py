@@ -3,8 +3,8 @@ import dataclasses
 import pathlib
 import typing
 import json
-from util import StimmKreis, Candidate, DirectResult, StimmkreisResult, \
-    ListResults, VoteType, get_vote_type
+from util import StimmKreis, Wahlkreis, Candidate, DirectResult, \
+    StimmkreisResult, ListResults, VoteType, get_vote_type
 
 
 class ParsedInfoXML(typing.NamedTuple):
@@ -81,7 +81,7 @@ def parse_results_xml(filepath: pathlib.Path) -> ParsedResultsXML:
                     candidate_data.Vorname.contents[0].strip(),
                     candidate_data.Nachname.contents[0].strip(),
                     party_name,
-                    wahlkreis_name,
+                    Wahlkreis[wahlkreis_name],
                 )
                 candidates.append(candidate)
 

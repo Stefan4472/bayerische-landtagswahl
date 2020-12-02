@@ -47,7 +47,7 @@ class Candidate:
     first_name: str
     last_name: str
     party: str
-    wahlkreis: str
+    wahlkreis: Wahlkreis
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
