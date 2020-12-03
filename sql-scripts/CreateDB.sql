@@ -57,6 +57,14 @@ CREATE TABLE Kandidat (
     FOREIGN KEY (Wahlkreis) REFERENCES Wahlkreis(ID) on update cascade on delete cascade
 );
 
+-- Associate direct candidate to the stimmkreis in which they ran
+CREATE TABLE DKandidatZuStimmkreis (
+    Kandidat int NOT NULL,
+    Stimmkreis int NOT NULL,
+    FOREIGN KEY (Kandidat) REFERENCES Kandidat(ID) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (Stimmkreis) REFERENCES Stimmkreis(ID) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
 --TODO (this has been removed for now for simplification... will be added back next week when we have more time.
 --CREATE TABLE KandidatZuWahl (
 --    ID int NOT NULL AUTO_INCREMENT,

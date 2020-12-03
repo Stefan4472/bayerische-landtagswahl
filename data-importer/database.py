@@ -77,6 +77,16 @@ class Database:
         self._cursor.execute(sql, val)
         return self._cursor.lastrowid
 
+    def get_stimmkreis_id(
+        self,
+        wahl_id: int,
+        stimmkreis_nr: int,
+    ) -> int:
+        sql = 'SELECT * FROM Stimmkreis WHERE WahlID = %s and Nummer = %s'
+        values = (wahl_id, stimmkreis_nr)
+        self._cursor.execute(sql, values)
+        return self._cursor.fetchone()[0]
+
     def add_stimmkreis(
         self,
         wahl_id: int,
@@ -141,6 +151,7 @@ class Database:
         party_id: int,
     ) -> int:
         print('Adding Candidate {}'.format(candidate))
+        # Add Candidate information to the 'Kandidat' table
         sql = 'INSERT INTO Kandidat (VorName, Nachname, Partei, WahlID, Wahlkreis) ' \
                 'VALUES (%s, %s, %s, %s, %s)'
         vals = (
@@ -151,7 +162,26 @@ class Database:
             candidate.wahlkreis.value,
         )
         self._cursor.execute(sql, vals)
-        return self._cursor.lastrowid
+        # Record ID given to candidate in the table
+        candidate_id = self._cursor.lastrowid
+        # If candidate is a direct candidate, record their stimmkreis
+        # in the 'DKandidatZuStimmkreis' table
+        if candidate.is_direct:
+            # Look up the ID of the candidate's stimmkreis
+            stimmkreis_id = self.get_stimmkreis_id(
+                wahl_id, 
+                candidate.direct_stimmkreis,
+            )
+            # Create mapping
+            sql = 'INSERT INTO DKandidatZuStimmkreis (Kandidat, Stimmkreis) ' \
+                    'VALUES (%s, %s)'
+            vals = (
+                candidate_id,
+                stimmkreis_id,
+            )
+            self._cursor.execute(sql, vals)
+        return candidate_id
+        
 
     def generate_erst_stimmen(
         self,
