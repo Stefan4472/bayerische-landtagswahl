@@ -189,19 +189,22 @@ class Database:
         candidate_id: int,
         stimmkreis_id: int,
         num_votes: int,
+        is_valid: bool = True,
     ):
-        # print('Generating {} ErstStimmen for candidate {} in {}'.format(
-        #     num_votes,
-        #     candidate_id,
-        #     stimmkreis_id,
-        # ))
-
-        self._bulk_insert(
-            'Erststimme',
-            ('Kandidat', 'Stimmkreis', 'Wahl'),
-            (candidate_id, stimmkreis_id, wahl_id),
-            num_votes,
-        )
+        if is_valid:
+            self._bulk_insert(
+                'Erststimme',
+                ('Kandidat', 'Stimmkreis', 'Wahl'),
+                (candidate_id, stimmkreis_id, wahl_id),
+                num_votes,
+            )
+        else:
+            self._bulk_insert(
+                'Erststimme',
+                ('Kandidat', 'Stimmkreis', 'Wahl', 'IsValid'),
+                (candidate_id, stimmkreis_id, wahl_id, False),
+                num_votes,
+            )
 
     def generate_zweit_stimmen(
         self,
@@ -209,19 +212,22 @@ class Database:
         candidate_id: int,
         stimmkreis_id: int,
         num_votes: int,
+        is_valid: bool = True,
     ):
-        # print('Generating {} ZweitStimmen for candidate {} in {}'.format(
-        #     num_votes,
-        #     candidate_id,
-        #     stimmkreis_id,
-        # ))
-
-        self._bulk_insert(
-            'Zweitstimme',
-            ('Kandidat', 'Stimmkreis', 'Wahl'),
-            (candidate_id, stimmkreis_id, wahl_id),
-            num_votes,
-        )
+        if is_valid:
+            self._bulk_insert(
+                'Zweitstimme',
+                ('Kandidat', 'Stimmkreis', 'Wahl'),
+                (candidate_id, stimmkreis_id, wahl_id),
+                num_votes,
+            )
+        else:
+            self._bulk_insert(
+                'Zweitstimme',
+                ('Kandidat', 'Stimmkreis', 'Wahl', 'IsValid'),
+                (candidate_id, stimmkreis_id, wahl_id, False),
+                num_votes,
+            )
 
     def generate_zweit_stimmen_ohne_kandidat(
         self,
@@ -230,12 +236,6 @@ class Database:
         stimmkreis_id: int,
         num_votes: int,
     ):
-        # print('Generating {} ZweitStimmen for party {} in {}'.format(
-        #     num_votes,
-        #     party_id,
-        #     stimmkreis_id,
-        # ))
-
         self._bulk_insert(
             'ZweitstimmePartei',
             ('Partei', 'Stimmkreis', 'Wahl'),
