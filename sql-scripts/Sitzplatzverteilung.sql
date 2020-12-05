@@ -21,29 +21,28 @@ WHERE isValid = 1
 GROUP BY Wahl, Kandidat, Stimmkreis
 ORDER BY Wahl, Wahlkreis, Stimmkreis, Partei, Anzahl DESC;
 
--- Anzahl an Zweitstimme nur für Partei pro Wahlkreis
-CREATE OR REPLACE VIEW Anzhal_Zweitstimme_Partei_Wahlkreis AS
-SELECT Wahl, Wahlkreis, Partei, count(StimmeID) as Anzahl FROM bayerische_landtagswahl.ZweitstimmePartei zp
-INNER JOIN Stimmkreis s ON s.ID = zp.Stimmkreis
-GROUP BY Wahl, Wahlkreis, Partei
-ORDER BY Wahl, Wahlkreis, Partei;
-
 -- Anzahl an alle Zweitstimme für Partei (inklusive Listkandidaten) pro Wahlkreis
 CREATE OR REPLACE VIEW Anzhal_Gesamt_Zweitstimme_Partei_Wahlkreis AS
 SELECT Wahl, Wahlkreis, Partei, sum(Anzahl) as Anzahl FROM 
+	-- Anzahl an Zweitstimme für jeden Kandidat
 	(SELECT Wahl, Wahlkreis, Partei, sum(Anzahl) as Anzahl FROM Anzhal_Zweitstimme_Kandidat azs
 	GROUP BY Wahl, Wahlkreis, Partei
 	UNION ALL 
-	SELECT * FROM Anzhal_Zweitstimme_Partei_Wahlkreis azpw) Gesamt_Zweitstimmen_Partei_In_Wahlkreis
+    -- Anzahl an Zweitstimme nur für Partei
+	SELECT Wahl, Wahlkreis, Partei, count(StimmeID) as Anzahl FROM bayerische_landtagswahl.ZweitstimmePartei zp
+	INNER JOIN Stimmkreis s ON s.ID = zp.Stimmkreis
+	GROUP BY Wahl, Wahlkreis, Partei) Gesamt_Zweitstimmen_Partei_In_Wahlkreis
 GROUP BY Wahl, Wahlkreis, Partei
 ORDER BY Wahl, Wahlkreis, Anzahl DESC;
 
--- Gesamtstimmen für Partei (inklusive Listkandidaten) pro Wahlkreis
-CREATE OR REPLACE VIEW Anzhal_Gesamt_Stimme_Partei_Wahlkreis AS
+-- Gesamtstimmen (inkl. Erst- und Zweitstimmen) für Partei pro Wahlkreis
+CREATE OR REPLACE VIEW Anzhal_Gesamtstimmen_Partei_Wahlkreis AS
 SELECT Wahl, Wahlkreis, Partei, sum(Anzahl) as Anzahl FROM
+	-- Erststimmen für alle Kandidaten einer Partei
 	(SELECT Wahl, Wahlkreis, Partei, sum(Anzahl) as Anzahl FROM Kandidat_Stimmkreis_Erststimme
 	GROUP BY Wahl, Wahlkreis, Partei
 	UNION ALL 
+    -- Zweitstimmen einer Partei
 	SELECT * FROM Anzhal_Gesamt_Zweitstimme_Partei_Wahlkreis) Gesamt_Stimme_Partei_Pro_Wahlkreis
 GROUP BY Wahl, Wahlkreis, Partei
 ORDER BY Wahl, Wahlkreis, Anzahl DESC;
