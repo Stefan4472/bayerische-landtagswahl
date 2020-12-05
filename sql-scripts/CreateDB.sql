@@ -11,6 +11,8 @@ CREATE TABLE Wahl (
 CREATE TABLE Wahlkreis (
 	ID int NOT NULL UNIQUE,
     Name varchar(255) NOT NULL UNIQUE,
+    Direktmandate int NOT NULL, 
+    Listenmandate int NOT NULL,
     PRIMARY KEY (ID)
 );
 
@@ -65,15 +67,16 @@ CREATE TABLE DKandidatZuStimmkreis (
     FOREIGN KEY (Stimmkreis) REFERENCES Stimmkreis(ID) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
---TODO (this has been removed for now for simplification... will be added back next week when we have more time.
---CREATE TABLE KandidatZuWahl (
---    ID int NOT NULL AUTO_INCREMENT,
---    Kandidat int NOT NULL,
---    WahlID int,
---    PRIMARY KEY (ID),
---    FOREIGN KEY (Kandidat) REFERENCES Kandidat(ID) on update cascade on delete cascade,
---    FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade
---)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*TODO (this has been removed for now for simplification... will be added back next week when we have more time.
+CREATE TABLE KandidatZuWahl (
+	ID int NOT NULL AUTO_INCREMENT,
+	Kandidat int NOT NULL,
+	WahlID int,
+	PRIMARY KEY (ID),
+	FOREIGN KEY (Kandidat) REFERENCES Kandidat(ID) on update cascade on delete cascade,
+	FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade
+)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+*/
 
 CREATE TABLE Erststimme (
 	StimmeID int AUTO_INCREMENT,
@@ -109,11 +112,11 @@ CREATE TABLE ZweitstimmePartei (
     FOREIGN KEY (Wahl) REFERENCES Wahl(ID) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-INSERT INTO Wahlkreis(ID, Name) VALUES
-    (1, "Oberbayern"),
-    (2, "Niederbayern"),
-    (3, "Oberpfalz"),
-    (4, "Oberfranken"),
-    (5, "Mittelfranken"),
-    (6, "Unterfranken"),
-    (7, "Schwaben");
+INSERT INTO Wahlkreis(ID, Name, Direktmandate, Listenmandate) VALUES
+    (1, "Oberbayern", 31, 30),
+    (2, "Niederbayern", 9, 9),
+    (3, "Oberpfalz", 8, 8),
+    (4, "Oberfranken", 8, 8),
+    (5, "Mittelfranken", 12, 12),
+    (6, "Unterfranken", 10, 9),
+    (7, "Schwaben", 13, 13);
