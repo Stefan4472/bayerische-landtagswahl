@@ -57,3 +57,14 @@ INNER JOIN (SELECT k.Wahl, k.Stimmkreis, MAX(Anzahl) as Anzahl FROM Kandidat_Sti
     WHERE gpw.Prozent >= 5
 	GROUP BY k.Wahl, k.Stimmkreis) kse_grouped
 ON kse.Wahl = kse_grouped.Wahl AND kse.Anzahl = kse_grouped.Anzahl AND kse.Stimmkreis = kse_grouped.Stimmkreis;
+
+-- Stimmenzahl der Partei (über 5 % in Bayern) in Wahlkreis mit Prozent
+CREATE OR REPLACE VIEW Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis AS
+WITH Gesamtstimmen_Partei_5Prozent AS  
+	(SELECT t1.Wahl, t1.Wahlkreis, t1.Partei, t1.Anzahl as Stimmenzahl FROM Anzhal_Gesamtstimmen_Partei_Wahlkreis t1
+    -- mindestens 5 % der Gesamtstimmen in Bayern
+	INNER JOIN (SELECT * FROM Gesamtstimmen_Partei_Wahl WHERE Prozent >= 5) partei_mit_5proz 
+	ON partei_mit_5proz.Partei = t1.Partei)
+SELECT Wahl, Wahlkreis, Partei, Stimmenzahl, 100 * Stimmenzahl / (SELECT sum(Stimmenzahl) FROM Gesamtstimmen_Partei_5Prozent t2 
+	WHERE t2.Wahlkreis = t3.Wahlkreis AND t2.Wahl = t3.Wahl GROUP BY Wahl, Wahlkreis) as Prozent_In_Wahlkreis
+FROM Gesamtstimmen_Partei_5Prozent t3;
