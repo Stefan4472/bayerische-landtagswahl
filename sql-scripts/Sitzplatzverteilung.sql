@@ -1,3 +1,4 @@
+USE bayerische_landtagswahl;
 -- Anzahl Erststimme für jeden Kandidat
 CREATE OR REPLACE VIEW Kandidat_Stimmkreis_Erststimme AS
 SELECT Wahl, Wahlkreis, Stimmkreis, Partei, Kandidat, count(StimmeID) as Anzahl FROM bayerische_landtagswahl.Erststimme s
@@ -69,5 +70,6 @@ WITH Gesamtstimmen_Partei_5Prozent AS
 		(SELECT Wahl, Wahlkreis, Partei, Stimmenzahl, Stimmenzahl / (SELECT sum(Stimmenzahl) FROM Gesamtstimmen_Partei_5Prozent t2
 		WHERE t2.Wahlkreis = t3.Wahlkreis AND t2.Wahl = t3.Wahl GROUP BY Wahl, Wahlkreis) as Prozent_In_Wahlkreis
 		FROM Gesamtstimmen_Partei_5Prozent t3)
-SELECT Wahl, Wahlkreis, Partei, Stimmenzahl, Prozent_In_Wahlkreis * 100, FLOOR(Prozent_In_Wahlkreis * (SELECT Direktmandate + Listenmandate FROM Wahlkreis w WHERE agp.Wahlkreis = w.ID)) as Sitze
+SELECT Wahl, Wahlkreis, Partei, Stimmenzahl, Prozent_In_Wahlkreis * 100 as Prozent, FLOOR(Prozent_In_Wahlkreis * (SELECT Direktmandate + Listenmandate FROM Wahlkreis w WHERE agp.Wahlkreis = w.ID)) as Sitze
 FROM Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis agp
+ORDER BY Wahl, Wahlkreis, Sitze DESC;
