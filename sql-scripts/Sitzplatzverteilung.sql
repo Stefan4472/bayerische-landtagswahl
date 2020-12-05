@@ -6,13 +6,6 @@ WHERE IsValid = 1
 GROUP BY Wahl, Kandidat, Stimmkreis
 ORDER BY Wahl, Wahlkreis, Stimmkreis, Anzahl DESC;
 
--- TODO: implement 5% check for each candidat
--- Erststimme Gewinner für jeden Stimmkreis mit der Anzahl Stimme
-CREATE OR REPLACE VIEW Erststimme_Gewinner_Stimmkreis AS
-SELECT kse.Wahl, kse.Kandidat, kse.Stimmkreis, kse.Anzahl FROM Kandidat_Stimmkreis_Erststimme kse
-INNER JOIN (SELECT Wahl, Stimmkreis, MAX(Anzahl) as Anzahl FROM Kandidat_Stimmkreis_Erststimme GROUP BY Wahl, Stimmkreis) kse_grouped
-ON kse.Wahl = kse_grouped.Wahl AND kse.Anzahl = kse_grouped.Anzahl AND kse.Stimmkreis = kse_grouped.Stimmkreis;
-
 -- Anzahl an Zweitstimme für jeden Kandidat
 CREATE OR REPLACE VIEW Anzhal_Zweitstimme_Kandidat AS
 SELECT Wahl, Wahlkreis, Stimmkreis, Partei, Kandidat, count(StimmeID) as Anzahl FROM bayerische_landtagswahl.Zweitstimme s
@@ -46,3 +39,21 @@ SELECT Wahl, Wahlkreis, Partei, sum(Anzahl) as Anzahl FROM
 	SELECT * FROM Anzhal_Gesamt_Zweitstimme_Partei_Wahlkreis) Gesamt_Stimme_Partei_Pro_Wahlkreis
 GROUP BY Wahl, Wahlkreis, Partei
 ORDER BY Wahl, Wahlkreis, Anzahl DESC;
+
+-- Summe der Stimmen aller Parteien in Bayern
+SET @Summe_Stimmen_aller_Parteien  = (SELECT sum(Anzahl) FROM Anzhal_Gesamtstimmen_Partei_Wahlkreis);
+
+-- Die Zahl der Gesamtstimmen der Partei mit Prozent in Bayern
+CREATE OR REPLACE VIEW Gesamtstimmen_Partei_Wahl AS
+SELECT Wahl, Partei, sum(Anzahl) as Anzahl_Gesamtstimmen, (sum(Anzahl) / (SELECT sum(Anzahl) FROM Anzhal_Gesamtstimmen_Partei_Wahlkreis)) * 100 as Prozent FROM Anzhal_Gesamtstimmen_Partei_Wahlkreis
+GROUP BY Wahl, Partei;
+
+-- Erststimme Gewinner für jeden Stimmkreis (Kandidat mit meisten Anzahl an Erststimmen, dessen Partei mindestens 5 % der Gesamtstimmen in Bayern erreicht hat)
+CREATE OR REPLACE VIEW Erststimme_Gewinner_Pro_Stimmkreis AS
+SELECT kse.Wahl, kse.Wahlkreis , kse.Stimmkreis, kse.Kandidat, kse.Partei, kse.Anzahl as Erststimme FROM Kandidat_Stimmkreis_Erststimme kse
+INNER JOIN (SELECT k.Wahl, k.Stimmkreis, MAX(Anzahl) as Anzahl FROM Kandidat_Stimmkreis_Erststimme k
+	INNER JOIN Gesamtstimmen_Partei_Wahl gpw ON gpw.Partei = k.Partei
+    -- mindestens 5 % der Gesamtstimmen in Bayern
+    WHERE gpw.Prozent >= 5
+	GROUP BY k.Wahl, k.Stimmkreis) kse_grouped
+ON kse.Wahl = kse_grouped.Wahl AND kse.Anzahl = kse_grouped.Anzahl AND kse.Stimmkreis = kse_grouped.Stimmkreis;
