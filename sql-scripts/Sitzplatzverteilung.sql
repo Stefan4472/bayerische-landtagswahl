@@ -40,9 +40,6 @@ SELECT Wahl, Wahlkreis, Partei, sum(Anzahl) as Anzahl FROM
 GROUP BY Wahl, Wahlkreis, Partei
 ORDER BY Wahl, Wahlkreis, Anzahl DESC;
 
--- Summe der Stimmen aller Parteien in Bayern
-SET @Summe_Stimmen_aller_Parteien  = (SELECT sum(Anzahl) FROM Anzhal_Gesamtstimmen_Partei_Wahlkreis);
-
 -- Die Zahl der Gesamtstimmen der Partei mit Prozent in Bayern
 CREATE OR REPLACE VIEW Gesamtstimmen_Partei_Wahl AS
 SELECT Wahl, Partei, sum(Anzahl) as Anzahl_Gesamtstimmen, (sum(Anzahl) / (SELECT sum(Anzahl) FROM Anzhal_Gesamtstimmen_Partei_Wahlkreis)) * 100 as Prozent FROM Anzhal_Gesamtstimmen_Partei_Wahlkreis
