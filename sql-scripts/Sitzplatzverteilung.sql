@@ -109,3 +109,19 @@ SELECT * FROM
     FROM Anzhal_Zweitstimme_Kandidat) AS azk
 WHERE Nr <= (SELECT Listmandate FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
 				WHERE gsp.Wahl = azk.Wahl AND gsp.Wahlkreis = azk.Wahlkreis AND gsp.Partei = azk.Partei);
+                
+-- Alle Gewählte.
+CREATE OR REPLACE VIEW Gewaehlte AS
+(SELECT eg.Kandidat, eg.Partei, eg.Wahlkreis, eg.Stimmkreis, eg.Wahl FROM Erststimme_Gewinner_Pro_Stimmkreis eg
+	UNION
+SELECT lk.Kandidat, lk.Partei, lk.Wahlkreis, null, lk.Wahl FROM Listkandidaten lk);
+
+-- Liste aller Gewählten in 2018. (Erzeugt für User)
+CREATE OR REPLACE VIEW Gewaehlte_2018_Result AS
+SELECT row_number() OVER (ORDER BY k.Vorname, k.Nachname, p.ParteiName) n, k.Vorname, k.Nachname, p.ParteiName as Partei, w.Name as Stimmkreis, s.Name as Wahlkreis, wahl.Jahr 
+FROM Gewaehlte g
+INNER JOIN Kandidat k ON g.Kandidat = k.ID
+INNER JOIN Partei p ON g.Partei = p.ID
+INNER JOIN Wahlkreis w ON g.Wahlkreis = w.ID
+LEFT JOIN Stimmkreis s ON g.Stimmkreis = s.ID
+INNER JOIN (SELECT * FROM Wahl WHERE Jahr = 2018) wahl ON g.Wahl = wahl.ID
