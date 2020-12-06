@@ -4,16 +4,15 @@ CREATE OR REPLACE VIEW Kandidat_Stimmkreis_Erststimme AS
 SELECT Wahl, Wahlkreis, Stimmkreis, Partei, Kandidat, count(StimmeID) as Anzahl FROM bayerische_landtagswahl.Erststimme s
 INNER JOIN Kandidat k ON k.ID = s.Kandidat
 WHERE IsValid = 1
-GROUP BY Wahl, Kandidat, Stimmkreis
-ORDER BY Wahl, Wahlkreis, Stimmkreis, Anzahl DESC;
+GROUP BY Wahl, Kandidat, Stimmkreis;
 
--- Anzahl an Zweitstimme für jeden Kandidat
+-- Anzahl an Zweitstimme für jeden Kandidat in Wahlkreis
 CREATE OR REPLACE VIEW Anzhal_Zweitstimme_Kandidat AS
-SELECT Wahl, Wahlkreis, Stimmkreis, Partei, Kandidat, count(StimmeID) as Anzahl FROM bayerische_landtagswahl.Zweitstimme s
+SELECT Wahl, Wahlkreis, Partei, Kandidat, count(StimmeID) as Anzahl FROM bayerische_landtagswahl.Zweitstimme s
 INNER JOIN Kandidat k ON k.ID = s.Kandidat
 WHERE isValid = 1
-GROUP BY Wahl, Kandidat, Stimmkreis
-ORDER BY Wahl, Wahlkreis, Stimmkreis, Partei, Anzahl DESC;
+GROUP BY Wahl, Wahlkreis, Kandidat
+ORDER BY Wahl, Wahlkreis, Partei, Anzahl DESC;
 
 -- Anzahl an alle Zweitstimme für Partei (inklusive Listkandidaten) pro Wahlkreis
 CREATE OR REPLACE VIEW Anzhal_Gesamt_Zweitstimme_Partei_Wahlkreis AS
