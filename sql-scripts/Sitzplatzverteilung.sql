@@ -103,7 +103,8 @@ ORDER BY Wahl, Wahlkreis, Prozent DESC;
 CREATE OR REPLACE VIEW Listkandidaten AS
 SELECT * FROM
 	(SELECT *, RANK() OVER (PARTITION BY Wahl, Wahlkreis, Partei ORDER BY Wahl, Wahlkreis, Partei, Anzahl DESC) AS Nr
-    FROM Anzhal_Zweitstimme_Kandidat) AS azk
+    FROM Anzhal_Zweitstimme_Kandidat azk
+    WHERE azk.Kandidat NOT IN (SELECT Kandidat FROM Erststimme_Gewinner_Pro_Stimmkreis)) AS azk
 WHERE Nr <= (SELECT Listmandate FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
 				WHERE gsp.Wahl = azk.Wahl AND gsp.Wahlkreis = azk.Wahlkreis AND gsp.Partei = azk.Partei);
                 
@@ -121,4 +122,4 @@ INNER JOIN Kandidat k ON g.Kandidat = k.ID
 INNER JOIN Partei p ON g.Partei = p.ID
 INNER JOIN Wahlkreis w ON g.Wahlkreis = w.ID
 LEFT JOIN Stimmkreis s ON g.Stimmkreis = s.ID
-INNER JOIN (SELECT * FROM Wahl WHERE Jahr = 2018) wahl ON g.Wahl = wahl.ID
+INNER JOIN (SELECT * FROM Wahl WHERE Jahr = 2018) wahl ON g.Wahl = wahl.ID;
