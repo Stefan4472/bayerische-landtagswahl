@@ -70,6 +70,6 @@ WITH Gesamtstimmen_Partei_5Prozent AS
 		(SELECT Wahl, Wahlkreis, Partei, Stimmenzahl, Stimmenzahl / (SELECT sum(Stimmenzahl) FROM Gesamtstimmen_Partei_5Prozent t2
 		WHERE t2.Wahlkreis = t3.Wahlkreis AND t2.Wahl = t3.Wahl GROUP BY Wahl, Wahlkreis) as Prozent_In_Wahlkreis
 		FROM Gesamtstimmen_Partei_5Prozent t3)
-SELECT Wahl, Wahlkreis, Partei, Stimmenzahl, Prozent_In_Wahlkreis * 100 as Prozent, FLOOR(Prozent_In_Wahlkreis * (SELECT Direktmandate + Listenmandate FROM Wahlkreis w WHERE agp.Wahlkreis = w.ID)) as Sitze
+SELECT agp.Wahl, agp.Wahlkreis, agp.Partei, agp.Stimmenzahl, agp.Prozent_In_Wahlkreis * 100 as Prozent, ROUND(agp.Prozent_In_Wahlkreis * (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE agp.Wahlkreis = w.ID)) as Sitze
 FROM Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis agp
-ORDER BY Wahl, Wahlkreis, Sitze DESC;
+ORDER BY Wahl, Wahlkreis, Prozent DESC;
