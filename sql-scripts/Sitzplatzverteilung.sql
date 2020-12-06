@@ -61,15 +61,29 @@ ON kse.Wahl = kse_grouped.Wahl AND kse.Anzahl = kse_grouped.Anzahl AND kse.Stimm
 
 -- Anzahl an Stimmen und Sitze der Partei (über 5 % in Bayern) pro Wahlkreis
 CREATE OR REPLACE VIEW Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis AS
-WITH Gesamtstimmen_Partei_5Prozent AS  
+WITH Gesamtstimmen_Partei_5Prozent AS
+-- Parteien die mehr als 5 % der Gesamtstimmen in Bayern haben
 		(SELECT t1.Wahl, t1.Wahlkreis, t1.Partei, t1.Anzahl as Stimmenzahl FROM Anzhal_Gesamtstimmen_Partei_Wahlkreis t1
 		-- mindestens 5 % der Gesamtstimmen in Bayern
 		INNER JOIN (SELECT * FROM Gesamtstimmen_Partei_Wahl WHERE Prozent >= 5) partei_mit_5proz
 		ON partei_mit_5proz.Partei = t1.Partei),
+-- Absolute Stimmenzahl einer Partei wird durch die Gesamtzahl der Stimmen aller Parteien dividiert
 	Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis AS
 		(SELECT Wahl, Wahlkreis, Partei, Stimmenzahl, Stimmenzahl / (SELECT sum(Stimmenzahl) FROM Gesamtstimmen_Partei_5Prozent t2
 		WHERE t2.Wahlkreis = t3.Wahlkreis AND t2.Wahl = t3.Wahl GROUP BY Wahl, Wahlkreis) as Prozent_In_Wahlkreis
-		FROM Gesamtstimmen_Partei_5Prozent t3)
-SELECT agp.Wahl, agp.Wahlkreis, agp.Partei, agp.Stimmenzahl, agp.Prozent_In_Wahlkreis * 100 as Prozent, ROUND(agp.Prozent_In_Wahlkreis * (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE agp.Wahlkreis = w.ID)) as Sitze
-FROM Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis agp
+		FROM Gesamtstimmen_Partei_5Prozent t3),
+-- Berechnen Anzhal an Sitze pro Partei in Wahlkreis
+	Gesamtstimmen_und_Sitze_Partei AS 
+		(SELECT agp.Wahl, agp.Wahlkreis, agp.Partei, agp.Stimmenzahl, agp.Prozent_In_Wahlkreis * 100 as Prozent, ROUND(agp.Prozent_In_Wahlkreis * (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE agp.Wahlkreis = w.ID)) as Sitze
+		FROM Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis agp)
+-- Berechnen Anzahl Direktmandate und Listmandate
+SELECT agz.Wahl, agz.Wahlkreis, agz.Partei, agz.Stimmenzahl, agz.Prozent, agz.Sitze, 
+		IFNULL(Erststimme_Gewinner_Pro_Partei.Anzahl_Gewinner, 0) as Direktmandate,
+        agz.Sitze - IFNULL(Erststimme_Gewinner_Pro_Partei.Anzahl_Gewinner, 0) as Listmandate
+FROM Gesamtstimmen_und_Sitze_Partei agz
+LEFT JOIN (SELECT Wahl, Wahlkreis, Partei, count(Kandidat) as Anzahl_Gewinner FROM Erststimme_Gewinner_Pro_Stimmkreis
+			GROUP BY Wahl, Wahlkreis, Partei) Erststimme_Gewinner_Pro_Partei
+ON Erststimme_Gewinner_Pro_Partei.Wahl = agz.Wahl
+	AND Erststimme_Gewinner_Pro_Partei.Wahlkreis = agz.Wahlkreis
+	AND Erststimme_Gewinner_Pro_Partei.Partei = agz.Partei
 ORDER BY Wahl, Wahlkreis, Prozent DESC;
