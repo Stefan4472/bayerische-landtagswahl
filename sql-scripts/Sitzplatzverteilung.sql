@@ -75,15 +75,29 @@ WITH Gesamtstimmen_Partei_5Prozent AS
 -- Berechnen Anzhal an Sitze pro Partei in Wahlkreis
 	Gesamtstimmen_und_Sitze_Partei AS 
 		(SELECT agp.Wahl, agp.Wahlkreis, agp.Partei, agp.Stimmenzahl, agp.Prozent_In_Wahlkreis * 100 as Prozent, ROUND(agp.Prozent_In_Wahlkreis * (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE agp.Wahlkreis = w.ID)) as Sitze
-		FROM Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis agp)
+		FROM Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis agp),
 -- Berechnen Anzahl Direktmandate und Listmandate
-SELECT agz.Wahl, agz.Wahlkreis, agz.Partei, agz.Stimmenzahl, agz.Prozent, agz.Sitze, 
-		IFNULL(Erststimme_Gewinner_Pro_Partei.Anzahl_Gewinner, 0) as Direktmandate,
-        agz.Sitze - IFNULL(Erststimme_Gewinner_Pro_Partei.Anzahl_Gewinner, 0) as Listmandate
-FROM Gesamtstimmen_und_Sitze_Partei agz
-LEFT JOIN (SELECT Wahl, Wahlkreis, Partei, count(Kandidat) as Anzahl_Gewinner FROM Erststimme_Gewinner_Pro_Stimmkreis
-			GROUP BY Wahl, Wahlkreis, Partei) Erststimme_Gewinner_Pro_Partei
-ON Erststimme_Gewinner_Pro_Partei.Wahl = agz.Wahl
-	AND Erststimme_Gewinner_Pro_Partei.Wahlkreis = agz.Wahlkreis
-	AND Erststimme_Gewinner_Pro_Partei.Partei = agz.Partei
+	Mandate_Partei AS
+		(SELECT agz.Wahl, agz.Wahlkreis, agz.Partei, agz.Stimmenzahl, agz.Prozent, agz.Sitze, 
+				IFNULL(Erststimme_Gewinner_Pro_Partei.Anzahl_Gewinner, 0) as Direktmandate,
+				agz.Sitze - IFNULL(Erststimme_Gewinner_Pro_Partei.Anzahl_Gewinner, 0) as Listmandate
+		FROM Gesamtstimmen_und_Sitze_Partei agz
+		LEFT JOIN (SELECT Wahl, Wahlkreis, Partei, count(Kandidat) as Anzahl_Gewinner FROM Erststimme_Gewinner_Pro_Stimmkreis
+					GROUP BY Wahl, Wahlkreis, Partei) Erststimme_Gewinner_Pro_Partei
+		ON Erststimme_Gewinner_Pro_Partei.Wahl = agz.Wahl
+			AND Erststimme_Gewinner_Pro_Partei.Wahlkreis = agz.Wahlkreis
+			AND Erststimme_Gewinner_Pro_Partei.Partei = agz.Partei),
+-- Berechnen Überhangmandaten Ratio für alle Wahlkreise.
+	Ueberhangsmandate_Verhaeltnis AS 
+		(SELECT Wahl, Wahlkreis, MAX(Direktmandate / Sitze) as Ueberhangsmandate_Verhaeltnis FROM Mandate_Partei
+		GROUP BY Wahl, Wahlkreis
+		HAVING Ueberhangsmandate_Verhaeltnis > 1)
+-- Berechnen Sitze für alle Parteien wenn es zu Überhangmandaten kommt.
+SELECT mp.Wahl, mp.Wahlkreis, mp.Partei, mp.Stimmenzahl, mp.Prozent, mp.Sitze, 
+		ROUND(mp.Sitze * IFNULL(uv.Ueberhangsmandate_Verhaeltnis, 1)) as Ueberhangsmandate_Sitze,
+        mp.Direktmandate,
+		ROUND(mp.Sitze * IFNULL(uv.Ueberhangsmandate_Verhaeltnis, 1)) - mp.Direktmandate as Listmandate
+FROM Mandate_Partei mp
+LEFT JOIN Ueberhangsmandate_Verhaeltnis uv
+ON mp.Wahl = uv.Wahl AND mp.Wahlkreis = uv.Wahlkreis
 ORDER BY Wahl, Wahlkreis, Prozent DESC;
