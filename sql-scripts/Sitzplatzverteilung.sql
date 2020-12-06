@@ -56,7 +56,8 @@ INNER JOIN (SELECT k.Wahl, k.Stimmkreis, MAX(Anzahl) as Anzahl FROM Kandidat_Sti
     -- mindestens 5 % der Gesamtstimmen in Bayern
     WHERE gpw.Prozent >= 5
 	GROUP BY k.Wahl, k.Stimmkreis) kse_grouped
-ON kse.Wahl = kse_grouped.Wahl AND kse.Anzahl = kse_grouped.Anzahl AND kse.Stimmkreis = kse_grouped.Stimmkreis;
+ON kse.Wahl = kse_grouped.Wahl AND kse.Anzahl = kse_grouped.Anzahl AND kse.Stimmkreis = kse_grouped.Stimmkreis
+ORDER BY kse.Wahl, kse.Stimmkreis;
 
 -- Anzahl an Stimmen und Sitze der Partei (über 5 % in Bayern) pro Wahlkreis
 CREATE OR REPLACE VIEW Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis AS
@@ -100,3 +101,11 @@ FROM Mandate_Partei mp
 LEFT JOIN Ueberhangsmandate_Verhaeltnis uv
 ON mp.Wahl = uv.Wahl AND mp.Wahlkreis = uv.Wahlkreis
 ORDER BY Wahl, Wahlkreis, Prozent DESC;
+
+-- Alle Listkandidaten.
+CREATE OR REPLACE VIEW Listkandidaten AS
+SELECT * FROM
+	(SELECT *, RANK() OVER (PARTITION BY Wahl, Wahlkreis, Partei ORDER BY Wahl, Wahlkreis, Partei, Anzahl DESC) AS Nr
+    FROM Anzhal_Zweitstimme_Kandidat) AS azk
+WHERE Nr <= (SELECT Listmandate FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
+				WHERE gsp.Wahl = azk.Wahl AND gsp.Wahlkreis = azk.Wahlkreis AND gsp.Partei = azk.Partei);
