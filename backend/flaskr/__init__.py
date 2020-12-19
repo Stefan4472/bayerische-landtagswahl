@@ -1,23 +1,18 @@
-import os
 import pathlib
 import json
 from flask import Flask
 
 
-def create_app(test_config=None):
+def create_app():
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
 
-    instance_path = pathlib.Path(app.instance_path)
+    app_path = pathlib.Path(app.root_path)
 
-    # Create the instance folder if it doesn't already exist
-    instance_path.mkdir(exist_ok=True)
-
-    # Load the secret config
-    dbconfig_path = instance_path / 'db-config.json'
+    # Load the database config
+    dbconfig_path = app_path / 'db-config.json'
     with open(dbconfig_path, 'r') as secret_file:
         db_config = json.load(secret_file)
-        print(db_config)
         # TODO: MAKE SURE ALL VALUES HAVE BEEN SET
 
     # Add database config to the app config
@@ -28,18 +23,9 @@ def create_app(test_config=None):
         DB_NAME=db_config['database_name'],
     )
 
-    if test_config is None:
-        # load the instance config, if it exists, when not testing
-        app.config.from_pyfile('config.py', silent=True)
-    else:
-        # load the test config if passed in
-        app.config.from_mapping(test_config)
-
-    # ensure the instance folder exists
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
+    # Ensure the instance folder exists
+    instance_path = pathlib.Path(app.instance_path)
+    instance_path.mkdir(exist_ok=True)
 
     # a simple page that says hello
     @app.route('/hello')
