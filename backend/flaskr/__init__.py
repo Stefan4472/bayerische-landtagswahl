@@ -1,6 +1,7 @@
 import pathlib
 import json
 from flask import Flask
+from . import db_context
 
 
 def create_app():
@@ -27,9 +28,12 @@ def create_app():
     instance_path = pathlib.Path(app.instance_path)
     instance_path.mkdir(exist_ok=True)
 
+    app.teardown_appcontext(db_context.close_db)
+
     # a simple page that says hello
     @app.route('/hello')
     def hello():
+        db_context.get_db()
         return 'Hello, World!'
 
     return app

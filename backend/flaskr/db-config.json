@@ -1,6 +1,6 @@
 {
   "host": "localhost",
-  "user": "root",
+  "user": "postgres",
   "password": "dev",
   "database_name": "bayerische_landtagswahl"
 }
