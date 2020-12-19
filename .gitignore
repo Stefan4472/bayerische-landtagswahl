@@ -1,6 +1,6 @@
 env/*
 *.pyc
 __pycache__/
-instance/
+.idea/
 
 data/wahl-2018.json

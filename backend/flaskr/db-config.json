@@ -1,0 +1,6 @@
+{
+  "host": "localhost",
+  "user": "root",
+  "password": "dev",
+  "database_name": "bayerische_landtagswahl"
+}
