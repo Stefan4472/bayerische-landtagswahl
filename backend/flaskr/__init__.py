@@ -2,6 +2,7 @@ import pathlib
 import json
 from flask import Flask
 from . import db_context
+from . import api
 
 
 def create_app():
@@ -28,12 +29,10 @@ def create_app():
     instance_path = pathlib.Path(app.instance_path)
     instance_path.mkdir(exist_ok=True)
 
-    app.teardown_appcontext(db_context.close_db)
+    # Register the API blueprint
+    app.register_blueprint(api.API_BLUEPRINT)
 
-    # a simple page that says hello
-    @app.route('/hello')
-    def hello():
-        db_context.get_db()
-        return 'Hello, World!'
+    # Register `close_db` as a teardown function
+    app.teardown_appcontext(db_context.close_db)
 
     return app
