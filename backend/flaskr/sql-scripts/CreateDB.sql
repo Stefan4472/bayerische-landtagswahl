@@ -11,7 +11,7 @@ CREATE TABLE Wahl (
 CREATE TABLE Wahlkreis (
 	ID int NOT NULL UNIQUE,
     Name varchar(255) NOT NULL UNIQUE,
-    Direktmandate int NOT NULL, 
+    Direktmandate int NOT NULL,
     Listenmandate int NOT NULL,
     PRIMARY KEY (ID)
 );

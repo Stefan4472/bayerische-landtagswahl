@@ -1,8 +1,10 @@
 import pathlib
 import json
 from flask import Flask
-from . import db_context
-from . import api
+# from . import db_context
+# from . import api
+import db_context
+import api
 
 
 def create_app():

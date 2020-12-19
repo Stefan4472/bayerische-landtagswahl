@@ -1,7 +1,7 @@
 import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import typing
 import util
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 class Database:
     def __init__(
@@ -25,7 +25,7 @@ class Database:
     def commit(self):
         self._conn.commit()
 
-    def disconnect(self):
+    def close(self):
         self._cursor.close()
         self._conn.close()
 

@@ -3,6 +3,11 @@
 import click
 import pathlib
 import time
+# Note: This is a path hack to get access to code in the parent directory.
+# TODO: FIGURE OUT HOW TO DO THIS PROPERLY WITH PACKAGES
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import database as db
 import data_parser
 import data_importer
@@ -44,7 +49,7 @@ def cmd_reset_database(
     database.create_database(db_name)
 
     # Disconnect
-    database.disconnect()
+    database.close()
 
     # Reconnect, this time to the reset-database
     database = db.Database(
@@ -66,7 +71,7 @@ def cmd_reset_database(
 @click.option('--password', type=str, required=True)  
 @click.option('--db_name', type=str, required=True)
 @click.option('--host', type=str, default='localhost')
-@click.option('--user', type=str, default='root')
+@click.option('--user', type=str, default='postgres')
 def cmd_import_data(
     info_path: str,
     results_path: str,

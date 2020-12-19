@@ -3,6 +3,11 @@ import dataclasses
 import pathlib
 import typing
 import json
+# Note: This is a path hack to get access to code in the parent directory.
+# TODO: FIGURE OUT HOW TO DO THIS PROPERLY WITH PACKAGES
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from util import StimmKreis, Wahlkreis, Candidate, DirectResult, \
     StimmkreisResult, ListResults, VoteType, get_vote_type
 

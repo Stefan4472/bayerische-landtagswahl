@@ -1,5 +1,8 @@
-import mysql.connector
-import time
+# Note: This is a path hack to get access to code in the parent directory.
+# TODO: FIGURE OUT HOW TO DO THIS PROPERLY WITH PACKAGES
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import database as db
 import util
 import data_parser
