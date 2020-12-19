@@ -15,30 +15,45 @@ def click_cli():
 
 
 # TODO: REQUIRE PASSWORD INPUT AS PROMPT
-@click_cli.command(name='run_script')
+@click_cli.command(name='reset')
 @click.argument('filepath', type=click.Path(exists=True, readable=True))
 @click.option('--host', type=str, default='localhost')
-@click.option('--user', type=str, default='root')
+@click.option('--user', type=str, default='postgres')
 @click.option('--password', type=str, required=True)  
+@click.option('--db_name', type=str, required=True)
 def cmd_reset_database(
     filepath: str,
     host: str,
     user: str,
     password: str,
+    db_name: str,
 ):
-    click.echo('Reading "{}"'.format(filepath))
     with open(filepath) as sql_file:
         schema_script = sql_file.read()
 
-    click.echo('Connecting to database...')
+    # Connect to the default database
     database = db.Database(
         host,
         user,
         password,
+        'postgres'
     )
 
-    click.echo('Executing script..')
-    database.execute_script(schema_script)
+    # Drop and then create the desired database
+    database.drop_database(db_name)
+    database.create_database(db_name)
+
+    # Disconnect
+    database.disconnect()
+
+    # Reconnect, this time to the reset-database
+    database = db.Database(
+        host,
+        user,
+        password,
+        db_name,
+    )
+    database.run_script(schema_script)
     database.commit()
     click.echo('Done')
 
