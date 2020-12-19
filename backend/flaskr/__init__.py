@@ -16,7 +16,8 @@ def create_app():
         instance_relative_config=True,
         static_url_path='',
     )
-    cors = CORS(app)
+    CORS(app)
+    app.config['CORS_HEADERS'] = 'Content-Type'
 
     app_path = pathlib.Path(app.root_path)
 
