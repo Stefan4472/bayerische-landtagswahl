@@ -1,3 +1,18 @@
+-- Wahlbeteiligung
+CREATE MATERIALIZED VIEW Wahlbeteiligung_Pro_Stimmkreis AS
+SELECT w.jahr,
+       wk.name         as Wahlkreis,
+       s.id            as StimmkreisID,
+       s.name          as Stimmkreis,
+       count(StimmeID)::decimal / s.numberechtigter as Wahlbeteiligung
+FROM erststimme es
+         INNER JOIN stimmkreis s ON es.stimmkreis = s.id
+         INNER JOIN wahlkreis wk ON wk.id = s.wahlkreis
+         INNER JOIN wahl w on es.wahl = w.id
+GROUP BY w.jahr, wk.name , s.id, s.name
+ORDER BY s.id;
+
+
 -- Anzahl Erststimme für jeden Kandidat
 CREATE MATERIALIZED VIEW Erststimme_Kandidat AS
 SELECT Wahl, Wahlkreis, Stimmkreis, Partei, Kandidat, count(StimmeID) as Anzahl

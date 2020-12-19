@@ -3,8 +3,8 @@
 -- Direktkandidaten
 SELECT w.jahr,
        wk.name as Wahlkreis,
-       s.id as StimmkreisID,
-       s.name as Stimmkreis,
+       s.id    as StimmkreisID,
+       s.name  as Stimmkreis,
        k.vorname,
        k.nachname,
        p.parteiname,
@@ -16,3 +16,7 @@ FROM Erststimme_Gewinner_Pro_Stimmkreis eg
          INNER JOIN kandidat k ON k.id = eg.kandidat
          INNER JOIN partei p ON p.id = eg.partei
 ORDER BY w.jahr, s.id;
+
+
+-- Wahlbeteiligung
+SELECT * FROM Wahlbeteiligung_Pro_Stimmkreis;
