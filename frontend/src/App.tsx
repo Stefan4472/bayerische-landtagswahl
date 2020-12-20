@@ -1,7 +1,7 @@
 import React from "react";
 import {Jumbotron, Container, Navbar, Card, Row, Col, Nav} from "react-bootstrap";
-import {StimmkreisSelector} from "./StimmkreisSelector";
 import "./App.css"
+import {StimmkreisDisplayer} from "./StimmkreisDisplayer";
 
 export class App extends React.Component {
     render() {
@@ -40,19 +40,7 @@ export class App extends React.Component {
                     <p>This website stores data from Bavarian State Parliament elections. It can be used to view and analyze the results from a given election (use the "Wahljahr Auswahl", below) and to compare data between elections.</p>
                 </Row>
 
-                {/*TODO: HOW TO SET ROW HEIGHT CORRECTLY?*/}
-                <Row>
-                    <Col md={4}>
-                        <div className={"overflow-auto"} style={{height: "500px"}}>
-                            <StimmkreisSelector/>
-                        </div>
-                    </Col>
-                    <Col>
-                        <Card>
-
-                        </Card>
-                    </Col>
-                </Row>
+                <StimmkreisDisplayer/>
 
                 <Card className="mb-2">
                     <Card.Body>

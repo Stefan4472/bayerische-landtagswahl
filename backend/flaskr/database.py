@@ -86,7 +86,7 @@ class Database:
             wahl_id: int,
     ):
         """Return data on all Stimmkreise for the specified `wahl_id`."""
-        sql = 'SELECT * FROM Stimmkreis WHERE WahlID = %s'
+        sql = 'SELECT * FROM Stimmkreis WHERE WahlID = %s ORDER BY Nummer ASC'
         values = (wahl_id,)
         self._cursor.execute(sql, values)
         return self._cursor.fetchall()

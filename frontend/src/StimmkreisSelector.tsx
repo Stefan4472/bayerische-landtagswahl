@@ -1,14 +1,14 @@
 import React from "react";
 import {ListGroup} from "react-bootstrap";
 
-interface StimmkreisInfo {
+export interface StimmkreisInfo {
     id: number;
     name: string;
     number: number;
 }
 
 interface Props {
-
+    onSelect: (stimmkreisInfo: StimmkreisInfo)=>void;
 }
 
 interface State {
@@ -35,19 +35,18 @@ export class StimmkreisSelector extends React.Component<Props> {
                 });
                 // Select the first Stimmkreis by default
                 if (data.length) {
-                    this.setState({
-                        currSelectedID: data[0].id,
-                    })
+                    this.setSelection(data[0]);
                 }
             })
     }
 
     // Handle user clicking to select a Stimmkreis to show
-    handleStimmkreisClick(stimmkreis: StimmkreisInfo) {
-        console.log(stimmkreis);
+    setSelection(stimmkreis: StimmkreisInfo) {
+        console.log("Setting selection", stimmkreis);
+        // Update state, then tell the parent about the new selection
         this.setState({
             currSelectedID: stimmkreis.id,
-        });
+        }, () => {this.props.onSelect(stimmkreis)});
     }
 
     render() {
@@ -55,10 +54,10 @@ export class StimmkreisSelector extends React.Component<Props> {
             {this.state.stimmkreisInfo.map((info) => {
                 // Set the currently-selected stimmkreis to "active"
                 if (info.id === this.state.currSelectedID) {
-                    return <ListGroup.Item active action onClick={() => this.handleStimmkreisClick(info)}>({info.number}) {info.name}</ListGroup.Item>
+                    return <ListGroup.Item active action onClick={() => this.setSelection(info)} key={info.number}>({info.number}) {info.name}</ListGroup.Item>
                 }
                 else {
-                    return <ListGroup.Item action onClick={() => this.handleStimmkreisClick(info)}>({info.number}) {info.name}</ListGroup.Item>
+                    return <ListGroup.Item action onClick={() => this.setSelection(info)} key={info.number}>({info.number}) {info.name}</ListGroup.Item>
                 }
 
             })}
