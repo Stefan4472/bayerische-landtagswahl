@@ -1,11 +1,22 @@
 import {Card, Col, Row} from "react-bootstrap";
 import {StimmkreisInfo, StimmkreisSelector} from "./StimmkreisSelector";
 import React from "react";
+import {StimmkreisTable} from "./StimmkreisTable";
 
-interface Stimmkreis {
+
+interface StimmkreisResult {
+    party: string;
+    candidate: string;
+    erststimmen: number;
+    zweitstimmen: number;
+}
+
+export interface Stimmkreis {
     id: number;
     name: string;
     number: number;
+    turnout_percent: number;
+    results: StimmkreisResult[];
 }
 
 interface Props {
@@ -27,23 +38,35 @@ export class StimmkreisDisplayer extends React.Component<Props> {
     // Handle user requesting the overview of the specified Stimmkreis
     onStimmkreisRequested(stimmkreisInfo: StimmkreisInfo) {
         console.log(stimmkreisInfo);
-
-        this.setState({
-            currStimmkreis: stimmkreisInfo,
-        });
+        // TODO: BETTER FORMATTING OF URLS
+        fetch('/api/results/stimmkreis/' + stimmkreisInfo.number.toString())
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    currStimmkreis: {
+                        'id': stimmkreisInfo.id,
+                        'name': stimmkreisInfo.name,
+                        'number': stimmkreisInfo.number,
+                        'turnout_percent': data.turnout_percent,
+                        'results': data.results,
+                    }
+                })
+            });
     }
 
     render() {
-      // TODO: HOW TO SET ROW HEIGHT CORRECTLY?
-      return <Row>
+        // TODO: HOW TO SET ROW HEIGHT CORRECTLY?
+        return <Row>
+            {/*Provide Stimmkreis selector on left side*/}
             <Col md={4}>
                 <div className={"overflow-auto"} style={{height: "500px"}}>
-                    <StimmkreisSelector onSelect={this.onStimmkreisRequested}/>
+                    <StimmkreisSelector onSelect={(stkInfo) => this.onStimmkreisRequested(stkInfo)}/>
                 </div>
             </Col>
+            {/*Show results using the rest of the screen width*/}
             <Col>
                 <Card>
-
+                    <StimmkreisTable stimmkreis={this.state.currStimmkreis}/>
                 </Card>
             </Col>
         </Row>
