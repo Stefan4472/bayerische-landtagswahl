@@ -1,6 +1,7 @@
-import {Jumbotron, Container, Navbar, Card, Row, Col, Nav} from "react-bootstrap";
-import "./App.css"
 import React from "react";
+import {Jumbotron, Container, Navbar, Card, Row, Col, Nav} from "react-bootstrap";
+import {StimmkreisSelector} from "./StimmkreisSelector";
+import "./App.css"
 
 export class App extends React.Component {
     render() {
@@ -39,18 +40,18 @@ export class App extends React.Component {
                     <p>This website stores data from Bavarian State Parliament elections. It can be used to view and analyze the results from a given election (use the "Wahljahr Auswahl", below) and to compare data between elections.</p>
                 </Row>
 
+                {/*TODO: HOW TO SET ROW HEIGHT CORRECTLY?*/}
                 <Row>
-                    <form>
-                        <div className="form-group">
-                            <label htmlFor="stimmkreis-select">Stimmkreis Auswahl</label>
-                            <select className="form-control" id="stimmkreis-select">
-                                <option>Muenchen-Moosach (105)</option>
-                                <option>Muenchen-Pasing (106)</option>
-                                <option>Muenchen-Land-Sued (124)</option>
-                                <option>...</option>
-                            </select>
+                    <Col md={4}>
+                        <div className={"overflow-auto"} style={{height: "500px"}}>
+                            <StimmkreisSelector/>
                         </div>
-                    </form>
+                    </Col>
+                    <Col>
+                        <Card>
+
+                        </Card>
+                    </Col>
                 </Row>
 
                 <Card className="mb-2">
