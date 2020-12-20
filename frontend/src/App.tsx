@@ -1,5 +1,4 @@
-import {TestComp} from "./Test"
-import {Jumbotron, Container, Navbar} from "react-bootstrap";
+import {Jumbotron, Container, Navbar, Card, Row, Col, Nav} from "react-bootstrap";
 import "./App.css"
 import React from "react";
 
@@ -17,37 +16,112 @@ export class App extends React.Component {
                 <h1 className="display-4"><a href="%PUBLIC_URL%" className="link-override">Bayerische Landtagswahl System</a></h1>
             </Jumbotron>
 
+            {/*Navbar*/}
+
             <Container>
-                {/*Navbar*/}
-                <Navbar className="navbar navbar-expand-lg navbar-light bg-light rounded" style={{marginBottom: "2rem"}}>
-                    <div className="collapse navbar-collapse">
-                        <ul className="navbar-nav justify-content-center">
-                            <li className="nav-item active">
-                                <a className="nav-link" href="%PUBLIC_URL%">Ergebnisse <span className="sr-only">(current)</span></a>
-                            </li>
-                            <li className="nav-item active">
-                                <a className="nav-link" href="%PUBLIC_URL%">Kandidaten</a>
-                            </li>
-                            <li className="nav-item active">
-                                <a className="nav-link" href="%PUBLIC_URL%">Wahlkreise</a>
-                            </li>
-                            <li className="nav-item active">
-                            <a className="nav-link" href="%PUBLIC_URL%">Stimmkreise</a>
-                            </li>
-                        </ul>
-                    </div>
+                <Navbar collapseOnSelect expand="md" variant="light" bg="light" className="rounded" style={{marginBottom: "2rem"}}>
+                    <Navbar.Toggle aria-controls="responsive-navbar-nav" />
+                    <Navbar.Collapse>
+                        <Nav className="mr-auto">
+                            <Nav.Link href="#home">Ergebnisse</Nav.Link>
+                            <Nav.Link href="#link">Kandidaten</Nav.Link>
+                            <Nav.Link href="#link">Wahlkreise</Nav.Link>
+                            <Nav.Link href="#link">Stimmkreise</Nav.Link>
+                        </Nav>
+                    </Navbar.Collapse>
                 </Navbar>
+            </Container>
 
+
+            <Container>
                 {/*Content*/}
-                <div className="row mb-2">
-                    <div className="col-md-12">
-                        <h2>Das Bayerische Landtagswahl System</h2>
-                        <p>This website stores data from Bavarian State Parliament elections. It can be used to view and analyze the results from a given election (use the "Wahljahr Auswahl", below) and to compare data between elections.</p>
-                    </div>
-                </div>
+                <Row className="mb-2">
+                    <h2>Das Bayerische Landtagswahl System</h2>
+                    <p>This website stores data from Bavarian State Parliament elections. It can be used to view and analyze the results from a given election (use the "Wahljahr Auswahl", below) and to compare data between elections.</p>
+                </Row>
 
-                <p>Hello world</p>
-                <TestComp/>
+                <Row>
+                    <form>
+                        <div className="form-group">
+                            <label htmlFor="stimmkreis-select">Stimmkreis Auswahl</label>
+                            <select className="form-control" id="stimmkreis-select">
+                                <option>Muenchen-Moosach (105)</option>
+                                <option>Muenchen-Pasing (106)</option>
+                                <option>Muenchen-Land-Sued (124)</option>
+                                <option>...</option>
+                            </select>
+                        </div>
+                    </form>
+                </Row>
+
+                <Card className="mb-2">
+                    <Card.Body>
+                        <Card.Title>Stimmkreis Ergebnisse</Card.Title>
+                        <Row>
+                            <Col>
+                                <div id="piechart-county"></div>
+                            </Col>
+                            <Col>
+                                <table style={{width: "100%"}}>
+                                    <tr>
+                                        <th>Kandidat</th>
+                                        <th>Partei</th>
+                                        <th>Erststimmen</th>
+                                        <th>Erststimmen (%)</th>
+                                    </tr>
+                                    <tr>
+                                        <td>Benjamin Adjei*</td>
+                                        <td>Gruene</td>
+                                        <td>17.573</td>
+                                        <td>26,2</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Mechthilde Wittmann</td>
+                                        <td>CSU</td>
+                                        <td>17.495</td>
+                                        <td>26,1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Diana Stachowitz</td>
+                                        <td>SPD</td>
+                                        <td>9.996</td>
+                                        <td>14,9</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Michael Groß</td>
+                                        <td>AfD</td>
+                                        <td>5.462</td>
+                                        <td>8,2</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Albert Duin</td>
+                                        <td>FDP</td>
+                                        <td>5.285</td>
+                                        <td>7,9</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Lilian Edenhofer</td>
+                                        <td>Freie Waehler</td>
+                                        <td>4.462</td>
+                                        <td>6,7</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Tony Luis Guerra</td>
+                                        <td>Die Linke</td>
+                                        <td>2.790</td>
+                                        <td>4,2</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Sonstige</td>
+                                        <td>...</td>
+                                        <td>...</td>
+                                        <td>...</td>
+                                    </tr>
+                                </table>
+                            </Col>
+                        </Row>
+                    </Card.Body>
+                </Card>
             </Container>
         </div>
     }
