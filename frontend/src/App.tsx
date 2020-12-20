@@ -17,7 +17,6 @@ export class App extends React.Component {
             </Jumbotron>
 
             {/*Navbar*/}
-
             <Container>
                 <Navbar collapseOnSelect expand="md" variant="light" bg="light" className="rounded" style={{marginBottom: "2rem"}}>
                     <Navbar.Toggle aria-controls="responsive-navbar-nav" />
