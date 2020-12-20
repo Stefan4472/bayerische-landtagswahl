@@ -1,3 +1,6 @@
+-- Q1 Sitzverteilung
+SELECT * FROM Sitzverteilung;
+
 -- Q2 Mitglieder des Landtages
 SELECT * FROM Mitglieder_des_LandtagesUI
 ORDER BY nachname;

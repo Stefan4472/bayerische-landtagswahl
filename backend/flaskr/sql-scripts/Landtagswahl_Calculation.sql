@@ -175,6 +175,14 @@ SELECT lk.Kandidat, lk.Partei, lk.Wahlkreis, null, lk.Wahl, false as Direktkandi
 FROM Listkandidaten lk;
 
 
+-- Q1 Sitzverteilung
+CREATE MATERIALIZED VIEW Sitzverteilung AS
+SELECT w.jahr, p.parteiname, count(Kandidat) as Anzahl_der_Sitze FROM Mitglieder_des_Landtages mds
+INNER JOIN Wahl w ON w.ID = mds.wahl
+INNER JOIN Partei p ON p.ID = mds.partei
+GROUP BY w.jahr, p.parteiname;
+
+
 -- Q2 Mitglieder des Landtages
 CREATE MATERIALIZED VIEW Mitglieder_des_LandtagesUI AS
 SELECT k.vorname,
