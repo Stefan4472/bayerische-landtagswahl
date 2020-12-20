@@ -154,10 +154,10 @@ def parse_results_xml(filepath: pathlib.Path) -> ParsedResultsXML:
 
 # NOTE: THIS METHOD WILL BE REMOVED
 def write_to_json(
-    year: int,
-    xml_info: ParsedInfoXML,
-    xml_results: ParsedResultsXML,
-    dump_file: pathlib.Path,
+        year: int,
+        xml_info: ParsedInfoXML,
+        xml_results: ParsedResultsXML,
+        dump_file: pathlib.Path,
 ):
     root_dict: dict[str, typing.Any] = {}
     root_dict['year'] = year

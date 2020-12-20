@@ -3,6 +3,7 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import typing
 import util
 
+
 class Database:
     def __init__(
             self,
@@ -53,8 +54,8 @@ class Database:
         self._cursor.execute(script)
 
     def has_wahl(
-        self,
-        wahl_year: int,
+            self,
+            wahl_year: int,
     ) -> bool:
         sql = 'SELECT * FROM Wahl where Jahr = %s'
         values = (wahl_year,)
@@ -62,8 +63,8 @@ class Database:
         return bool(self._cursor.fetchall())
 
     def get_wahl_id(
-        self,
-        wahl_year: int,
+            self,
+            wahl_year: int,
     ) -> int:
         sql = 'SELECT * FROM Wahl where Jahr = %s'
         values = (wahl_year,)
@@ -71,8 +72,8 @@ class Database:
         return self._cursor.fetchone()[0]
 
     def add_wahl(
-        self,
-        wahl_year: int,
+            self,
+            wahl_year: int,
     ) -> int:
         sql = 'INSERT INTO Wahl (Jahr) VALUES (%s) RETURNING id'
         val = (2018,)
@@ -80,9 +81,9 @@ class Database:
         return self._cursor.fetchone()[0]
 
     def get_stimmkreis_id(
-        self,
-        wahl_id: int,
-        stimmkreis_nr: int,
+            self,
+            wahl_id: int,
+            stimmkreis_nr: int,
     ) -> int:
         sql = 'SELECT * FROM Stimmkreis WHERE WahlID = %s and Nummer = %s'
         values = (wahl_id, stimmkreis_nr)
@@ -90,9 +91,9 @@ class Database:
         return self._cursor.fetchone()[0]
 
     def add_stimmkreis(
-        self,
-        wahl_id: int,
-        stimmkreis: util.StimmKreis,
+            self,
+            wahl_id: int,
+            stimmkreis: util.StimmKreis,
     ) -> int:
         print('Adding Stimmkreis {}'.format(stimmkreis))
         sql = 'INSERT INTO Stimmkreis (Name, Wahlkreis, Nummer, NumBerechtigter, WahlID) ' \
@@ -111,8 +112,8 @@ class Database:
         return self._cursor.fetchone()[0]
 
     def has_party(
-        self,
-        party_name: str,
+            self,
+            party_name: str,
     ) -> bool:
         sql = 'SELECT * FROM Partei where ParteiName = %s'
         values = (party_name,)
@@ -120,8 +121,8 @@ class Database:
         return bool(self._cursor.fetchall())
 
     def get_party_id(
-        self,
-        party_name: str,
+            self,
+            party_name: str,
     ) -> int:
         sql = 'SELECT * FROM Partei where ParteiName = %s'
         values = (party_name,)
@@ -129,8 +130,8 @@ class Database:
         return self._cursor.fetchone()[0]
 
     def add_party(
-        self,
-        party_name: str,
+            self,
+            party_name: str,
     ) -> int:
         print('Adding Party {}'.format(party_name))
         sql = 'INSERT INTO Partei (ParteiName) VALUES (%s) RETURNING id'
@@ -139,19 +140,19 @@ class Database:
         return self._cursor.fetchone()[0]
 
     def add_party_to_election(
-        self,
-        party_id: int,
-        wahl_id: int,
+            self,
+            party_id: int,
+            wahl_id: int,
     ):
         sql = 'INSERT INTO ParteiZuWahl (Partei, WahlID) VALUES (%s, %s)'
         vals = (party_id, wahl_id,)
         self._cursor.execute(sql, vals)
 
     def add_candidate(
-        self,
-        wahl_id: int,
-        candidate: util.Candidate,
-        party_id: int,
+            self,
+            wahl_id: int,
+            candidate: util.Candidate,
+            party_id: int,
     ) -> int:
         print('Adding Candidate {}'.format(candidate))
         # Add Candidate information to the 'Kandidat' table
@@ -187,12 +188,12 @@ class Database:
         return candidate_id
 
     def generate_erst_stimmen(
-        self,
-        wahl_id: int,
-        candidate_id: int,
-        stimmkreis_id: int,
-        num_votes: int,
-        is_valid: bool = True,
+            self,
+            wahl_id: int,
+            candidate_id: int,
+            stimmkreis_id: int,
+            num_votes: int,
+            is_valid: bool = True,
     ):
         if is_valid:
             self._bulk_insert(
@@ -210,12 +211,12 @@ class Database:
             )
 
     def generate_zweit_stimmen(
-        self,
-        wahl_id: int,
-        candidate_id: int,
-        stimmkreis_id: int,
-        num_votes: int,
-        is_valid: bool = True,
+            self,
+            wahl_id: int,
+            candidate_id: int,
+            stimmkreis_id: int,
+            num_votes: int,
+            is_valid: bool = True,
     ):
         if is_valid:
             self._bulk_insert(
@@ -233,11 +234,11 @@ class Database:
             )
 
     def generate_zweit_stimmen_ohne_kandidat(
-        self,
-        wahl_id: int,
-        party_id: int,
-        stimmkreis_id: int,
-        num_votes: int,
+            self,
+            wahl_id: int,
+            party_id: int,
+            stimmkreis_id: int,
+            num_votes: int,
     ):
         self._bulk_insert(
             'ZweitstimmePartei',
@@ -247,12 +248,12 @@ class Database:
         )
 
     def _bulk_insert(
-        self,
-        table_name: str,
-        col_names: tuple[str],
-        _tuple: tuple[typing.Any],
-        num_inserts: int,
-        inserts_per_call: typing.Optional[int] = 2000,
+            self,
+            table_name: str,
+            col_names: tuple[str],
+            _tuple: tuple[typing.Any],
+            num_inserts: int,
+            inserts_per_call: typing.Optional[int] = 2000,
     ):
         """Here we do a bulk insert.
         See: https://medium.com/@benmorel/high-speed-inserts-with-mysql-9d3dcd76f723

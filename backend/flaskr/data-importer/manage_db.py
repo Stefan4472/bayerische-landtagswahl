@@ -27,11 +27,11 @@ def click_cli():
 @click.option('--password', type=str, required=True)  
 @click.option('--db_name', type=str, required=True)
 def cmd_reset_database(
-    filepath: str,
-    host: str,
-    user: str,
-    password: str,
-    db_name: str,
+        filepath: str,
+        host: str,
+        user: str,
+        password: str,
+        db_name: str,
 ):
     with open(filepath) as sql_file:
         schema_script = sql_file.read()
@@ -73,13 +73,13 @@ def cmd_reset_database(
 @click.option('--host', type=str, default='localhost')
 @click.option('--user', type=str, default='postgres')
 def cmd_import_data(
-    info_path: str,
-    results_path: str,
-    year: int,
-    host: str,
-    user: str,
-    password: str,
-    db_name: str,
+        info_path: str,
+        results_path: str,
+        year: int,
+        host: str,
+        user: str,
+        password: str,
+        db_name: str,
 ):
     click.echo('Reading xml...', nl=False)
     start_xml_time = time.time()
@@ -112,6 +112,7 @@ def cmd_import_data(
 
     database.get_cursor().execute('SELECT * FROM Kandidat')
     print(database.get_cursor().fetchall())
+
 
 if __name__ == '__main__':
     click_cli()
