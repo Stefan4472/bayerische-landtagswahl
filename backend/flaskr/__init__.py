@@ -1,13 +1,23 @@
 import pathlib
 import json
-from flask import Flask
-from . import db_context
-from . import api
+from flask import Flask, send_from_directory
+from flask_cors import CORS
+# TODO: USE RELATIVE IMPORTS?
+# from . import db_context
+# from . import api
+import db_context
+import api
 
 
 def create_app():
     # create and configure the app
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(
+        __name__,
+        instance_relative_config=True,
+        static_url_path='',
+    )
+    CORS(app)
+    app.config['CORS_HEADERS'] = 'Content-Type'
 
     app_path = pathlib.Path(app.root_path)
 
@@ -34,5 +44,10 @@ def create_app():
 
     # Register `close_db` as a teardown function
     app.teardown_appcontext(db_context.close_db)
+
+    # Register the base URL to serve 'index.html'
+    @app.route('/')
+    def serve():
+        return send_from_directory(app.static_folder, 'index.html')
 
     return app

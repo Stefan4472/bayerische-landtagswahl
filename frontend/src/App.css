@@ -1,0 +1,15 @@
+.site-jumbotron {
+    margin-bottom: 0;
+}
+
+.link-override {
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+}
+
+.link-override:hover {
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+}

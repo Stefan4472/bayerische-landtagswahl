@@ -24,7 +24,7 @@ Reset the database to use a specified schema:
 Import XML election data, for example `data/2018-info.xml` and `data/2018-results.xml`:
 ```
 > cd data-importer
-> python manage_db.py import_data ../data/2018-info.xml ../data/2018-results-sample.xml --year=2018 --password=[YOUR_MYSQL_PASSWORD] --db_name=bayerische_landtagswahl
+> python manage_db.py import_data ../data/2018-info.xml ../data/2018-results.xml --year=2018 --password=[YOUR_MYSQL_PASSWORD] --db_name=bayerische_landtagswahl
 ```
 
 ## Unofficial benchmark data for importing/generating election data

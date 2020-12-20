@@ -3,6 +3,11 @@
 import click
 import pathlib
 import time
+# Note: This is a path hack to get access to code in the parent directory.
+# TODO: FIGURE OUT HOW TO DO THIS PROPERLY WITH PACKAGES
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import database as db
 import data_parser
 import data_importer
@@ -22,11 +27,11 @@ def click_cli():
 @click.option('--password', type=str, required=True)  
 @click.option('--db_name', type=str, required=True)
 def cmd_reset_database(
-    filepath: str,
-    host: str,
-    user: str,
-    password: str,
-    db_name: str,
+        filepath: str,
+        host: str,
+        user: str,
+        password: str,
+        db_name: str,
 ):
     with open(filepath) as sql_file:
         schema_script = sql_file.read()
@@ -44,7 +49,7 @@ def cmd_reset_database(
     database.create_database(db_name)
 
     # Disconnect
-    database.disconnect()
+    database.close()
 
     # Reconnect, this time to the reset-database
     database = db.Database(
@@ -66,15 +71,15 @@ def cmd_reset_database(
 @click.option('--password', type=str, required=True)  
 @click.option('--db_name', type=str, required=True)
 @click.option('--host', type=str, default='localhost')
-@click.option('--user', type=str, default='root')
+@click.option('--user', type=str, default='postgres')
 def cmd_import_data(
-    info_path: str,
-    results_path: str,
-    year: int,
-    host: str,
-    user: str,
-    password: str,
-    db_name: str,
+        info_path: str,
+        results_path: str,
+        year: int,
+        host: str,
+        user: str,
+        password: str,
+        db_name: str,
 ):
     click.echo('Reading xml...', nl=False)
     start_xml_time = time.time()
@@ -107,6 +112,7 @@ def cmd_import_data(
 
     database.get_cursor().execute('SELECT * FROM Kandidat')
     print(database.get_cursor().fetchall())
+
 
 if __name__ == '__main__':
     click_cli()
