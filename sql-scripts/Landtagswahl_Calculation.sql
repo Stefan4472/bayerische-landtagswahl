@@ -61,7 +61,7 @@ GROUP BY Wahl, Wahlkreis, Partei;
 CREATE MATERIALIZED VIEW Gesamtstimmen_Partei_Wahl AS
 SELECT Wahl,
        Partei,
-       sum(Gesamtstimmen)                                                                    as Gesamtstimmen,
+       sum(Gesamtstimmen)                                                                           as Gesamtstimmen,
        (sum(Gesamtstimmen) / (SELECT sum(Gesamtstimmen) FROM Gesamtstimmen_Partei_Wahlkreis)) * 100 as Prozent
 FROM Gesamtstimmen_Partei_Wahlkreis
 GROUP BY Wahl, Partei;
@@ -88,31 +88,31 @@ ORDER BY kse.Wahl, kse.Stimmkreis;
 -- Wahlbeteiligung
 CREATE MATERIALIZED VIEW WahlbeteiligungUI AS
 SELECT w.jahr,
-       wk.name         as Wahlkreis,
-       s.id            as StimmkreisID,
-       s.name          as Stimmkreis,
+       wk.name                                            as Wahlkreis,
+       s.id                                               as StimmkreisID,
+       s.name                                             as Stimmkreis,
        100 * count(StimmeID)::decimal / s.numberechtigter as Wahlbeteiligung
 FROM erststimme es
          INNER JOIN stimmkreis s ON es.stimmkreis = s.id
          INNER JOIN wahlkreis wk ON wk.id = s.wahlkreis
          INNER JOIN wahl w on es.wahl = w.id
-GROUP BY w.jahr, wk.name , s.id, s.name
+GROUP BY w.jahr, wk.name, s.id, s.name
 ORDER BY s.id;
 
 -- Die prozentuale und absolute Anzahl an Stimmen fuer jede Partei.
 CREATE MATERIALIZED VIEW Gesamtstimmen_Partei_StimmkreisUI AS
 SELECT w.jahr,
-       wk.name         as Wahlkreis,
-       s.id            as StimmkreisID,
-       s.name          as Stimmkreis,
+       wk.name as Wahlkreis,
+       s.id    as StimmkreisID,
+       s.name  as Stimmkreis,
        p.parteiname,
        gps.gesamtstimmen,
        gps.prozent
-       FROM Gesamtstimmen_Partei_Stimmkreis gps
+FROM Gesamtstimmen_Partei_Stimmkreis gps
          INNER JOIN stimmkreis s ON gps.stimmkreis = s.id
          INNER JOIN wahlkreis wk ON wk.id = gps.wahlkreis
          INNER JOIN wahl w ON gps.wahl = w.id
-INNER JOIN partei p ON p.id = gps.Partei;
+         INNER JOIN partei p ON p.id = gps.Partei;
 
 
 -- Direktkandidaten
