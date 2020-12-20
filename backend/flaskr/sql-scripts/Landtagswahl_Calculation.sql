@@ -158,6 +158,14 @@ WITH summary AS (
            ROW_NUMBER() OVER (PARTITION BY gps.jahr, gps.stimmkreisID
                ORDER BY gps.gesamtstimmen DESC) AS rk
     FROM Gesamtstimmen_Partei_StimmkreisUI gps)
-SELECT s.jahr, s.wahlkreis, s.stimmkreisid, s.stimmkreis, s.parteiname, s.gesamtstimmen, s.prozent
+SELECT s.jahr,
+       s.wahlkreis,
+       s.stimmkreisid,
+       s.stimmkreis,
+       s.parteiname,
+       s.gesamtstimmen,
+       s.prozent,
+       s.Erststimmen,
+       s.Zweitstimmen
 FROM summary s
 WHERE s.rk = 1
