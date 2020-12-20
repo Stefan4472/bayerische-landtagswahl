@@ -80,6 +80,17 @@ class Database:
         self._cursor.execute(sql, val)
         return self._cursor.fetchone()[0]
 
+    # TODO: TYPING
+    def get_stimmkreise(
+            self,
+            wahl_id: int,
+    ):
+        """Return data on all Stimmkreise for the specified `wahl_id`."""
+        sql = 'SELECT * FROM Stimmkreis WHERE WahlID = %s'
+        values = (wahl_id,)
+        self._cursor.execute(sql, values)
+        return self._cursor.fetchall()
+
     def get_stimmkreis_id(
             self,
             wahl_id: int,
@@ -97,8 +108,8 @@ class Database:
     ) -> int:
         print('Adding Stimmkreis {}'.format(stimmkreis))
         sql = 'INSERT INTO Stimmkreis (Name, Wahlkreis, Nummer, NumBerechtigter, WahlID) ' \
-                'VALUES (%s, %s, %s, %s, %s) ' \
-                'RETURNING id'
+              'VALUES (%s, %s, %s, %s, %s) ' \
+              'RETURNING id'
         # TODO:
         # - BETTER LOOKUP OF WAHLKREIS ID'S (CURRENTLY HARDCODED)\
         vals = (
@@ -157,8 +168,8 @@ class Database:
         print('Adding Candidate {}'.format(candidate))
         # Add Candidate information to the 'Kandidat' table
         sql = 'INSERT INTO Kandidat (VorName, Nachname, Partei, WahlID, Wahlkreis) ' \
-                'VALUES (%s, %s, %s, %s, %s) ' \
-                'RETURNING id'
+              'VALUES (%s, %s, %s, %s, %s) ' \
+              'RETURNING id'
         vals = (
             candidate.first_name,
             candidate.last_name,
@@ -179,7 +190,7 @@ class Database:
             )
             # Create mapping
             sql = 'INSERT INTO DKandidatZuStimmkreis (Kandidat, Stimmkreis) ' \
-                    'VALUES (%s, %s)'
+                  'VALUES (%s, %s)'
             vals = (
                 candidate_id,
                 stimmkreis_id,
