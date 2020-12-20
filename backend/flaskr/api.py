@@ -14,6 +14,7 @@ API_BLUEPRINT = Blueprint('api', __name__, url_prefix='/api')
 # @cross_origin
 def index():
     db = db_context.get_db()
+    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
     response = jsonify({'some': 'data'})
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
