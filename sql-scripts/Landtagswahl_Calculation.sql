@@ -1,18 +1,3 @@
--- Wahlbeteiligung
-CREATE MATERIALIZED VIEW Wahlbeteiligung_Pro_Stimmkreis AS
-SELECT w.jahr,
-       wk.name         as Wahlkreis,
-       s.id            as StimmkreisID,
-       s.name          as Stimmkreis,
-       count(StimmeID)::decimal / s.numberechtigter as Wahlbeteiligung
-FROM erststimme es
-         INNER JOIN stimmkreis s ON es.stimmkreis = s.id
-         INNER JOIN wahlkreis wk ON wk.id = s.wahlkreis
-         INNER JOIN wahl w on es.wahl = w.id
-GROUP BY w.jahr, wk.name , s.id, s.name
-ORDER BY s.id;
-
-
 -- Anzahl Erststimme für jeden Kandidat
 CREATE MATERIALIZED VIEW Erststimme_Kandidat AS
 SELECT Wahl, Wahlkreis, Stimmkreis, Partei, Kandidat, count(StimmeID) as Anzahl
@@ -87,3 +72,59 @@ FROM Erststimme_Kandidat kse
                     ON kse.Wahl = kse_grouped.Wahl AND kse.Anzahl = kse_grouped.Anzahl AND
                        kse.Stimmkreis = kse_grouped.Stimmkreis
 ORDER BY kse.Wahl, kse.Stimmkreis;
+
+
+
+-- Q3 Stimmkreisuebersicht
+
+-- Wahlbeteiligung
+CREATE MATERIALIZED VIEW Wahlbeteiligung_Pro_Stimmkreis AS
+SELECT w.jahr,
+       wk.name         as Wahlkreis,
+       s.id            as StimmkreisID,
+       s.name          as Stimmkreis,
+       100 * count(StimmeID)::decimal / s.numberechtigter as Wahlbeteiligung
+FROM erststimme es
+         INNER JOIN stimmkreis s ON es.stimmkreis = s.id
+         INNER JOIN wahlkreis wk ON wk.id = s.wahlkreis
+         INNER JOIN wahl w on es.wahl = w.id
+GROUP BY w.jahr, wk.name , s.id, s.name
+ORDER BY s.id;
+
+-- Die Summe der Erststimmen einer Partei (fuer alle Kandidaten) in Stimmkreis.
+CREATE MATERIALIZED VIEW Gesamtstimmen_Partei_Stimmkreis AS
+SELECT Wahl, Wahlkreis, Stimmkreis, Partei, sum(Anzahl) as Gesamtstimmen
+FROM (SELECT wahl, wahlkreis, stimmkreis, partei, sum(anzahl) as Anzahl
+      FROM Erststimme_Kandidat
+      GROUP BY wahl, wahlkreis, stimmkreis, partei
+      UNION ALL
+-- Anzahl an Zweitstimme für jeden Kandidat in Wahlkreis
+      SELECT Wahl, Wahlkreis, Stimmkreis, Partei, count(StimmeID) as Anzahl
+      FROM zweitstimme s
+               INNER JOIN Kandidat k ON k.ID = s.Kandidat
+      WHERE isValid = 1
+      GROUP BY Wahl, Wahlkreis, Stimmkreis, Partei
+      UNION ALL
+-- Anzahl an Zweitstimme nur für Partei
+      SELECT Wahl, Wahlkreis, Stimmkreis, Partei, count(StimmeID) as Anzahl
+      FROM zweitstimmepartei zp
+               INNER JOIN Stimmkreis s ON s.ID = zp.Stimmkreis
+      GROUP BY Wahl, Wahlkreis, Stimmkreis, Partei) as EKsk
+GROUP BY Wahl, Wahlkreis, Stimmkreis, Partei;
+
+WITH Gesamtstimmen_Pro_Stimmkreis AS (
+    SELECT Wahl, Wahlkreis, Stimmkreis, sum(Gesamtstimmen) as Gesamtstimmen
+    FROM Gesamtstimmen_Partei_Stimmkreis gps
+    GROUP BY Wahl, Wahlkreis, Stimmkreis
+)
+SELECT Wahl,
+       Wahlkreis,
+       Stimmkreis,
+       Partei,
+       Gesamtstimmen,
+       100 * Gesamtstimmen:: decimal / (SELECT gspAll.Gesamtstimmen
+                                        FROM Gesamtstimmen_Pro_Stimmkreis gspAll
+                                        WHERE gspAll.Wahl = gps.Wahl
+                                          AND gps.Stimmkreis = gspAll.Stimmkreis)
+FROM Gesamtstimmen_Partei_Stimmkreis gps
+ORDER BY Wahl, Stimmkreis, Gesamtstimmen DESC;
