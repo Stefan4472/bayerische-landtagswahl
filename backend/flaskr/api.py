@@ -38,3 +38,34 @@ def get_stimmkreise():
     response = jsonify(stimmkreis_json)
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
+
+
+@API_BLUEPRINT.route('/results/stimmkreis/<number>')
+def get_stimmkreis_results(number: int):
+    # Currently using mock data
+    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
+    response = jsonify({
+        'turnout_percent': 70.2,
+        'results': [
+            {
+                'party': 'Grüne',
+                'candidate': 'Benjamin Adjei',
+                'erststimmen': 17573,
+                'zweitstimmen': 18307,
+            },
+            {
+                'party': 'CSU',
+                'candidate': 'Mechtilde Wittman',
+                'erststimmen': 17495,
+                'zweitstimmen': 17853,
+            },
+            {
+                'party': 'SPD',
+                'candidate': 'Diana Stachowitz',
+                'erststimmen': 9996,
+                'zweitstimmen': 8467,
+            },
+        ],
+    })
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
