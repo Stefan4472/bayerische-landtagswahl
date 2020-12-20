@@ -32,84 +32,13 @@ export class App extends React.Component {
                 </Navbar>
             </Container>
 
-
+            {/*Content*/}
             <Container>
-                {/*Content*/}
                 <Row className="mb-2">
                     <h2>Das Bayerische Landtagswahl System</h2>
                     <p>This website stores data from Bavarian State Parliament elections. It can be used to view and analyze the results from a given election (use the "Wahljahr Auswahl", below) and to compare data between elections.</p>
                 </Row>
-
                 <StimmkreisDisplayer/>
-
-                <Card className="mb-2">
-                    <Card.Body>
-                        <Card.Title>Stimmkreis Ergebnisse</Card.Title>
-                        <Row>
-                            <Col>
-                                <div id="piechart-county"></div>
-                            </Col>
-                            <Col>
-                                <table style={{width: "100%"}}>
-                                    <tr>
-                                        <th>Kandidat</th>
-                                        <th>Partei</th>
-                                        <th>Erststimmen</th>
-                                        <th>Erststimmen (%)</th>
-                                    </tr>
-                                    <tr>
-                                        <td>Benjamin Adjei*</td>
-                                        <td>Gruene</td>
-                                        <td>17.573</td>
-                                        <td>26,2</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Mechthilde Wittmann</td>
-                                        <td>CSU</td>
-                                        <td>17.495</td>
-                                        <td>26,1</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Diana Stachowitz</td>
-                                        <td>SPD</td>
-                                        <td>9.996</td>
-                                        <td>14,9</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Michael Groß</td>
-                                        <td>AfD</td>
-                                        <td>5.462</td>
-                                        <td>8,2</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Albert Duin</td>
-                                        <td>FDP</td>
-                                        <td>5.285</td>
-                                        <td>7,9</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Lilian Edenhofer</td>
-                                        <td>Freie Waehler</td>
-                                        <td>4.462</td>
-                                        <td>6,7</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Tony Luis Guerra</td>
-                                        <td>Die Linke</td>
-                                        <td>2.790</td>
-                                        <td>4,2</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Sonstige</td>
-                                        <td>...</td>
-                                        <td>...</td>
-                                        <td>...</td>
-                                    </tr>
-                                </table>
-                            </Col>
-                        </Row>
-                    </Card.Body>
-                </Card>
             </Container>
         </div>
     }
