@@ -19,3 +19,7 @@ SELECT * FROM Gesamtstimmen_Partei_StimmkreisUI;
 
 -- Q4 Stimmkreissieger
 SELECT * FROM StimmkreisSiegerUi;
+
+
+-- Q5 Ueberhangmandate
+SELECT * FROM UeberhangmandateUI;

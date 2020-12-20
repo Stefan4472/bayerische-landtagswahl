@@ -145,6 +145,7 @@ WITH Gesamtstimmen_Partei_5Prozent AS
 -- Berechnen Sitze für alle Parteien wenn es zu Überhangmandaten kommt.
 SELECT mp.Wahl, mp.Wahlkreis, mp.Partei, mp.Stimmenzahl, mp.Prozent, mp.Sitze,
 		ROUND(mp.Sitze * COALESCE(uv.Ueberhangsmandate_Verhaeltnis, 1)) as Ueberhangsmandate_Sitze,
+        ROUND(mp.Sitze * COALESCE(uv.Ueberhangsmandate_Verhaeltnis, 1))  - mp.Sitze as Ueberhangsmandate,
         mp.Direktmandate,
 		ROUND(mp.Sitze * COALESCE(uv.Ueberhangsmandate_Verhaeltnis, 1)) - mp.Direktmandate as Listmandate
 FROM Mandate_Partei mp
@@ -270,4 +271,12 @@ SELECT s.jahr,
        s.Erststimmen,
        s.Zweitstimmen
 FROM summary s
-WHERE s.rk = 1
+WHERE s.rk = 1;
+
+-- Q5 Ueberhangmandate
+CREATE MATERIALIZED VIEW UeberhangmandateUI AS
+SELECT w.jahr, wk.id as wahlkreisID, wk.name as wahlkreis, p.parteiname, Ueberhangsmandate
+FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
+         INNER JOIN wahl w ON w.id = gsp.wahl
+         INNER JOIN wahlkreis wk ON wk.id = gsp.wahlkreis
+         INNER JOIN partei p ON p.id = gsp.partei
