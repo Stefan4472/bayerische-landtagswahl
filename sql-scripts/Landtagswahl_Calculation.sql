@@ -47,54 +47,22 @@ FROM Gesamtstimmen_Partei_Stimmkreis gps
 ORDER BY Wahl, Stimmkreis, Gesamtstimmen DESC;
 
 
--- Anzahl an Zweitstimme für jeden Kandidat in Wahlkreis
-CREATE MATERIALIZED VIEW Zweitstimme_Kandidat AS
-SELECT Wahl, Wahlkreis, Partei, Kandidat, count(StimmeID) as Anzahl
-FROM zweitstimme s
-         INNER JOIN Kandidat k ON k.ID = s.Kandidat
-WHERE isValid = 1
-GROUP BY Wahl, Wahlkreis, Partei, Kandidat;
-
-
--- Anzahl an alle Zweitstimme für Partei (inklusive Listkandidaten) pro Wahlkreis
-CREATE MATERIALIZED VIEW Zweitstimme_Partei_Wahlkreis AS
-SELECT Wahl, Wahlkreis, Partei, sum(Anzahl) as Anzahl
-FROM
-    -- Anzahl an Zweitstimme für jeden Kandidat
-    (SELECT Wahl, Wahlkreis, Partei, sum(Anzahl) as Anzahl
-     FROM Zweitstimme_Kandidat azs
-     GROUP BY Wahl, Wahlkreis, Partei
-     UNION ALL
-     -- Anzahl an Zweitstimme nur für Partei
-     SELECT Wahl, Wahlkreis, Partei, count(StimmeID) as Anzahl
-     FROM zweitstimmepartei zp
-              INNER JOIN Stimmkreis s ON s.ID = zp.Stimmkreis
-     GROUP BY Wahl, Wahlkreis, Partei) Gesamt_Zweitstimmen_Partei_In_Wahlkreis
-GROUP BY Wahl, Wahlkreis, Partei;
-
-
--- Gesamtstimmen (inkl. Erst- und Zweitstimmen) für Partei pro Wahlkreis
+-- Gesamtstimmen aller Parteien pro Wahlkreis
 CREATE MATERIALIZED VIEW Gesamtstimmen_Partei_Wahlkreis AS
-SELECT Wahl, Wahlkreis, Partei, sum(Anzahl) as Anzahl
-FROM
-    -- Erststimmen für alle Kandidaten einer Partei
-    (SELECT Wahl, Wahlkreis, Partei, sum(Anzahl) as Anzahl
-     FROM Erststimme_Kandidat
-     GROUP BY Wahl, Wahlkreis, Partei
-     UNION ALL
-     -- Zweitstimmen einer Partei
-     SELECT *
-     FROM Zweitstimme_Partei_Wahlkreis) Gesamt_Stimme_Partei_Pro_Wahlkreis
-GROUP BY Wahl, Wahlkreis, Partei
-ORDER BY Wahl, Wahlkreis, Anzahl DESC;
+SELECT Wahl,
+       Wahlkreis,
+       Partei,
+       sum(Gesamtstimmen) as Gesamtstimmen
+FROM Gesamtstimmen_Partei_Stimmkreis gps
+GROUP BY Wahl, Wahlkreis, Partei;
 
 
 -- Die Zahl der Gesamtstimmen der Partei mit Prozent in Bayern
 CREATE MATERIALIZED VIEW Gesamtstimmen_Partei_Wahl AS
 SELECT Wahl,
        Partei,
-       sum(Anzahl)                                                                    as Anzahl_Gesamtstimmen,
-       (sum(Anzahl) / (SELECT sum(Anzahl) FROM Gesamtstimmen_Partei_Wahlkreis)) * 100 as Prozent
+       sum(Gesamtstimmen)                                                                    as Gesamtstimmen,
+       (sum(Gesamtstimmen) / (SELECT sum(Gesamtstimmen) FROM Gesamtstimmen_Partei_Wahlkreis)) * 100 as Prozent
 FROM Gesamtstimmen_Partei_Wahlkreis
 GROUP BY Wahl, Partei;
 
@@ -144,4 +112,23 @@ SELECT w.jahr,
          INNER JOIN stimmkreis s ON gps.stimmkreis = s.id
          INNER JOIN wahlkreis wk ON wk.id = gps.wahlkreis
          INNER JOIN wahl w ON gps.wahl = w.id
-INNER JOIN partei p ON p.id = gps.Partei
+INNER JOIN partei p ON p.id = gps.Partei;
+
+
+-- Direktkandidaten
+CREATE MATERIALIZED VIEW DirektkandidatenUI AS
+SELECT w.jahr,
+       wk.name as Wahlkreis,
+       s.id    as StimmkreisID,
+       s.name  as Stimmkreis,
+       k.vorname,
+       k.nachname,
+       p.parteiname,
+       eg.erststimme
+FROM Erststimme_Gewinner_Pro_Stimmkreis eg
+         INNER JOIN wahl w ON w.id = eg.wahl
+         INNER JOIN wahlkreis wk ON wk.id = eg.wahlkreis
+         INNER JOIN stimmkreis s ON s.id = eg.stimmkreis
+         INNER JOIN kandidat k ON k.id = eg.kandidat
+         INNER JOIN partei p ON p.id = eg.partei
+ORDER BY w.jahr, s.id;
