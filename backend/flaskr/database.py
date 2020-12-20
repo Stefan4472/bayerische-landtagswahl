@@ -76,7 +76,7 @@ class Database:
             wahl_year: int,
     ) -> int:
         sql = 'INSERT INTO Wahl (Jahr) VALUES (%s) RETURNING id'
-        val = (2018,)
+        val = (wahl_year,)
         self._cursor.execute(sql, val)
         return self._cursor.fetchone()[0]
 
