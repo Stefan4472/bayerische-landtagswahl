@@ -132,3 +132,14 @@ FROM Erststimme_Gewinner_Pro_Stimmkreis eg
          INNER JOIN kandidat k ON k.id = eg.kandidat
          INNER JOIN partei p ON p.id = eg.partei
 ORDER BY w.jahr, s.id;
+
+-- Q4 Stimmkreissieger
+CREATE MATERIALIZED VIEW StimmkreissiegerUI AS
+WITH summary AS (
+    SELECT gps.*,
+           ROW_NUMBER() OVER (PARTITION BY gps.jahr, gps.stimmkreisID
+               ORDER BY gps.gesamtstimmen DESC) AS rk
+    FROM Gesamtstimmen_Partei_StimmkreisUI gps)
+SELECT s.jahr, s.wahlkreis, s.stimmkreisid, s.stimmkreis, s.parteiname, s.gesamtstimmen, s.prozent
+FROM summary s
+WHERE s.rk = 1
