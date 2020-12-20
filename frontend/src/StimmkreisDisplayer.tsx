@@ -2,6 +2,7 @@ import {Card, Col, Row} from "react-bootstrap";
 import {StimmkreisInfo, StimmkreisSelector} from "./StimmkreisSelector";
 import React from "react";
 import {StimmkreisTable} from "./StimmkreisTable";
+import {StimmkreisChart} from "./StimmkreisChart";
 
 
 interface StimmkreisResult {
@@ -65,7 +66,8 @@ export class StimmkreisDisplayer extends React.Component<Props> {
             </Col>
             {/*Show results using the rest of the screen width*/}
             <Col>
-                <Card>
+                <Card className={"justify-content-center"}>
+                    <StimmkreisChart stimmkreis={this.state.currStimmkreis}/>
                     <StimmkreisTable stimmkreis={this.state.currStimmkreis}/>
                 </Card>
             </Col>
