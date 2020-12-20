@@ -1,3 +1,7 @@
+-- Q2 Mitglieder des Landtages
+SELECT * FROM Mitglieder_des_LandtagesUI
+ORDER BY nachname;
+
 -- Q3 Stimmkreisuebersicht
 
 -- Wahlbeteiligung
