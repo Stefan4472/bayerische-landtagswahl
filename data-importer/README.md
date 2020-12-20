@@ -15,10 +15,10 @@ TODO: MORE DETAIL
 - Use pip to install the libraries listed in `requirements.txt`
 
 ## Usage
-Run a SQL script, for example, `sql-scripts/CreateDB.sql`:
+Reset the database to use a specified schema:
 ```
 > cd data-importer
-> python manage_db.py run_script "../SQL scripts/CreateDB.sql" --password=[YOUR_MYSQL_PASSWORD]
+> python manage_db.py reset ../sql-scripts/PostgresSchema.sql --db_name=bayerische_landtagswahl --password=[YOUR_MYSQL_PASSWORD]
 ```
 
 Import XML election data, for example `data/2018-info.xml` and `data/2018-results.xml`:

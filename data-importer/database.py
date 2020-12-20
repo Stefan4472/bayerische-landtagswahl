@@ -1,54 +1,56 @@
-import mysql.connector
+import psycopg2
 import typing
 import util
-
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 class Database:
     def __init__(
-        self,
-        host: str,
-        user: str,
-        password: str,
-        database_name: str = '',
+            self,
+            host: str,
+            user: str,
+            password: str,
+            database_name: str,
     ):
-        self._db = mysql.connector.connect(
+        self._conn = psycopg2.connect(
             host=host,
             user=user,
             password=password,
             database=database_name,
         )
-        self._cursor = self._db.cursor()
+        self._cursor = self._conn.cursor()
 
-    def get_cursor(self) -> mysql.connector.cursor.MySQLCursor:
+    def get_cursor(self) -> psycopg2.extensions.cursor:
         return self._cursor
 
-    def execute_script(
-        self,
-        script: str,
-    ):
-        # Note: Code from StackOverflow: cursor.execute(script, multi=True) 
-        # doesn't seem to work correctly.
-        # NOTE: THIS DOES NOT ALLOW MULTI-LINE COMMENTS!!
-        # https://stackoverflow.com/a/19159041
-        import re
-        statement = ''
-        for line in script.splitlines():
-            if re.match(r'--', line):  # ignore sql comment lines
-                continue
-            if not re.search(r';$', line):  # keep appending lines that don't end in ';'
-                statement = statement + line
-            else:  # when you get a line ending in ';' then exec statement and reset for next statement
-                statement = statement + line
-                #print "\n\n[DEBUG] Executing SQL statement:\n%s" % (statement)
-                try:
-                    self._cursor.execute(statement)
-                except (mysql.connector.OperationalError, mysql.connector.ProgrammingError, mysql.connector.DatabaseError) as e:
-                    print("\n[WARN] MySQLError during execute statement \n\tArgs: '{}'".format(str(e.args)))
-                statement = ""
-        # self._cursor.execute(script, multi=True)
-
     def commit(self):
-        self._db.commit()
+        self._conn.commit()
+
+    def disconnect(self):
+        self._cursor.close()
+        self._conn.close()
+
+    def create_database(
+            self,
+            db_name: str,
+    ):
+        self._conn.autocommit = True
+        self._cursor.execute('CREATE DATABASE ' + db_name)
+        self._conn.autocommit = False
+
+    def drop_database(
+            self,
+            db_name: str,
+    ):
+        self._conn.autocommit = True
+        self._cursor.execute('DROP DATABASE IF EXISTS ' + db_name)
+        self._conn.autocommit = False
+
+    def run_script(
+            self,
+            script: str,
+    ):
+        """NOTE: cannot be used to create or drop a database"""
+        self._cursor.execute(script)
 
     def has_wahl(
         self,
@@ -72,10 +74,10 @@ class Database:
         self,
         wahl_year: int,
     ) -> int:
-        sql = 'INSERT INTO Wahl (Jahr) VALUES (%s)'
+        sql = 'INSERT INTO Wahl (Jahr) VALUES (%s) RETURNING id'
         val = (2018,)
         self._cursor.execute(sql, val)
-        return self._cursor.lastrowid
+        return self._cursor.fetchone()[0]
 
     def get_stimmkreis_id(
         self,
@@ -94,18 +96,19 @@ class Database:
     ) -> int:
         print('Adding Stimmkreis {}'.format(stimmkreis))
         sql = 'INSERT INTO Stimmkreis (Name, Wahlkreis, Nummer, NumBerechtigter, WahlID) ' \
-                'VALUES (%s, %s, %s, %s, %s)'
+                'VALUES (%s, %s, %s, %s, %s) ' \
+                'RETURNING id'
         # TODO:
         # - BETTER LOOKUP OF WAHLKREIS ID'S (CURRENTLY HARDCODED)\
         vals = (
-            stimmkreis.name, 
-            stimmkreis.get_wahlkreis().value, 
+            stimmkreis.name,
+            stimmkreis.get_wahlkreis().value,
             stimmkreis.number,
             stimmkreis.num_eligible_voters,
             wahl_id,
         )
         self._cursor.execute(sql, vals)
-        return self._cursor.lastrowid
+        return self._cursor.fetchone()[0]
 
     def has_party(
         self,
@@ -130,10 +133,10 @@ class Database:
         party_name: str,
     ) -> int:
         print('Adding Party {}'.format(party_name))
-        sql = 'INSERT INTO Partei (ParteiName) VALUES (%s)'
+        sql = 'INSERT INTO Partei (ParteiName) VALUES (%s) RETURNING id'
         vals = (party_name,)
         self._cursor.execute(sql, vals)
-        return self._cursor.lastrowid
+        return self._cursor.fetchone()[0]
 
     def add_party_to_election(
         self,
@@ -153,9 +156,10 @@ class Database:
         print('Adding Candidate {}'.format(candidate))
         # Add Candidate information to the 'Kandidat' table
         sql = 'INSERT INTO Kandidat (VorName, Nachname, Partei, WahlID, Wahlkreis) ' \
-                'VALUES (%s, %s, %s, %s, %s)'
+                'VALUES (%s, %s, %s, %s, %s) ' \
+                'RETURNING id'
         vals = (
-            candidate.first_name, 
+            candidate.first_name,
             candidate.last_name,
             party_id,
             wahl_id,
@@ -163,13 +167,13 @@ class Database:
         )
         self._cursor.execute(sql, vals)
         # Record ID given to candidate in the table
-        candidate_id = self._cursor.lastrowid
+        candidate_id = self._cursor.fetchone()[0]
         # If candidate is a direct candidate, record their stimmkreis
         # in the 'DKandidatZuStimmkreis' table
         if candidate.is_direct:
             # Look up the ID of the candidate's stimmkreis
             stimmkreis_id = self.get_stimmkreis_id(
-                wahl_id, 
+                wahl_id,
                 candidate.direct_stimmkreis,
             )
             # Create mapping
@@ -181,7 +185,6 @@ class Database:
             )
             self._cursor.execute(sql, vals)
         return candidate_id
-        
 
     def generate_erst_stimmen(
         self,
@@ -256,6 +259,7 @@ class Database:
         Note: Performance might be improved by reducing the number of tuples per insert
         TODO: IS THE `INSERTS_PER_CALL` OPTIMIZATION WORTH THE ADDED CODE COMPLEXITY?
         """
+        print('Inserting {} values'.format(num_inserts))
         if num_inserts == 0:
             return
 
@@ -263,7 +267,7 @@ class Database:
         columns_string = ','.join(col_names)
         # Form single tuple string
         tuple_string = '(' + ','.join([str(t) for t in _tuple]) + ')'
-        
+
         if num_inserts < inserts_per_call:
             # Create bulk insertion string
             bulk_insert = (tuple_string + ',') * (num_inserts - 1) + tuple_string
@@ -273,7 +277,7 @@ class Database:
                 columns_string,
                 bulk_insert,
             )
-            # Execute    
+            # Execute
             self._cursor.execute(sql)
         # Split the insert into a number of calls, each of size `inserts_per_call`
         else:
@@ -299,6 +303,7 @@ class Database:
                 columns_string,
                 bulk_insert,
             )
-            # Execute    
+            # Execute
             self._cursor.execute(sql)
+
 
