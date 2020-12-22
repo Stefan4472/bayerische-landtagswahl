@@ -40,34 +40,32 @@ def get_stimmkreise():
     return response
 
 
+# TODO: GENERALLY, NEED A TON OF LEGIBILITY IMPROVEMENTS, NAMED TUPLES, DTOS, ETC.
 @API_BLUEPRINT.route('/results/stimmkreis/<number>')
-def get_stimmkreis_results(number: int):
+def get_stimmkreis_overview(number: int):
     db = db_context.get_db()
-    db.get_stimmkreis_info(WAHL_ID, number)
-    # Currently using mock data
-    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
+    # Look up StimmkreisID
+    stimmkreis_id = db.get_stimmkreis_id(WAHL_ID, number)
+    # Perform queries
+    turnout = db.get_stimmkreis_turnout(WAHL_ID, stimmkreis_id)
+    # winner_fname, winner_lname = db.get_stimmkreis_winner(WAHL_ID, stimmkreis_id)
+    erst_by_party = db.get_stimmkreis_erststimmen(WAHL_ID, stimmkreis_id)
+    gesamt_by_party = db.get_stimmkreis_gesamtstimmen(WAHL_ID, stimmkreis_id)
+    # Form the 'results' dictionary, which requires coalescing first-
+    # and second-votes by party
+    results = [
+        {
+            'party': party_name,
+            'candidate': erst_by_party[party_name][0] + erst_by_party[party_name][1],
+            'erststimmen': erst_by_party[party_name][2],
+            'zweitstimmen': gesamt_by_party[party_name] - erst_by_party[party_name][2],
+        } for party_name in erst_by_party.keys()
+    ]
+    # Form the response
     response = jsonify({
-        'turnout_percent': 70.2,
-        'results': [
-            {
-                'party': 'Grüne',
-                'candidate': 'Benjamin Adjei',
-                'erststimmen': 17573,
-                'zweitstimmen': 18307,
-            },
-            {
-                'party': 'CSU',
-                'candidate': 'Mechtilde Wittman',
-                'erststimmen': 17495,
-                'zweitstimmen': 17853,
-            },
-            {
-                'party': 'SPD',
-                'candidate': 'Diana Stachowitz',
-                'erststimmen': 9996,
-                'zweitstimmen': 8467,
-            },
-        ],
+        'turnout_percent': turnout,
+        'results': results,
     })
+    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
