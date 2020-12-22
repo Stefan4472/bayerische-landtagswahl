@@ -1,5 +1,5 @@
 import React from "react";
-import {Jumbotron, Container, Navbar, Card, Row, Col, Nav} from "react-bootstrap";
+import {Jumbotron, Container, Navbar, Row, Nav} from "react-bootstrap";
 import "./App.css"
 import {StimmkreisDisplayer} from "./StimmkreisDisplayer";
 
