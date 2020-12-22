@@ -12,11 +12,31 @@ API_BLUEPRINT = Blueprint('api', __name__, url_prefix='/api')
 # NOTE: CURRENTLY HARDCODED TO WAHL_ID = 1
 WAHL_ID = 1
 
+
 @API_BLUEPRINT.route('/')
 # @cross_origin
 def index():
     # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
     response = jsonify({'some': 'data'})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+# TODO: HOW TO IMPLEMENT THIS PROPERLY?
+@API_BLUEPRINT.route('/main-parties/')
+def get_main_parties():
+    """Return list of parties in-order that they should be displayed,
+    and with display color."""
+    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
+    response = jsonify([
+        {'name': 'CSU', 'color': '#009FE3'},
+        {'name': 'SPD', 'color': '#E20612'},
+        {'name': 'FDP', 'color': '#F29200'},
+        {'name': 'GRÜNE', 'color': '#F29200'},
+        {'name': 'FDP', 'color': '#FEED01'},
+        {'name': 'DIE LINKE', 'color': '#AE1871'},
+        {'name': 'AfD', 'color': '#006691'},
+    ])
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
@@ -56,7 +76,7 @@ def get_stimmkreis_overview(number: int):
     results = [
         {
             'party': party_name,
-            'candidate': erst_by_party[party_name][0] + erst_by_party[party_name][1],
+            'candidate': erst_by_party[party_name][1] + ', ' + erst_by_party[party_name][0],
             'erststimmen': erst_by_party[party_name][2],
             'zweitstimmen': gesamt_by_party[party_name] - erst_by_party[party_name][2],
         } for party_name in erst_by_party.keys()
