@@ -1,6 +1,7 @@
 import React from "react";
 import { Pie } from '@nivo/pie'
 import {Stimmkreis} from "./StimmkreisDisplayer";
+import assert from "assert";
 
 interface PartyInfo {
     name: string;
@@ -15,7 +16,7 @@ interface State {
     // Map party name to hex color string
     partyColorInfo: Map<string, string>;
     // Map index to party name
-    // partyOrdering: Map<, number>;
+    partyOrdering: string[];
 }
 
 // TODO: PROVIDE OPTION TO DISPLAY ERSTSTIMMEN OR ZWEITSTIMMEN
@@ -26,7 +27,7 @@ export class StimmkreisChart extends React.Component<Props> {
         super(props);
         this.state = {
             partyColorInfo: new Map(),
-            // partyOrdering: [],
+            partyOrdering: [],
         };
     }
 
@@ -50,14 +51,17 @@ export class StimmkreisChart extends React.Component<Props> {
     }
 
     // Formats data for this Stimmkreis into a format that
-    // can be displayed in the chart
+    // can be displayed in the chart.
+    // NOTE: This is pretty hacky.
     formatData() {
         if (this.props.stimmkreis) {
-            let results = [];
+            // Construct result object mapped by party name
+            let results = new Map<string, any>();
+            // Create result objects for the main parties
             let num_other_votes = 0;
             for (const stimmkreis of this.props.stimmkreis.results) {
                 if (this.state.partyColorInfo.has(stimmkreis.party)) {
-                    results.push({
+                    results.set(stimmkreis.party, {
                         id: stimmkreis.party,
                         value: stimmkreis.erststimmen,
                     })
@@ -67,14 +71,28 @@ export class StimmkreisChart extends React.Component<Props> {
                     num_other_votes += stimmkreis.erststimmen;
                 }
             }
+            console.log(results);
+            // Now order result objects into a list
+            let results_list = [];
+            for (const party_name of this.state.partyOrdering) {
+                console.log(party_name);
+                if (results.has(party_name)) {
+                    results_list.push(results.get(party_name));
+                }
+                else {
+                    // SHOULD NEVER HAPPEN
+                    assert(false);
+                }
+            }
+            // Add the sum of all tiny parties
             if (num_other_votes) {
-                results.push({
+                results_list.push({
                     id: 'Other',
                     value: num_other_votes,
                 })
             }
-            console.log(results);
-            return results;
+            console.log(results_list);
+            return results_list;
         }
         else {
             return [];

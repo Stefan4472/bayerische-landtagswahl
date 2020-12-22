@@ -31,8 +31,8 @@ def get_main_parties():
     response = jsonify([
         {'name': 'CSU', 'color': '#009FE3'},
         {'name': 'SPD', 'color': '#E20612'},
-        {'name': 'FDP', 'color': '#F29200'},
-        {'name': 'GRÜNE', 'color': '#F29200'},
+        {'name': 'FREIE WÄHLER', 'color': '#F29200'},
+        {'name': 'GRÜNE', 'color': '#23A538'},
         {'name': 'FDP', 'color': '#FEED01'},
         {'name': 'DIE LINKE', 'color': '#AE1871'},
         {'name': 'AfD', 'color': '#006691'},
