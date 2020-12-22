@@ -12,7 +12,10 @@ interface Props {
 }
 
 interface State {
+    // Map party name to hex color string
     partyColorInfo: Map<string, string>;
+    // Map index to party name
+    // partyOrdering: Map<, number>;
 }
 
 // TODO: PROVIDE OPTION TO DISPLAY ERSTSTIMMEN OR ZWEITSTIMMEN
@@ -23,6 +26,7 @@ export class StimmkreisChart extends React.Component<Props> {
         super(props);
         this.state = {
             partyColorInfo: new Map(),
+            // partyOrdering: [],
         };
     }
 
@@ -33,13 +37,14 @@ export class StimmkreisChart extends React.Component<Props> {
             .then(data => {
                 // TODO: NEEDS TO BE IMPROVED
                 let party_color_info = new Map<string, string>();
-                data.forEach((obj: PartyInfo) => {
-                    console.log(obj);
-                    console.log(obj.name, obj.color);
-                    party_color_info.set(obj.name, obj.color);
+                let party_order_info: string[] = [];
+                data.forEach((party_info: PartyInfo) => {
+                    party_color_info.set(party_info.name, party_info.color);
+                    party_order_info.push(party_info.name);
                 })
                 this.setState({
                     partyColorInfo: party_color_info,
+                    partyOrdering: party_order_info,
                 })
             });
     }
@@ -48,13 +53,28 @@ export class StimmkreisChart extends React.Component<Props> {
     // can be displayed in the chart
     formatData() {
         if (this.props.stimmkreis) {
-            return this.props.stimmkreis.results.map((stimmkreis) => {
-                return {
-                    id: stimmkreis.party,
-                    value: stimmkreis.erststimmen,
-                    color: '#FFFFFF',
+            let results = [];
+            let num_other_votes = 0;
+            for (const stimmkreis of this.props.stimmkreis.results) {
+                if (this.state.partyColorInfo.has(stimmkreis.party)) {
+                    results.push({
+                        id: stimmkreis.party,
+                        value: stimmkreis.erststimmen,
+                    })
                 }
-            })
+                // Track votes of the minor parties
+                else {
+                    num_other_votes += stimmkreis.erststimmen;
+                }
+            }
+            if (num_other_votes) {
+                results.push({
+                    id: 'Other',
+                    value: num_other_votes,
+                })
+            }
+            console.log(results);
+            return results;
         }
         else {
             return [];
@@ -66,7 +86,6 @@ export class StimmkreisChart extends React.Component<Props> {
     getColor(id: string|number) : string {
         // if (id instanceof string) {
         if (typeof(id) === 'string') {
-            console.log(id);
             if (this.state.partyColorInfo.has(id)) {
                 let color = this.state.partyColorInfo.get(id);
                 if (color) {
@@ -84,7 +103,6 @@ export class StimmkreisChart extends React.Component<Props> {
         // TODO: RESPONSIVE SIZING?
         // A link that helped me to figure out custom coloring: https://github.com/plouc/nivo/issues/581
         if (this.props.stimmkreis) {
-            let func = this.getColor;
             return <Pie
                 width={400}
                 height={400}
