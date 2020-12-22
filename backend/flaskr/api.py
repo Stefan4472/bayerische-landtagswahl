@@ -42,6 +42,8 @@ def get_stimmkreise():
 
 @API_BLUEPRINT.route('/results/stimmkreis/<number>')
 def get_stimmkreis_results(number: int):
+    db = db_context.get_db()
+    db.get_stimmkreis_info(WAHL_ID, number)
     # Currently using mock data
     # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
     response = jsonify({

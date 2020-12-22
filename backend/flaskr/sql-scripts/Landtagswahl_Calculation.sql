@@ -1,3 +1,21 @@
+-- @Vlad: I kept getting errors that these views already existed. Let me know if this is incorrect
+DROP MATERIALIZED VIEW IF EXISTS Erststimme_Kandidat CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Anzhal_Zweitstimme_Kandidat CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Erststimme_Gewinner_Pro_Stimmkreis CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Mitglieder_des_Landtages CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Sitzverteilung CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Mitglieder_des_LandtagesUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS WahlbeteiligungUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_StimmkreisUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS DirektkandidatenUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS StimmkreissiegerUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS UeberhangmandateUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS ErstimmenKandidatStimmkreisUI CASCADE;
+
 -- Anzahl Erststimme für jeden Kandidat
 CREATE MATERIALIZED VIEW Erststimme_Kandidat AS
 SELECT Wahl, Wahlkreis, Stimmkreis, Partei, Kandidat, count(StimmeID) as Anzahl
@@ -235,7 +253,6 @@ FROM Gesamtstimmen_Partei_Stimmkreis gps
          INNER JOIN wahl w ON gps.wahl = w.id
          INNER JOIN partei p ON p.id = gps.Partei;
 
-
 -- Direktkandidaten
 CREATE MATERIALIZED VIEW DirektkandidatenUI AS
 SELECT w.jahr,
@@ -279,4 +296,11 @@ SELECT w.jahr, wk.id as wahlkreisID, wk.name as wahlkreis, p.parteiname, Ueberha
 FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
          INNER JOIN wahl w ON w.id = gsp.wahl
          INNER JOIN wahlkreis wk ON wk.id = gsp.wahlkreis
-         INNER JOIN partei p ON p.id = gsp.partei
+         INNER JOIN partei p ON p.id = gsp.partei;
+
+-- Erststimmen pro Kandidat, pro Stimmkreis (Q7?)
+CREATE MATERIALIZED VIEW ErstimmenKandidatStimmkreisUI AS
+SELECT ek.stimmkreis, k.vorname, k.nachname, ek.anzahl, p.ParteiName
+FROM Erststimme_Kandidat ek
+    INNER JOIN Kandidat k ON k.ID = ek.kandidat
+    INNER JOIN Partei p ON p.ID = ek.partei;

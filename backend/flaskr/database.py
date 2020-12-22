@@ -101,6 +101,56 @@ class Database:
         self._cursor.execute(sql, values)
         return self._cursor.fetchone()[0]
 
+    def get_stimmkreis_info(
+            self,
+            wahl_id: int,
+            stimmkreis_nr: int,
+    ):
+        # TODO: ACCOUNT FOR WAHL_ID
+        # TODO: PROBABLY SHOULD SPLIT THIS INTO MULTIPLE API CALLS AND DO THE AGGREGATION SOMEWHERE ELSE
+        results = {}
+
+        # Look up ID
+        stimmkreis_id = self.get_stimmkreis_id(wahl_id, stimmkreis_nr)
+        print(stimmkreis_id)
+
+        # Get turnout
+        # (2018, 'Oberbayern', 1, 'München-Hadern', Decimal('71.2617933877745184'))
+        query = 'Select * FROM WahlbeteiligungUI WHERE StimmkreisID = %s'
+        values = (stimmkreis_id,)
+        self._cursor.execute(query, values)
+        turnout_percent = self._cursor.fetchone()[4]
+        print(turnout_percent)
+        results['turnout_percent'] = turnout_percent
+
+        # Get number of Erststimmen per candidate
+        # (2018, 'Oberbayern', 1, 'München-Hadern', 'Georg', 'Eisenreich', 'CSU', 20721)
+        query = 'Select * FROM DirektkandidatenUI WHERE StimmkreisID = %s'
+        values = (stimmkreis_id,)
+        self._cursor.execute(query, values)
+        erst_per_candidate = {res[4] + ' ' + res[5]: res[7] for res in self._cursor.fetchall()}
+        print(erst_per_candidate)
+
+        # Get number of Gesamtstimmen per candidate
+        # (2018, 'Oberbayern', 1, 'München-Hadern', 'CSU', Decimal('40162'), Decimal('28.0013107530555188'))
+        query = 'SELECT * FROM Gesamtstimmen_Partei_StimmkreisUI WHERE StimmkreisID = %s'
+        values = (stimmkreis_id,)
+        self._cursor.execute(query, values)
+        zweit_per_partei = {res[4]: res[5] for res in self._cursor.fetchall()}
+        print(zweit_per_partei)
+
+        query = 'SELECT * FROM Erststimme_Kandidat ek WHERE ek.stimmkreis = %s'
+        values = (stimmkreis_id,)
+        self._cursor.execute(query, values)
+        print([desc[0] for desc in self._cursor.description])
+        print(self._cursor.fetchall())
+
+        query = 'SELECT * FROM ErstimmenKandidatStimmkreisUI WHERE stimmkreis = %s'
+        values = (stimmkreis_id,)
+        self._cursor.execute(query, values)
+        print([desc[0] for desc in self._cursor.description])
+        print(self._cursor.fetchall())
+
     def add_stimmkreis(
             self,
             wahl_id: int,
