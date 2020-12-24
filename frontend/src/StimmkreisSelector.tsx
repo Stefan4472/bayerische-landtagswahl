@@ -1,5 +1,5 @@
 import React from "react";
-import {Col, Form, ListGroup} from "react-bootstrap";
+import {Form, ListGroup} from "react-bootstrap";
 
 export interface StimmkreisInfo {
     id: number;

@@ -1,4 +1,4 @@
-import {Card, Col, Form, Row} from "react-bootstrap";
+import {Card, Col, Row} from "react-bootstrap";
 import {StimmkreisInfo, StimmkreisSelector} from "./StimmkreisSelector";
 import React from "react";
 import {StimmkreisTable} from "./StimmkreisTable";

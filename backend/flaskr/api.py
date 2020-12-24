@@ -95,6 +95,12 @@ def get_stimmkreis_overview(number: int):
 def get_sitzverteilung():
     db = db_context.get_db()
     response = jsonify(db.get_sitz_verteilung(WAHL_ID))
+    # response = jsonify([
+    #     {
+    #         'party': party_name,
+    #         'num_seats': num_seats,
+    #     } for party_name, num_seats in db.get_sitz_verteilung(WAHL_ID).items()
+    # ])
     # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
