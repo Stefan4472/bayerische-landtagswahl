@@ -364,4 +364,25 @@ class Database:
             # Execute
             self._cursor.execute(sql)
 
+    def get_sitz_verteilung(
+            self,
+            wahl_id: int,
+    ) -> dict[str, int]:
+        """Returns party name -> number of seats. Only lists those parties
+        that won at least one seat."""
+        # TODO: ACCOUNT FOR WAHL_ID
+        script = 'SELECT parteiname, anzahl_der_sitze FROM Sitzverteilung'
+        self._cursor.execute(script)
+        return {rec[0]: rec[1] for rec in self._cursor.fetchall()}
+
+    def get_elected_candidates(
+            self,
+            wahl_id: int,
+    ) -> list[tuple[str, str, str, str]]:
+        """Returns party name -> number of seats. Only lists those parties
+        that won at least one seat."""
+        # TODO: ACCOUNT FOR WAHL_ID
+        script = 'SELECT vorname, nachname, partei, wahlkreis FROM Mitglieder_des_LandtagesUI'
+        self._cursor.execute(script)
+        return [(rec[0], rec[1], rec[2], rec[3]) for rec in self._cursor.fetchall()]
 

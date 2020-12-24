@@ -89,3 +89,29 @@ def get_stimmkreis_overview(number: int):
     # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
+
+
+@API_BLUEPRINT.route('/results/sitzverteilung')
+def get_sitzverteilung():
+    db = db_context.get_db()
+    response = jsonify(db.get_sitz_verteilung(WAHL_ID))
+    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+@API_BLUEPRINT.route('/results/elected-candidates')
+def get_elected_candidates():
+    db = db_context.get_db()
+    # TODO: USE DATACLASS DTOs
+    response = jsonify([
+        {
+            'fname': rec[0],
+            'lname': rec[1],
+            'party': rec[2],
+            'wahlkreis': rec[3],
+        } for rec in db.get_elected_candidates(WAHL_ID)
+    ])
+    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
