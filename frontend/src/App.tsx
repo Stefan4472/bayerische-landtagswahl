@@ -2,7 +2,7 @@ import React from "react";
 import {Jumbotron, Container, Navbar, Row, Nav} from "react-bootstrap";
 import "./App.css"
 import {StimmkreisDisplayer} from "./StimmkreisDisplayer";
-import {SitzverteilungChart} from "./SitzverteilungChart";
+import {SitzverteilungOverview} from "./SitzverteilungOverview";
 
 export class App extends React.Component {
     render() {
@@ -39,7 +39,7 @@ export class App extends React.Component {
                     <h2>Das Bayerische Landtagswahl System</h2>
                     <p>This website stores data from Bavarian State Parliament elections. It can be used to view and analyze the results from a given election (use the "Wahljahr Auswahl", below) and to compare data between elections.</p>
                 </Row>
-                <SitzverteilungChart/>
+                <SitzverteilungOverview/>
                 <StimmkreisDisplayer/>
             </Container>
         </div>
