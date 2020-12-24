@@ -1,5 +1,7 @@
 import React from "react";
 import {SitzverteilungChart} from "./SitzverteilungChart";
+import {SitzverteilungTable} from "./SitzverteilungTable";
+import {Card} from "react-bootstrap";
 
 interface Props {
 
@@ -31,7 +33,10 @@ export class SitzverteilungOverview extends React.Component<Props> {
 
     render() {
         if (this.state.sitzVerteilung) {
-            return <SitzverteilungChart sitzVerteilung={this.state.sitzVerteilung}/>
+            return <Card>
+                <SitzverteilungChart sitzVerteilung={this.state.sitzVerteilung}/>
+                <SitzverteilungTable sitzVerteilung={this.state.sitzVerteilung}/>
+            </Card>
         }
         else {
             // TODO: WHAT TO RETURN?
