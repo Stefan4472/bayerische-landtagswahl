@@ -33,10 +33,17 @@ export class SitzverteilungOverview extends React.Component<Props> {
 
     render() {
         if (this.state.sitzVerteilung) {
-            return <Card>
-                <SitzverteilungChart sitzVerteilung={this.state.sitzVerteilung}/>
-                <SitzverteilungTable sitzVerteilung={this.state.sitzVerteilung}/>
-            </Card>
+            return (
+                <div>
+                    <Card>
+                        <Card.Body>
+                            <SitzverteilungChart sitzVerteilung={this.state.sitzVerteilung}/>
+                        </Card.Body>
+                    </Card>
+                    <div className={"my-1"}/>
+                    <SitzverteilungTable sitzVerteilung={this.state.sitzVerteilung}/>
+                </div>
+            )
         }
         else {
             // TODO: WHAT TO RETURN?
