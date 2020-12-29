@@ -1,5 +1,5 @@
 import React from "react";
-import { Pie } from '@nivo/pie'
+import { ResponsivePie } from '@nivo/pie'
 import {Stimmkreis} from "./StimmkreisDisplayer";
 import assert from "assert";
 
@@ -113,7 +113,7 @@ export class StimmkreisChart extends React.Component<Props> {
         }
         // Any case where we can't unambiguously resolve the color:
         // return gray
-        return '#9D9D9D';
+        return '#b0bec5 ';
     }
 
     render() {
@@ -121,21 +121,33 @@ export class StimmkreisChart extends React.Component<Props> {
         // TODO: RESPONSIVE SIZING?
         // A link that helped me to figure out custom coloring: https://github.com/plouc/nivo/issues/581
         if (this.props.stimmkreis) {
-            return <Pie
-                width={400}
-                height={400}
-                data={this.formatData()}
-                margin={{
-                    top: 40,
-                    right: 80,
-                    bottom: 80,
-                    left: 80
-                }}
-                innerRadius={0.43}
-                enableRadialLabels={false}
-                sliceLabel={'id'}
-                colors={d => this.getColor(d.id)}
-            />
+            return (
+                <div style={{"height": "400px"}}>
+                    <ResponsivePie
+                        data={this.formatData()}
+                        innerRadius={0.43}
+                        enableRadialLabels={false}
+                        sliceLabel={'id'}
+                        // colors={{"scheme": "pastel1"}}
+                        colors={d => this.getColor(d.id)}
+                        legends={[
+                            {
+                                anchor: 'top-left',
+                                direction: 'column',
+                                justify: false,
+                                translateX: 0,
+                                translateY: 0,
+                                itemWidth: 100,
+                                itemHeight: 20,
+                                itemsSpacing: 0,
+                                symbolSize: 20,
+                                itemDirection: 'left-to-right',
+                                symbolShape: 'circle'
+                            }
+                        ]}
+                    />
+                </div>
+            )
         }
         else {
             // TODO: WHAT TO RETURN?

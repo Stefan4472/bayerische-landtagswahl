@@ -66,8 +66,14 @@ export class StimmkreisDisplayer extends React.Component<Props> {
             </Col>
             {/*Show results using the rest of the screen width*/}
             <Col>
-                <Card className={"justify-content-center"}>
-                    <StimmkreisChart stimmkreis={this.state.currStimmkreis}/>
+                <Card>
+                    <div className={"m-3"}>
+                        <Card.Title>({this.state.currStimmkreis?.number}) {this.state.currStimmkreis?.name}</Card.Title>
+                        <StimmkreisChart stimmkreis={this.state.currStimmkreis}/>
+                        <div className={"float-right"}>
+                            Wahlbeteiligung: {this.state.currStimmkreis?.turnout_percent.toFixed(2)}%
+                        </div>
+                    </div>
                     <StimmkreisTable stimmkreis={this.state.currStimmkreis}/>
                 </Card>
             </Col>
