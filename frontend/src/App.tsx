@@ -1,9 +1,11 @@
 import React from "react";
 import {Jumbotron, Container, Navbar, Row, Nav} from "react-bootstrap";
 import "./App.css"
-import {StimmkreisDisplayer} from "./StimmkreisDisplayer";
-import {SitzverteilungOverview} from "./SitzverteilungOverview";
 import {BrowserRouter, Switch, Route, Link} from "react-router-dom"
+import {StimmkreisPage} from "./StimmkreisPage";
+import {MitgliederPage} from "./MitgliederPage";
+import {SitzverteilungPage} from "./SitzverteilungPage";
+
 
 export class App extends React.Component {
     render() {
@@ -37,24 +39,13 @@ export class App extends React.Component {
 
                     <Switch>
                         <Route path={"/mitglieder"}>
-                            <Container>
-                                <p>Placeholder</p>
-                            </Container>
+                            <MitgliederPage/>
                         </Route>
                         <Route path={"/stimmkreise"}>
-                            <Container>
-                                <StimmkreisDisplayer/>
-                            </Container>
+                            <StimmkreisPage/>
                         </Route>
-                        {/*Home page: show Sitzverteilung*/}
                         <Route path={"/"}>
-                            <Container>
-                                <Row className="mb-2">
-                                    <h2>Das Bayerische Landtagswahl System</h2>
-                                    <p>This website stores data from Bavarian State Parliament elections. It can be used to view and analyze the results from a given election (use the "Wahljahr Auswahl", below) and to compare data between elections.</p>
-                                </Row>
-                                <SitzverteilungOverview/>
-                            </Container>
+                            <SitzverteilungPage/>
                         </Route>
                     </Switch>
                 </div>
