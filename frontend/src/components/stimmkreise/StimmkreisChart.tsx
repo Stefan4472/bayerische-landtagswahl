@@ -71,11 +71,9 @@ export class StimmkreisChart extends React.Component<Props> {
                     num_other_votes += stimmkreis.erststimmen;
                 }
             }
-            console.log(results);
             // Now order result objects into a list
             let results_list = [];
             for (const party_name of this.state.partyOrdering) {
-                console.log(party_name);
                 if (results.has(party_name)) {
                     results_list.push(results.get(party_name));
                 }
@@ -91,7 +89,6 @@ export class StimmkreisChart extends React.Component<Props> {
                     value: num_other_votes,
                 })
             }
-            console.log(results_list);
             return results_list;
         }
         else {

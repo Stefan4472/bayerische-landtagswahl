@@ -1,4 +1,4 @@
-import {Card, Col, Row} from "react-bootstrap";
+import {Card, Col, Form, Row} from "react-bootstrap";
 import {StimmkreisInfo, StimmkreisSelector} from "./StimmkreisSelector";
 import React from "react";
 import {StimmkreisTable} from "./StimmkreisTable";
@@ -26,6 +26,7 @@ interface Props {
 
 interface State {
     currStimmkreis?: Stimmkreis,
+    filterText: string,
 }
 
 export class StimmkreisDisplayer extends React.Component<Props> {
@@ -33,12 +34,20 @@ export class StimmkreisDisplayer extends React.Component<Props> {
 
     constructor(props: Props) {
         super(props);
-        this.state = {};
+        this.state = {
+            filterText: "",
+        };
+    }
+
+    // Handle user changing the filter text
+    onFilterChanged(newFilter: string) {
+        this.setState({
+            filterText: newFilter,
+        });
     }
 
     // Handle user requesting the overview of the specified Stimmkreis
     onStimmkreisRequested(stimmkreisInfo: StimmkreisInfo) {
-        console.log(stimmkreisInfo);
         // TODO: BETTER FORMATTING OF URLS
         fetch('/api/results/stimmkreis/' + stimmkreisInfo.number.toString())
             .then(response => response.json())
@@ -61,7 +70,19 @@ export class StimmkreisDisplayer extends React.Component<Props> {
             {/*Provide Stimmkreis selector on left side*/}
             <Col md={4}>
                 <div className={"overflow-auto"} style={{height: "500px"}}>
-                    <StimmkreisSelector onSelect={(stkInfo) => this.onStimmkreisRequested(stkInfo)}/>
+                    {/*Search form*/}
+                    <Form>
+                      <Form.Control
+                          className={'my-2'}
+                          type="text"
+                          placeholder="Enter Filter Here..."
+                          onChange={(event) => {this.onFilterChanged(event.target.value);}}
+                      />
+                    </Form>
+                    <StimmkreisSelector
+                        filterText={this.state.filterText}
+                        onSelect={(stkInfo) => this.onStimmkreisRequested(stkInfo)}
+                    />
                 </div>
             </Col>
             {/*Show results using the rest of the screen width*/}
