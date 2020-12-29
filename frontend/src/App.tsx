@@ -37,6 +37,7 @@ export class App extends React.Component {
                         </Navbar>
                     </Container>
 
+                    {/*Content*/}
                     <Switch>
                         <Route path={"/mitglieder"}>
                             <MitgliederPage/>
