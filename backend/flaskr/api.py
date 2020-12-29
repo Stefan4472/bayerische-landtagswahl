@@ -12,11 +12,32 @@ API_BLUEPRINT = Blueprint('api', __name__, url_prefix='/api')
 # NOTE: CURRENTLY HARDCODED TO WAHL_ID = 1
 WAHL_ID = 1
 
+
 @API_BLUEPRINT.route('/')
 # @cross_origin
 def index():
     # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
     response = jsonify({'some': 'data'})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+# TODO: HOW TO IMPLEMENT THIS PROPERLY?
+@API_BLUEPRINT.route('/main-parties/')
+def get_main_parties():
+    """Return list of parties in-order that they should be displayed,
+    and with display color."""
+    # Temporary CORS workaround: https://stackoverflow.com/a/33091782
+    # Now using colors from the Material Design chart: https://htmlcolorcodes.com/color-chart/
+    response = jsonify([
+        {'name': 'CSU', 'color': '#90caf9 '},
+        {'name': 'SPD', 'color': '#ef5350 '},
+        {'name': 'FREIE WÄHLER', 'color': '#ffb74d '},
+        {'name': 'GRÜNE', 'color': '#66bb6a'},
+        {'name': 'FDP', 'color': '#ffee58'},
+        {'name': 'DIE LINKE', 'color': '#ab47bc'},
+        {'name': 'AfD', 'color': '#5c6bc0'},
+    ])
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
@@ -40,32 +61,64 @@ def get_stimmkreise():
     return response
 
 
+# TODO: GENERALLY, NEED A TON OF LEGIBILITY IMPROVEMENTS, NAMED TUPLES, DTOS, ETC.
 @API_BLUEPRINT.route('/results/stimmkreis/<number>')
-def get_stimmkreis_results(number: int):
-    # Currently using mock data
-    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
+def get_stimmkreis_overview(number: int):
+    db = db_context.get_db()
+    # Look up StimmkreisID
+    stimmkreis_id = db.get_stimmkreis_id(WAHL_ID, number)
+    # Perform queries
+    turnout = db.get_stimmkreis_turnout(WAHL_ID, stimmkreis_id)
+    # winner_fname, winner_lname = db.get_stimmkreis_winner(WAHL_ID, stimmkreis_id)
+    erst_by_party = db.get_stimmkreis_erststimmen(WAHL_ID, stimmkreis_id)
+    gesamt_by_party = db.get_stimmkreis_gesamtstimmen(WAHL_ID, stimmkreis_id)
+    # Form the 'results' dictionary, which requires coalescing first-
+    # and second-votes by party
+    results = [
+        {
+            'party': party_name,
+            'candidate': erst_by_party[party_name][1] + ', ' + erst_by_party[party_name][0],
+            'erststimmen': erst_by_party[party_name][2],
+            'zweitstimmen': gesamt_by_party[party_name] - erst_by_party[party_name][2],
+        } for party_name in erst_by_party.keys()
+    ]
+    # Form the response
     response = jsonify({
-        'turnout_percent': 70.2,
-        'results': [
-            {
-                'party': 'Grüne',
-                'candidate': 'Benjamin Adjei',
-                'erststimmen': 17573,
-                'zweitstimmen': 18307,
-            },
-            {
-                'party': 'CSU',
-                'candidate': 'Mechtilde Wittman',
-                'erststimmen': 17495,
-                'zweitstimmen': 17853,
-            },
-            {
-                'party': 'SPD',
-                'candidate': 'Diana Stachowitz',
-                'erststimmen': 9996,
-                'zweitstimmen': 8467,
-            },
-        ],
+        'turnout_percent': turnout,
+        'results': results,
     })
+    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+@API_BLUEPRINT.route('/results/sitzverteilung')
+def get_sitzverteilung():
+    db = db_context.get_db()
+    response = jsonify(db.get_sitz_verteilung(WAHL_ID))
+    # response = jsonify([
+    #     {
+    #         'party': party_name,
+    #         'num_seats': num_seats,
+    #     } for party_name, num_seats in db.get_sitz_verteilung(WAHL_ID).items()
+    # ])
+    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+@API_BLUEPRINT.route('/results/elected-candidates')
+def get_elected_candidates():
+    db = db_context.get_db()
+    # TODO: USE DATACLASS DTOs
+    response = jsonify([
+        {
+            'fname': rec[0],
+            'lname': rec[1],
+            'party': rec[2],
+            'wahlkreis': rec[3],
+        } for rec in db.get_elected_candidates(WAHL_ID)
+    ])
+    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
