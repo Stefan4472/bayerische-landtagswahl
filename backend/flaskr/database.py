@@ -46,6 +46,18 @@ class Database:
         self._cursor.execute('DROP DATABASE IF EXISTS ' + db_name)
         self._conn.autocommit = False
 
+    def disable_triggers(
+            self,
+            table_name: str,
+    ):
+        self._cursor.execute('ALTER TABLE {} DISABLE TRIGGER ALL'.format(table_name))
+
+    def enable_triggers(
+            self,
+            table_name: str,
+    ):
+        self._cursor.execute('ALTER TABLE {} ENABLE TRIGGER ALL'.format(table_name))
+
     def run_script(
             self,
             script: str,
@@ -252,20 +264,12 @@ class Database:
             num_votes: int,
             is_valid: bool = True,
     ):
-        if is_valid:
-            self._bulk_insert(
-                'Erststimme',
-                ('Kandidat', 'Stimmkreis', 'Wahl'),
-                (candidate_id, stimmkreis_id, wahl_id),
-                num_votes,
-            )
-        else:
-            self._bulk_insert(
-                'Erststimme',
-                ('Kandidat', 'Stimmkreis', 'Wahl', 'IsValid'),
-                (candidate_id, stimmkreis_id, wahl_id, False),
-                num_votes,
-            )
+        self._bulk_insert(
+            'Erststimme',
+            ('Kandidat', 'Stimmkreis', 'Wahl', 'IsValid'),
+            (candidate_id, stimmkreis_id, wahl_id, 1 if is_valid else 0),
+            num_votes,
+        )
 
     def generate_zweit_stimmen(
             self,
@@ -275,20 +279,12 @@ class Database:
             num_votes: int,
             is_valid: bool = True,
     ):
-        if is_valid:
-            self._bulk_insert(
-                'Zweitstimme',
-                ('Kandidat', 'Stimmkreis', 'Wahl'),
-                (candidate_id, stimmkreis_id, wahl_id),
-                num_votes,
-            )
-        else:
-            self._bulk_insert(
-                'Zweitstimme',
-                ('Kandidat', 'Stimmkreis', 'Wahl', 'IsValid'),
-                (candidate_id, stimmkreis_id, wahl_id, False),
-                num_votes,
-            )
+        self._bulk_insert(
+            'Zweitstimme',
+            ('Kandidat', 'Stimmkreis', 'Wahl', 'IsValid'),
+            (candidate_id, stimmkreis_id, wahl_id, 1 if is_valid else 0),
+            num_votes,
+        )
 
     def generate_zweit_stimmen_ohne_kandidat(
             self,

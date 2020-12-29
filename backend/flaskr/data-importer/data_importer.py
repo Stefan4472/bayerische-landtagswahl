@@ -62,6 +62,13 @@ def run_import(
         )
         candidate_id_lookup[candidate] = candidate_id
 
+    # Temporarily disable foreign-key checks.
+    # Strictly speaking, this is bad practice, but it speeds up vote generation
+    # by more than a factor 3, and we know that our code works.
+    database.disable_triggers('Erststimme')
+    database.disable_triggers('Zweitstimme')
+    database.disable_triggers('ZweitstimmePartei')
+
     # Generate Erst-Stimmen
     for candidate, direct_result in results_xml.direct_results.items():
         candidate_id = candidate_id_lookup[candidate]
@@ -105,4 +112,7 @@ def run_import(
                 num_votes,
             )
 
+    database.enable_triggers('Erststimme')
+    database.enable_triggers('Zweitstimme')
+    database.enable_triggers('ZweitstimmePartei')
     database.commit()
