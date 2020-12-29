@@ -30,7 +30,8 @@ export class MitgliederTable extends React.Component<Props> {
         fetch('/api/results/elected-candidates')
             .then(response => response.json())
             .then(data => {
-                console.log(data);
+                // Sort the data alphabetically by first name
+                data.sort((a: Mitglied, b: Mitglied) => (a.fname > b.fname) ? 1 : -1);
                 this.setState({
                     mitglieder: data,
                 });
