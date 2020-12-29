@@ -104,11 +104,17 @@ GROUP BY Wahl, Wahlkreis, Partei;
 
 -- Die Zahl der Gesamtstimmen der Partei mit Prozent in Bayern
 CREATE MATERIALIZED VIEW Gesamtstimmen_Partei_Wahl AS
+with Gesamtstimmen_Wahl as (
+    SELECT wahl, sum(Gesamtstimmen) as Gesamtstimmen FROM Gesamtstimmen_Partei_Wahlkreis
+    GROUP BY wahl
+)
 SELECT Wahl,
        Partei,
-       sum(Gesamtstimmen)                                                                           as Gesamtstimmen,
-       (sum(Gesamtstimmen) / (SELECT sum(Gesamtstimmen) FROM Gesamtstimmen_Partei_Wahlkreis)) * 100 as Prozent
-FROM Gesamtstimmen_Partei_Wahlkreis
+       sum(Gesamtstimmen) as Gesamtstimmen,
+       (sum(Gesamtstimmen) / (SELECT gw.Gesamtstimmen
+                              FROM Gesamtstimmen_Wahl gw
+                              WHERE gw.Wahl = gps2.Wahl)) * 100 as Prozent
+FROM Gesamtstimmen_Partei_Wahlkreis gps2
 GROUP BY Wahl, Partei;
 
 
@@ -134,7 +140,7 @@ WITH Gesamtstimmen_Partei_5Prozent AS
 		(SELECT t1.Wahl, t1.Wahlkreis, t1.Partei, t1.Gesamtstimmen as Stimmenzahl FROM Gesamtstimmen_Partei_Wahlkreis t1
 		-- mindestens 5 % der Gesamtstimmen in Bayern
 		INNER JOIN (SELECT * FROM Gesamtstimmen_Partei_Wahl WHERE Prozent >= 5) partei_mit_5proz
-		ON partei_mit_5proz.Partei = t1.Partei),
+		ON partei_mit_5proz.Partei = t1.Partei AND partei_mit_5proz.Wahl = t1.Wahl),
 -- Absolute Stimmenzahl einer Partei wird durch die Gesamtzahl der Stimmen aller Parteien dividiert
 	Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis AS
 		(SELECT Wahl, Wahlkreis, Partei, Stimmenzahl, Stimmenzahl / (SELECT sum(Stimmenzahl) FROM Gesamtstimmen_Partei_5Prozent t2
