@@ -43,17 +43,15 @@ export class StimmkreisSelector extends React.Component<Props> {
     }
 
     performFilter(stimmkreise: StimmkreisInfo[], filterTerm: string|undefined) : StimmkreisInfo[] {
+        console.log('Performing filter');
+        // TODO: MINOR IMPROVEMENTS + MAKE IT SO THE STIMMKREIS SEARCH BAR DOESN'T SCROLL
         if (filterTerm === '' || !filterTerm) {
             return stimmkreise;
         }
 
         return stimmkreise.filter((stimmkreis) => {
-            if (stimmkreis.name.startsWith(filterTerm)) {
-                return true;
-            }
-            else if (stimmkreis.number.toString().startsWith(filterTerm)) {
-                return true;
-            }
+            return stimmkreis.name.startsWith(filterTerm) ||
+                stimmkreis.number.toString().startsWith(filterTerm);
         });
     }
 

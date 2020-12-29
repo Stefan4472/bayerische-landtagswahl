@@ -48,6 +48,9 @@ export class StimmkreisDisplayer extends React.Component<Props> {
 
     // Handle user requesting the overview of the specified Stimmkreis
     onStimmkreisRequested(stimmkreisInfo: StimmkreisInfo) {
+        if (this.state.currStimmkreis && stimmkreisInfo.id === this.state.currStimmkreis.id) {
+            return;
+        }
         // TODO: BETTER FORMATTING OF URLS
         fetch('/api/results/stimmkreis/' + stimmkreisInfo.number.toString())
             .then(response => response.json())
@@ -66,39 +69,44 @@ export class StimmkreisDisplayer extends React.Component<Props> {
 
     render() {
         // TODO: HOW TO SET ROW HEIGHT CORRECTLY?
-        return <Row>
-            {/*Provide Stimmkreis selector on left side*/}
-            <Col md={4}>
-                <div className={"overflow-auto"} style={{height: "500px"}}>
-                    {/*Search form*/}
-                    <Form>
-                      <Form.Control
-                          className={'my-2'}
-                          type="text"
-                          placeholder="Enter Filter Here..."
-                          onChange={(event) => {this.onFilterChanged(event.target.value);}}
-                      />
-                    </Form>
-                    <StimmkreisSelector
-                        filterText={this.state.filterText}
-                        onSelect={(stkInfo) => this.onStimmkreisRequested(stkInfo)}
-                    />
-                </div>
-            </Col>
-            {/*Show results using the rest of the screen width*/}
-            <Col>
-                <Card>
-                    <div className={"m-3"}>
-                        <Card.Title>({this.state.currStimmkreis?.number}) {this.state.currStimmkreis?.name}</Card.Title>
-                        <StimmkreisChart stimmkreis={this.state.currStimmkreis}/>
-                        <div className={"float-right"}>
-                            Wahlbeteiligung: {this.state.currStimmkreis?.turnout_percent.toFixed(2)}%
+        return (
+            <div>
+                <Row className={"mb-2"}>
+                    {/*Provide Stimmkreis selector on left side*/}
+                    <Col md={4}>
+                        {/*Search form*/}
+                        <Form>
+                            <Form.Label>Stimmkreis Auswahl</Form.Label>
+                            <Form.Control
+                                className={'mb-2'}
+                                type="text"
+                                placeholder="Enter Filter Here..."
+                                onChange={(event) => {this.onFilterChanged(event.target.value);}}
+                            />
+                        </Form>
+                        <div className={"overflow-auto"} style={{height: "420px"}}>
+                            <StimmkreisSelector
+                                filterText={this.state.filterText}
+                                onSelect={(stkInfo) => this.onStimmkreisRequested(stkInfo)}
+                            />
                         </div>
-                    </div>
-                    <StimmkreisTable stimmkreis={this.state.currStimmkreis}/>
-                </Card>
-            </Col>
-        </Row>
+                    </Col>
+                    {/*Show results using the rest of the screen width*/}
+                    <Col>
+                        <Card>
+                            <div className={"m-3"}>
+                                <Card.Title>({this.state.currStimmkreis?.number}) {this.state.currStimmkreis?.name}</Card.Title>
+                                <StimmkreisChart stimmkreis={this.state.currStimmkreis}/>
+                                <div className={"float-right"}>
+                                    Wahlbeteiligung: {this.state.currStimmkreis?.turnout_percent.toFixed(2)}%
+                                </div>
+                            </div>
+                        </Card>
+                    </Col>
+                </Row>
+                <StimmkreisTable stimmkreis={this.state.currStimmkreis}/>
+            </div>
+        )
     }
 }
 
