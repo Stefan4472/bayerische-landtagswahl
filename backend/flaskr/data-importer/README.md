@@ -18,14 +18,22 @@ TODO: MORE DETAIL
 Reset the database to use a specified schema:
 ```
 > cd data-importer
-> python manage_db.py reset ../sql-scripts/PostgresSchema.sql --db_name=bayerische_landtagswahl --password=[YOUR_MYSQL_PASSWORD]
+> python manage_db.py reset ../sql-scripts/PostgresSchema.sql --db_name=bayerische_landtagswahl
 ```
 
 Import XML election data, for example `data/2018-info.xml` and `data/2018-results.xml`:
 ```
 > cd data-importer
-> python manage_db.py import_data ../data/2018-info.xml ../data/2018-results.xml --year=2018 --password=[YOUR_MYSQL_PASSWORD] --db_name=bayerische_landtagswahl
+> python manage_db.py import_data ../../../data/2018-info.xml ../../../data/2018-results.xml --year=2018 --db_name=bayerische_landtagswahl
 ```
+
+Run the script to calculate materialized views: `sql-scripts/Landtagswahl_Calculation.sql`
+```
+> cd data-importer
+> python manage_db.py runscript ../sql-scripts/Landtagswahl_Calculation.sql --db_name=bayerische_landtagswahl
+```
+
+In each case, you will be prompted to enter your Postgres password. To avoid the prompt, you can provide your password as a flag: `--password=[YOUR_POSTGRES_PASSWORD`
 
 ## Unofficial benchmark data for importing/generating election data
 *(using time.time(), which isn't super accurate)*

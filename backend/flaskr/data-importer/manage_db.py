@@ -24,7 +24,7 @@ def click_cli():
 @click.argument('filepath', type=click.Path(exists=True, readable=True))
 @click.option('--host', type=str, default='localhost')
 @click.option('--user', type=str, default='postgres')
-@click.option('--password', type=str, required=True)  
+@click.option('--password', type=str, required=True, prompt=True, hide_input=True)
 @click.option('--db_name', type=str, required=True)
 def cmd_reset_database(
         filepath: str,
@@ -67,7 +67,7 @@ def cmd_reset_database(
 @click.argument('filepath', type=click.Path(exists=True, readable=True))
 @click.option('--host', type=str, default='localhost')
 @click.option('--user', type=str, default='postgres')
-@click.option('--password', type=str, required=True)
+@click.option('--password', type=str, required=True, prompt=True, hide_input=True)
 @click.option('--db_name', type=str, required=True)
 def cmd_reset_database(
         filepath: str,
@@ -94,12 +94,11 @@ def cmd_reset_database(
     click.echo('Done')
 
 
-# Note: We could use the `click.password_option()` to hide the password in console
 @click_cli.command(name='import_data')
 @click.argument('info_path', type=click.Path(exists=True, readable=True))
 @click.argument('results_path', type=click.Path(exists=True, readable=True))
 @click.option('--year', type=int, required=True)
-@click.option('--password', type=str, required=True)  
+@click.option('--password', type=str, required=True, prompt=True, hide_input=True)
 @click.option('--db_name', type=str, required=True)
 @click.option('--host', type=str, default='localhost')
 @click.option('--user', type=str, default='postgres')
