@@ -29,7 +29,7 @@ def determine_wahlkreis(stimmkreis_nr: int) -> Wahlkreis:
     elif stimmkreis_nr >= 700 and stimmkreis_nr < 800:
         return Wahlkreis.Schwaben
     else:
-        raise ValueError('Invalid stimmkreis number')
+        raise ValueError('Invalid stimmkreis number ({})'.format(stimmkreis_nr))
 
 
 @dataclasses.dataclass(eq=True, frozen=True)

@@ -1,5 +1,7 @@
 import React from "react";
-import {Table} from "react-bootstrap";
+import BootstrapTable from "react-bootstrap-table-next";
+import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
+
 
 export interface Mitglied {
     fname: string,
@@ -38,26 +40,49 @@ export class MitgliederTable extends React.Component<Props> {
             });
     }
 
+    // TODO: THIS ONLY HAS TO BE DONE ONCE
+    formatData(mitglieder: Mitglied[]) {
+        return mitglieder.map((mitglied, index) => {
+            return {
+                'id': index,
+                'fname': mitglied.fname,
+                'lname': mitglied.lname,
+                'party': mitglied.party,
+                'wahlkreis': mitglied.wahlkreis,
+            }
+        });
+    }
+
     render() {
-        return <Table striped bordered hover>
-            <thead>
-            <tr>
-                <th>Vorname</th>
-                <th>Nachname</th>
-                <th>Partei</th>
-                <th>Wahlkreis</th>
-            </tr>
-            </thead>
-            <tbody>
-            {this.state.mitglieder.map((mitglied, index) =>
-                <tr key={'mitglied-' + index}>
-                    <td>{mitglied.fname}</td>
-                    <td>{mitglied.lname}</td>
-                    <td>{mitglied.party}</td>
-                    <td>{mitglied.wahlkreis}</td>
-                </tr>
-            )}
-            </tbody>
-        </Table>
+        return (
+            <BootstrapTable
+                bootstrap4
+                keyField={'id'}
+                columns={[
+                    {
+                        dataField: 'fname',
+                        text: 'Vorname',
+                        sort: true,
+                    },
+                    {
+                        dataField: 'lname',
+                        text: 'Nachname',
+                        sort: true,
+                    },
+                    {
+                        dataField: 'party',
+                        text: 'Partei',
+                        sort: true,
+                    },
+                    {
+                        dataField: 'wahlkreis',
+                        text: 'Wahlkreis',
+                        sort: true,
+                    }
+                ]}
+                data={this.formatData(this.state.mitglieder)}
+                striped
+            />
+        )
     }
 }

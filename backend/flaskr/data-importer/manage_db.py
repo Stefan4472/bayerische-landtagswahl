@@ -24,7 +24,7 @@ def click_cli():
 @click.argument('filepath', type=click.Path(exists=True, readable=True))
 @click.option('--host', type=str, default='localhost')
 @click.option('--user', type=str, default='postgres')
-@click.option('--password', type=str, required=True)  
+@click.option('--password', type=str, required=True, prompt=True, hide_input=True)
 @click.option('--db_name', type=str, required=True)
 def cmd_reset_database(
         filepath: str,
@@ -63,12 +63,42 @@ def cmd_reset_database(
     click.echo('Done')
 
 
-# Note: We could use the `click.password_option()` to hide the password in console
+@click_cli.command(name='runscript')
+@click.argument('filepath', type=click.Path(exists=True, readable=True))
+@click.option('--host', type=str, default='localhost')
+@click.option('--user', type=str, default='postgres')
+@click.option('--password', type=str, required=True, prompt=True, hide_input=True)
+@click.option('--db_name', type=str, required=True)
+def cmd_reset_database(
+        filepath: str,
+        host: str,
+        user: str,
+        password: str,
+        db_name: str,
+):
+    with open(filepath) as sql_file:
+        script = sql_file.read()
+
+    # Connect to the database
+    database = db.Database(
+        host,
+        user,
+        password,
+        db_name,
+    )
+
+    # Run script, commit, then close connection
+    database.run_script(script)
+    database.commit()
+    database.close()
+    click.echo('Done')
+
+
 @click_cli.command(name='import_data')
 @click.argument('info_path', type=click.Path(exists=True, readable=True))
 @click.argument('results_path', type=click.Path(exists=True, readable=True))
 @click.option('--year', type=int, required=True)
-@click.option('--password', type=str, required=True)  
+@click.option('--password', type=str, required=True, prompt=True, hide_input=True)
 @click.option('--db_name', type=str, required=True)
 @click.option('--host', type=str, default='localhost')
 @click.option('--user', type=str, default='postgres')
@@ -109,9 +139,6 @@ def cmd_import_data(
     )
     end_import_time = time.time()
     click.echo('Done ({} seconds)'.format(end_import_time - start_import_time))
-
-    database.get_cursor().execute('SELECT * FROM Kandidat')
-    print(database.get_cursor().fetchall())
 
 
 if __name__ == '__main__':
