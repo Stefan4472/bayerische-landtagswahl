@@ -1,10 +1,10 @@
 import React from "react";
-import {Jumbotron, Container, Navbar, Row, Nav} from "react-bootstrap";
+import {Jumbotron, Container, Navbar, Nav} from "react-bootstrap";
+import {BrowserRouter, Switch, Route} from "react-router-dom"
+import {StimmkreisPage} from "./components/stimmkreise/StimmkreisPage";
+import {MitgliederPage} from "./components/mitglieder/MitgliederPage";
+import {SitzverteilungPage} from "./components/sitzverteilung/SitzverteilungPage";
 import "./App.css"
-import {BrowserRouter, Switch, Route, Link} from "react-router-dom"
-import {StimmkreisPage} from "./StimmkreisPage";
-import {MitgliederPage} from "./MitgliederPage";
-import {SitzverteilungPage} from "./SitzverteilungPage";
 
 
 export class App extends React.Component {
