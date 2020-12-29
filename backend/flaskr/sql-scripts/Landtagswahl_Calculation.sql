@@ -161,7 +161,7 @@ WITH Gesamtstimmen_Partei_5Prozent AS
 		GROUP BY Wahl, Wahlkreis
 		HAVING MAX(Direktmandate / Sitze) > 1)
 -- Berechnen Sitze für alle Parteien wenn es zu Überhangmandaten kommt.
-SELECT mp.Wahl, mp.Wahlkreis, mp.Partei, mp.Stimmenzahl, mp.Prozent, mp.Sitze,
+SELECT distinct mp.Wahl, mp.Wahlkreis, mp.Partei, mp.Stimmenzahl, mp.Prozent, mp.Sitze,
 		ROUND(mp.Sitze * COALESCE(uv.Ueberhangsmandate_Verhaeltnis, 1)) as Ueberhangsmandate_Sitze,
         ROUND(mp.Sitze * COALESCE(uv.Ueberhangsmandate_Verhaeltnis, 1))  - mp.Sitze as Ueberhangsmandate,
         mp.Direktmandate,
