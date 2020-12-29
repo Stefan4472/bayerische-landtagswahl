@@ -30,7 +30,8 @@ export class SitzverteilungTable extends React.Component<Props> {
                         dataField: 'party',
                         text: 'Partei',
                         sort: true,
-                    }, {
+                    },
+                    {
                         dataField: 'numSeats',
                         text: 'Sitze',
                         sort: true,
