@@ -1,25 +1,17 @@
-import {Table} from "react-bootstrap";
 import React from "react";
+import BootstrapTable from "react-bootstrap-table-next";
+import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
+
 
 interface Props {
     sitzVerteilung: Map<string, number>,
 }
 
-interface State {
-
-}
-
 export class SitzverteilungTable extends React.Component<Props> {
-    state: State;
-
-    constructor(props: Props) {
-        super(props);
-        this.state = {};
-    }
 
     formatData(sitzVerteilung: Map<string, number>) {
         let data: { party: string; numSeats: number; }[] = [];
-        this.props.sitzVerteilung.forEach(function(value, key) {
+        sitzVerteilung.forEach(function(value, key) {
                 data.push({
                     party: key,
                     numSeats: value,
@@ -29,21 +21,24 @@ export class SitzverteilungTable extends React.Component<Props> {
     }
 
     render() {
-        return <Table striped bordered hover>
-            <thead>
-            <tr>
-                <th>Partei</th>
-                <th>Sitze</th>
-            </tr>
-            </thead>
-            <tbody>
-            {this.formatData(this.props.sitzVerteilung).map((result) =>
-                <tr key={result.party}>
-                    <td>{result.party}</td>
-                    <td>{result.numSeats}</td>
-                </tr>
-            )}
-            </tbody>
-        </Table>
+        return (
+            <BootstrapTable
+                bootstrap4
+                keyField={'party'}
+                columns={[
+                    {
+                        dataField: 'party',
+                        text: 'Partei',
+                        sort: true,
+                    }, {
+                        dataField: 'numSeats',
+                        text: 'Sitze',
+                        sort: true,
+                    }
+                ]}
+                data={this.formatData(this.props.sitzVerteilung)}
+                striped
+            />
+        )
     }
 }
