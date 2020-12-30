@@ -1,7 +1,21 @@
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import typing
+import dataclasses as dc
 import util
+
+
+@dc.dataclass
+class StimmkreisInfo:
+    id: int
+    name: str
+    number: int
+
+
+@dc.dataclass
+class StimmkreisWinner:
+    first_name: str
+    last_name: str
 
 
 class Database:
@@ -12,6 +26,7 @@ class Database:
             password: str,
             database_name: str,
     ):
+        """Postgres database utility class."""
         self._conn = psycopg2.connect(
             host=host,
             user=user,
@@ -34,6 +49,7 @@ class Database:
             self,
             db_name: str,
     ):
+        """Create database with the specified name."""
         self._conn.autocommit = True
         self._cursor.execute('CREATE DATABASE ' + db_name)
         self._conn.autocommit = False
@@ -42,6 +58,10 @@ class Database:
             self,
             db_name: str,
     ):
+        """Drop database with the specified name.
+
+        WARNING: you cannot drop the database you are currently connected to.
+        """
         self._conn.autocommit = True
         self._cursor.execute('DROP DATABASE IF EXISTS ' + db_name)
         self._conn.autocommit = False
@@ -50,46 +70,58 @@ class Database:
             self,
             table_name: str,
     ):
+        """Disable all triggers for the specified table in the current database."""
         self._cursor.execute('ALTER TABLE {} DISABLE TRIGGER ALL'.format(table_name))
 
     def enable_triggers(
             self,
             table_name: str,
     ):
+        """Enable all triggers for the specified table in the current database."""
         self._cursor.execute('ALTER TABLE {} ENABLE TRIGGER ALL'.format(table_name))
 
     def run_script(
             self,
             script: str,
     ):
-        """NOTE: cannot be used to create or drop a database"""
+        """Run the provided Postgres script, which must be SQL.
+
+        WARNING: cannot be used to create or drop a database. For that,
+        use the `create_database()` or `drop_database() methods.
+        """
         self._cursor.execute(script)
 
     def has_wahl(
             self,
             wahl_year: int,
     ) -> bool:
-        sql = 'SELECT * FROM Wahl where Jahr = %s'
+        query = 'SELECT * ' \
+                'FROM Wahl ' \
+                'WHERE Jahr = %s'
         values = (wahl_year,)
-        self._cursor.execute(sql, values)
+        self._cursor.execute(query, values)
         return bool(self._cursor.fetchall())
 
     def get_wahl_id(
             self,
             wahl_year: int,
     ) -> int:
-        sql = 'SELECT * FROM Wahl where Jahr = %s'
+        query = 'SELECT * ' \
+                'FROM Wahl ' \
+                'WHERE Jahr = %s'
         values = (wahl_year,)
-        self._cursor.execute(sql, values)
+        self._cursor.execute(query, values)
         return self._cursor.fetchone()[0]
 
     def add_wahl(
             self,
             wahl_year: int,
     ) -> int:
-        sql = 'INSERT INTO Wahl (Jahr) VALUES (%s) RETURNING id'
+        query = 'INSERT INTO Wahl (Jahr) ' \
+                'VALUES (%s) ' \
+                'RETURNING id'
         val = (wahl_year,)
-        self._cursor.execute(sql, val)
+        self._cursor.execute(query, val)
         return self._cursor.fetchone()[0]
 
     def add_stimmkreis(
@@ -98,11 +130,10 @@ class Database:
             stimmkreis: util.StimmKreis,
     ) -> int:
         print('Adding Stimmkreis {}'.format(stimmkreis))
-        sql = 'INSERT INTO Stimmkreis (Name, Wahlkreis, Nummer, NumBerechtigter, WahlID) ' \
-              'VALUES (%s, %s, %s, %s, %s) ' \
-              'RETURNING id'
-        # TODO:
-        # - BETTER LOOKUP OF WAHLKREIS ID'S (CURRENTLY HARDCODED)\
+        query = 'INSERT INTO Stimmkreis (Name, Wahlkreis, Nummer, NumBerechtigter, WahlID) ' \
+                'VALUES (%s, %s, %s, %s, %s) ' \
+                'RETURNING id'
+        # TODO: BETTER LOOKUP OF WAHLKREIS ID'S (CURRENTLY HARDCODED)\
         vals = (
             stimmkreis.name,
             stimmkreis.get_wahlkreis().value,
@@ -110,28 +141,34 @@ class Database:
             stimmkreis.num_eligible_voters,
             wahl_id,
         )
-        self._cursor.execute(sql, vals)
+        self._cursor.execute(query, vals)
         return self._cursor.fetchone()[0]
 
-    # TODO: TYPING
+    # TODO: SHOULD THE OBJECT THAT GOES IN BE THE SAME AS THE OBJECT THAT COMES OUT?
     def get_stimmkreise(
             self,
             wahl_id: int,
-    ):
-        """Return data on all Stimmkreise for the specified `wahl_id`."""
-        sql = 'SELECT * FROM Stimmkreis WHERE WahlID = %s ORDER BY Nummer ASC'
+    ) -> list[StimmkreisInfo]:
+        """Return basic information about all Stimmkreise for the specified
+        `wahl_id`.
+        """
+        query = 'SELECT id, name, nummer ' \
+                'FROM Stimmkreis ' \
+                'WHERE WahlID = %s ' \
+                'ORDER BY Nummer ASC'
         values = (wahl_id,)
-        self._cursor.execute(sql, values)
-        return self._cursor.fetchall()
+        self._cursor.execute(query, values)
+        return [StimmkreisInfo(rec[0], rec[1], rec[2]) for rec in self._cursor.fetchall()]
 
     def get_stimmkreis_id(
             self,
             wahl_id: int,
             stimmkreis_nr: int,
     ) -> int:
-        sql = 'SELECT * FROM Stimmkreis WHERE WahlID = %s and Nummer = %s'
+        query = 'SELECT * FROM Stimmkreis ' \
+                'WHERE WahlID = %s and Nummer = %s'
         values = (wahl_id, stimmkreis_nr)
-        self._cursor.execute(sql, values)
+        self._cursor.execute(query, values)
         return self._cursor.fetchone()[0]
 
     # TODO: USE WAHL_ID
@@ -140,7 +177,9 @@ class Database:
             wahl_id: int,
             stimmkreis_id: int,
     ) -> float:
-        query = 'Select wahlbeteiligung FROM WahlbeteiligungUI WHERE StimmkreisID = %s'
+        query = 'SELECT wahlbeteiligung ' \
+                'FROM WahlbeteiligungUI ' \
+                'WHERE StimmkreisID = %s'
         values = (stimmkreis_id,)
         self._cursor.execute(query, values)
         return float(self._cursor.fetchone()[0])
@@ -149,12 +188,14 @@ class Database:
             self,
             wahl_id: int,
             stimmkreis_id: int,
-    ) -> tuple[str, str]:
-        # Returns (firstname, lastname)
-        query = 'Select vorname, nachname FROM DirektkandidatenUI WHERE StimmkreisID = %s'
+    ) -> StimmkreisWinner:
+        query = 'SELECT vorname, nachname ' \
+                'FROM DirektkandidatenUI ' \
+                'WHERE StimmkreisID = %s'
         values = (stimmkreis_id,)
         self._cursor.execute(query, values)
-        return tuple(self._cursor.fetchone())
+        rec = self._cursor.fetchone()
+        return StimmkreisWinner(rec[0], rec[1])
 
     def get_stimmkreis_erststimmen(
             self,
@@ -163,8 +204,9 @@ class Database:
     ) -> dict[str, tuple[str, str, int]]:
         # Return dictionary indexed by party name. Tuples are
         # (firstname, lastname, numvotes)
-        query = 'SELECT parteiname, vorname, nachname, anzahl FROM ' \
-                'ErstimmenKandidatStimmkreisUI WHERE stimmkreis = %s'
+        query = 'SELECT parteiname, vorname, nachname, anzahl ' \
+                'FROM ErstimmenKandidatStimmkreisUI ' \
+                'WHERE stimmkreis = %s'
         values = (stimmkreis_id,)
         self._cursor.execute(query, values)
         return {rec[0]: (rec[1], rec[2], int(rec[3])) for rec in self._cursor.fetchall()}
@@ -175,7 +217,9 @@ class Database:
             stimmkreis_id: int,
     ) -> dict[str, int]:
         # Return dictionary mapping (party name: num votes)
-        query = 'SELECT parteiname, gesamtstimmen FROM Gesamtstimmen_Partei_StimmkreisUI WHERE StimmkreisID = %s'
+        query = 'SELECT parteiname, gesamtstimmen ' \
+                'FROM Gesamtstimmen_Partei_StimmkreisUI ' \
+                'WHERE StimmkreisID = %s'
         values = (stimmkreis_id,)
         self._cursor.execute(query, values)
         return {rec[0]: int(rec[1]) for rec in self._cursor.fetchall()}
@@ -184,18 +228,22 @@ class Database:
             self,
             party_name: str,
     ) -> bool:
-        sql = 'SELECT * FROM Partei where ParteiName = %s'
+        query = 'SELECT * ' \
+                'FROM Partei ' \
+                'WHERE ParteiName = %s'
         values = (party_name,)
-        self._cursor.execute(sql, values)
+        self._cursor.execute(query, values)
         return bool(self._cursor.fetchall())
 
     def get_party_id(
             self,
             party_name: str,
     ) -> int:
-        sql = 'SELECT * FROM Partei where ParteiName = %s'
+        query = 'SELECT * ' \
+                'FROM Partei ' \
+                'WHERE ParteiName = %s'
         values = (party_name,)
-        self._cursor.execute(sql, values)
+        self._cursor.execute(query, values)
         return self._cursor.fetchone()[0]
 
     def add_party(
@@ -203,9 +251,11 @@ class Database:
             party_name: str,
     ) -> int:
         print('Adding Party {}'.format(party_name))
-        sql = 'INSERT INTO Partei (ParteiName) VALUES (%s) RETURNING id'
+        query = 'INSERT INTO Partei (ParteiName) ' \
+                'VALUES (%s) ' \
+                'RETURNING id'
         vals = (party_name,)
-        self._cursor.execute(sql, vals)
+        self._cursor.execute(query, vals)
         return self._cursor.fetchone()[0]
 
     def add_party_to_election(
@@ -213,9 +263,10 @@ class Database:
             party_id: int,
             wahl_id: int,
     ):
-        sql = 'INSERT INTO ParteiZuWahl (Partei, WahlID) VALUES (%s, %s)'
+        query = 'INSERT INTO ParteiZuWahl (Partei, WahlID) ' \
+                'VALUES (%s, %s)'
         vals = (party_id, wahl_id,)
-        self._cursor.execute(sql, vals)
+        self._cursor.execute(query, vals)
 
     def add_candidate(
             self,
@@ -225,9 +276,9 @@ class Database:
     ) -> int:
         print('Adding Candidate {}'.format(candidate))
         # Add Candidate information to the 'Kandidat' table
-        sql = 'INSERT INTO Kandidat (VorName, Nachname, Partei, WahlID, Wahlkreis) ' \
-              'VALUES (%s, %s, %s, %s, %s) ' \
-              'RETURNING id'
+        query = 'INSERT INTO Kandidat (VorName, Nachname, Partei, WahlID, Wahlkreis) ' \
+                'VALUES (%s, %s, %s, %s, %s) ' \
+                'RETURNING id'
         vals = (
             candidate.first_name,
             candidate.last_name,
@@ -235,7 +286,7 @@ class Database:
             wahl_id,
             candidate.wahlkreis.value,
         )
-        self._cursor.execute(sql, vals)
+        self._cursor.execute(query, vals)
         # Record ID given to candidate in the table
         candidate_id = self._cursor.fetchone()[0]
         # If candidate is a direct candidate, record their stimmkreis
@@ -247,13 +298,13 @@ class Database:
                 candidate.direct_stimmkreis,
             )
             # Create mapping
-            sql = 'INSERT INTO DKandidatZuStimmkreis (Kandidat, Stimmkreis) ' \
-                  'VALUES (%s, %s)'
+            query = 'INSERT INTO DKandidatZuStimmkreis (Kandidat, Stimmkreis) ' \
+                    'VALUES (%s, %s)'
             vals = (
                 candidate_id,
                 stimmkreis_id,
             )
-            self._cursor.execute(sql, vals)
+            self._cursor.execute(query, vals)
         return candidate_id
 
     def generate_erst_stimmen(
@@ -310,8 +361,6 @@ class Database:
     ):
         """Here we do a bulk insert.
         See: https://medium.com/@benmorel/high-speed-inserts-with-mysql-9d3dcd76f723
-        Note: Performance might be improved by reducing the number of tuples per insert
-        TODO: IS THE `INSERTS_PER_CALL` OPTIMIZATION WORTH THE ADDED CODE COMPLEXITY?
         """
         print('Inserting {} values'.format(num_inserts))
         if num_inserts == 0:
@@ -326,39 +375,39 @@ class Database:
             # Create bulk insertion string
             bulk_insert = (tuple_string + ',') * (num_inserts - 1) + tuple_string
             # Form SQL statement
-            sql = 'INSERT INTO {}({}) VALUES {};'.format(
+            query = 'INSERT INTO {}({}) VALUES {};'.format(
                 table_name,
                 columns_string,
                 bulk_insert,
             )
             # Execute
-            self._cursor.execute(sql)
+            self._cursor.execute(query)
         # Split the insert into a number of calls, each of size `inserts_per_call`
         else:
             inserts_remaining = num_inserts
             # Create bulk insertion string
             bulk_insert = (tuple_string + ',') * (inserts_per_call - 1) + tuple_string
             # Form SQL statement
-            sql = 'INSERT INTO {}({}) VALUES {};'.format(
+            query = 'INSERT INTO {}({}) VALUES {};'.format(
                 table_name,
                 columns_string,
                 bulk_insert,
             )
             # Loop
             while inserts_remaining > inserts_per_call:
-                self._cursor.execute(sql)
+                self._cursor.execute(query)
                 inserts_remaining -= inserts_per_call
             # Insert the remaining number of tuples
             # Create bulk insertion string
             bulk_insert = (tuple_string + ',') * (inserts_remaining - 1) + tuple_string
             # Form SQL statement
-            sql = 'INSERT INTO {}({}) VALUES {};'.format(
+            query = 'INSERT INTO {}({}) VALUES {};'.format(
                 table_name,
                 columns_string,
                 bulk_insert,
             )
             # Execute
-            self._cursor.execute(sql)
+            self._cursor.execute(query)
 
     def get_sitz_verteilung(
             self,
@@ -367,7 +416,8 @@ class Database:
         """Returns party name -> number of seats. Only lists those parties
         that won at least one seat."""
         # TODO: ACCOUNT FOR WAHL_ID
-        script = 'SELECT parteiname, anzahl_der_sitze FROM Sitzverteilung'
+        script = 'SELECT parteiname, anzahl_der_sitze ' \
+                 'FROM Sitzverteilung'
         self._cursor.execute(script)
         return {rec[0]: rec[1] for rec in self._cursor.fetchall()}
 
@@ -378,7 +428,8 @@ class Database:
         """Returns party name -> number of seats. Only lists those parties
         that won at least one seat."""
         # TODO: ACCOUNT FOR WAHL_ID
-        script = 'SELECT vorname, nachname, partei, wahlkreis FROM Mitglieder_des_LandtagesUI'
+        script = 'SELECT vorname, nachname, partei, wahlkreis ' \
+                 'FROM Mitglieder_des_LandtagesUI'
         self._cursor.execute(script)
         return [(rec[0], rec[1], rec[2], rec[3]) for rec in self._cursor.fetchall()]
 

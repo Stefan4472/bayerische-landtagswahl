@@ -4,3 +4,4 @@ click
 psycopg2
 flask
 flask-cors
+dataclasses

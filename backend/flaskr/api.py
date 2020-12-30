@@ -33,14 +33,7 @@ def get_main_parties():
 @API_BLUEPRINT.route('/stimmkreise')
 def get_stimmkreise():
     db = db_context.get_db()
-    # TODO: DO THIS PROPERLY WITH DATA TRANSFER OBJECTS (/PYTHON-EQUIVALENT)
-    return jsonify([
-        {
-            'id': info[0],
-            'name': info[1],
-            'number': info[3],
-        } for info in db.get_stimmkreise(WAHL_ID)
-    ])
+    return jsonify(db.get_stimmkreise(WAHL_ID))
 
 
 # TODO: GENERALLY, NEED A TON OF LEGIBILITY IMPROVEMENTS, NAMED TUPLES, DTOS, ETC.
