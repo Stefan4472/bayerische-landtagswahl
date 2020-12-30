@@ -44,40 +44,42 @@ def get_stimmkreis_overview(number: int):
     stimmkreis_id = db.get_stimmkreis_id(WAHL_ID, number)
     # Perform queries
     turnout = db.get_stimmkreis_turnout(WAHL_ID, stimmkreis_id)
-    # winner_fname, winner_lname = db.get_stimmkreis_winner(WAHL_ID, stimmkreis_id)
-    erst_by_party = db.get_stimmkreis_erststimmen(WAHL_ID, stimmkreis_id)
-    gesamt_by_party = db.get_stimmkreis_gesamtstimmen(WAHL_ID, stimmkreis_id)
-    # Form the 'results' dictionary, which requires coalescing first-
+    erst_by_party = {
+        rec.party_name: rec for rec in db.get_stimmkreis_erststimmen(WAHL_ID, stimmkreis_id)
+    }
+    gesamt_by_party = {
+        rec.party_name: rec for rec in db.get_stimmkreis_gesamtstimmen(WAHL_ID, stimmkreis_id)
+    }
+    # Form response. The 'results' dictionary requires coalescing first-
     # and second-votes by party
-    results = [
-        {
-            'party': party_name,
-            'candidate': erst_by_party[party_name][1] + ', ' + erst_by_party[party_name][0],
-            'erststimmen': erst_by_party[party_name][2],
-            'zweitstimmen': gesamt_by_party[party_name] - erst_by_party[party_name][2],
-        } for party_name in erst_by_party.keys()
-    ]
+    # TODO: SIMPLIFY
     return jsonify({
         'turnout_percent': turnout,
-        'results': results,
+        'results': [
+            {
+                'party': party_name,
+                'candidate': erst_by_party[party_name].candidate_fname + ', ' + erst_by_party[party_name].candidate_lname,
+                'erststimmen': erst_by_party[party_name].num_erststimmen,
+                'zweitstimmen': gesamt_by_party[party_name].num_gesamtstimmen - erst_by_party[party_name].num_erststimmen,
+            } for party_name in erst_by_party.keys()
+        ],
     })
 
 
 @API_BLUEPRINT.route('/results/sitzverteilung')
 def get_sitzverteilung():
     db = db_context.get_db()
-    return jsonify(db.get_sitz_verteilung(WAHL_ID))
+    return jsonify({rec.party_name: rec.num_sitze for rec in db.get_sitz_verteilung(WAHL_ID)})
 
 
 @API_BLUEPRINT.route('/results/elected-candidates')
 def get_elected_candidates():
     db = db_context.get_db()
-    # TODO: USE DATACLASS DTOs
     return jsonify([
         {
-            'fname': rec[0],
-            'lname': rec[1],
-            'party': rec[2],
-            'wahlkreis': rec[3],
+            'fname': rec.first_name,
+            'lname': rec.last_name,
+            'party': rec.party_name,
+            'wahlkreis': rec.wahlkreis_name,
         } for rec in db.get_elected_candidates(WAHL_ID)
     ])

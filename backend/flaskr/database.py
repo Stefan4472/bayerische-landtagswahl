@@ -1,21 +1,8 @@
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import typing
-import dataclasses as dc
 import util
-
-
-@dc.dataclass
-class StimmkreisInfo:
-    id: int
-    name: str
-    number: int
-
-
-@dc.dataclass
-class StimmkreisWinner:
-    first_name: str
-    last_name: str
+import database_dtos as dto
 
 
 class Database:
@@ -148,7 +135,7 @@ class Database:
     def get_stimmkreise(
             self,
             wahl_id: int,
-    ) -> list[StimmkreisInfo]:
+    ) -> list[dto.StimmkreisInfo]:
         """Return basic information about all Stimmkreise for the specified
         `wahl_id`.
         """
@@ -158,7 +145,7 @@ class Database:
                 'ORDER BY Nummer ASC'
         values = (wahl_id,)
         self._cursor.execute(query, values)
-        return [StimmkreisInfo(rec[0], rec[1], rec[2]) for rec in self._cursor.fetchall()]
+        return [dto.StimmkreisInfo(rec[0], rec[1], rec[2]) for rec in self._cursor.fetchall()]
 
     def get_stimmkreis_id(
             self,
@@ -188,41 +175,40 @@ class Database:
             self,
             wahl_id: int,
             stimmkreis_id: int,
-    ) -> StimmkreisWinner:
+    ) -> dto.StimmkreisWinner:
         query = 'SELECT vorname, nachname ' \
                 'FROM DirektkandidatenUI ' \
                 'WHERE StimmkreisID = %s'
         values = (stimmkreis_id,)
         self._cursor.execute(query, values)
         rec = self._cursor.fetchone()
-        return StimmkreisWinner(rec[0], rec[1])
+        return dto.StimmkreisWinner(rec[0], rec[1])
 
     def get_stimmkreis_erststimmen(
             self,
             wahl_id: int,
             stimmkreis_id: int,
-    ) -> dict[str, tuple[str, str, int]]:
-        # Return dictionary indexed by party name. Tuples are
-        # (firstname, lastname, numvotes)
+    ) -> list[dto.StimmkreisErststimmen]:
         query = 'SELECT parteiname, vorname, nachname, anzahl ' \
                 'FROM ErstimmenKandidatStimmkreisUI ' \
                 'WHERE stimmkreis = %s'
         values = (stimmkreis_id,)
         self._cursor.execute(query, values)
-        return {rec[0]: (rec[1], rec[2], int(rec[3])) for rec in self._cursor.fetchall()}
+        return [dto.StimmkreisErststimmen(rec[0], rec[1], rec[2], int(rec[3]))
+                for rec in self._cursor.fetchall()]
 
     def get_stimmkreis_gesamtstimmen(
             self,
             wahl_id: int,
             stimmkreis_id: int,
-    ) -> dict[str, int]:
-        # Return dictionary mapping (party name: num votes)
+    ) -> list[dto.StimmkreisGesamtstimmen]:
         query = 'SELECT parteiname, gesamtstimmen ' \
                 'FROM Gesamtstimmen_Partei_StimmkreisUI ' \
                 'WHERE StimmkreisID = %s'
         values = (stimmkreis_id,)
         self._cursor.execute(query, values)
-        return {rec[0]: int(rec[1]) for rec in self._cursor.fetchall()}
+        return [dto.StimmkreisGesamtstimmen(rec[0], int(rec[1]))
+                for rec in self._cursor.fetchall()]
 
     def has_party(
             self,
@@ -412,24 +398,24 @@ class Database:
     def get_sitz_verteilung(
             self,
             wahl_id: int,
-    ) -> dict[str, int]:
+    ) -> list[dto.Sitzverteilung]:
         """Returns party name -> number of seats. Only lists those parties
         that won at least one seat."""
         # TODO: ACCOUNT FOR WAHL_ID
         script = 'SELECT parteiname, anzahl_der_sitze ' \
                  'FROM Sitzverteilung'
         self._cursor.execute(script)
-        return {rec[0]: rec[1] for rec in self._cursor.fetchall()}
+        return [dto.Sitzverteilung(rec[0], rec[1]) for rec in self._cursor.fetchall()]
 
     def get_elected_candidates(
             self,
             wahl_id: int,
-    ) -> list[tuple[str, str, str, str]]:
+    ) -> list[dto.Mitglied]:
         """Returns party name -> number of seats. Only lists those parties
         that won at least one seat."""
         # TODO: ACCOUNT FOR WAHL_ID
         script = 'SELECT vorname, nachname, partei, wahlkreis ' \
                  'FROM Mitglieder_des_LandtagesUI'
         self._cursor.execute(script)
-        return [(rec[0], rec[1], rec[2], rec[3]) for rec in self._cursor.fetchall()]
+        return [dto.Mitglied(rec[0], rec[1], rec[2], rec[3]) for rec in self._cursor.fetchall()]
 
