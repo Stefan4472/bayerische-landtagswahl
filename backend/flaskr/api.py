@@ -36,12 +36,11 @@ def get_stimmkreise():
     return jsonify(db.get_stimmkreise(WAHL_ID))
 
 
-# TODO: GENERALLY, NEED A TON OF LEGIBILITY IMPROVEMENTS, NAMED TUPLES, DTOS, ETC.
-@API_BLUEPRINT.route('/results/stimmkreis/<number>')
-def get_stimmkreis_overview(number: int):
+@API_BLUEPRINT.route('/results/stimmkreis/<int:stimmkreis_nr>')
+def get_stimmkreis_overview(stimmkreis_nr: int):
     db = db_context.get_db()
     # Look up StimmkreisID
-    stimmkreis_id = db.get_stimmkreis_id(WAHL_ID, number)
+    stimmkreis_id = db.get_stimmkreis_id(WAHL_ID, stimmkreis_nr)
     # Perform queries
     turnout = db.get_stimmkreis_turnout(WAHL_ID, stimmkreis_id)
     erst_by_party = {
@@ -69,17 +68,10 @@ def get_stimmkreis_overview(number: int):
 @API_BLUEPRINT.route('/results/sitzverteilung')
 def get_sitzverteilung():
     db = db_context.get_db()
-    return jsonify({rec.party_name: rec.num_sitze for rec in db.get_sitz_verteilung(WAHL_ID)})
+    return jsonify(db.get_sitz_verteilung(WAHL_ID))
 
 
-@API_BLUEPRINT.route('/results/elected-candidates')
-def get_elected_candidates():
+@API_BLUEPRINT.route('/results/mitglieder')
+def get_mitglieder():
     db = db_context.get_db()
-    return jsonify([
-        {
-            'fname': rec.first_name,
-            'lname': rec.last_name,
-            'party': rec.party_name,
-            'wahlkreis': rec.wahlkreis_name,
-        } for rec in db.get_elected_candidates(WAHL_ID)
-    ])
+    return jsonify(db.get_mitglieder(WAHL_ID))

@@ -8,6 +8,7 @@ interface Props {
 }
 
 interface State {
+    // TODO: USE LIST INSTEAD
     sitzVerteilung: Map<string, number>,
 }
 
@@ -25,8 +26,13 @@ export class SitzverteilungOverview extends React.Component<Props> {
         fetch('/api/results/sitzverteilung')
             .then(response => response.json())
             .then(data => {
+                // Transform list into Map
+                // TODO: JUST USE A LIST
                 this.setState({
-                    sitzVerteilung: new Map(Object.entries(data)),
+                    sitzVerteilung: new Map(data.map(
+                        (rec: { num_sitze: number, party_name: string }) =>
+                            [rec.party_name, rec.num_sitze]
+                    )),
                 })
             });
     }

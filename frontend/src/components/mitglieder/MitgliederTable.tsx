@@ -4,10 +4,10 @@ import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 
 
 export interface Mitglied {
-    fname: string,
-    lname: string,
-    party: string,
-    wahlkreis: string,
+    first_name: string,
+    last_name: string,
+    party_name: string,
+    wahlkreis_name: string,
 }
 
 interface Props {
@@ -29,11 +29,11 @@ export class MitgliederTable extends React.Component<Props> {
     }
 
     componentDidMount() {
-        fetch('/api/results/elected-candidates')
+        fetch('/api/results/mitglieder')
             .then(response => response.json())
             .then(data => {
                 // Sort the data alphabetically by first name
-                data.sort((a: Mitglied, b: Mitglied) => (a.fname > b.fname) ? 1 : -1);
+                data.sort((a: Mitglied, b: Mitglied) => (a.first_name > b.first_name) ? 1 : -1);
                 this.setState({
                     mitglieder: data,
                 });
@@ -45,10 +45,10 @@ export class MitgliederTable extends React.Component<Props> {
         return mitglieder.map((mitglied, index) => {
             return {
                 'id': index,
-                'fname': mitglied.fname,
-                'lname': mitglied.lname,
-                'party': mitglied.party,
-                'wahlkreis': mitglied.wahlkreis,
+                'first_name': mitglied.first_name,
+                'last_name': mitglied.last_name,
+                'party_name': mitglied.party_name,
+                'wahlkreis_name': mitglied.wahlkreis_name,
             }
         });
     }
@@ -60,22 +60,22 @@ export class MitgliederTable extends React.Component<Props> {
                 keyField={'id'}
                 columns={[
                     {
-                        dataField: 'fname',
+                        dataField: 'first_name',
                         text: 'Vorname',
                         sort: true,
                     },
                     {
-                        dataField: 'lname',
+                        dataField: 'last_name',
                         text: 'Nachname',
                         sort: true,
                     },
                     {
-                        dataField: 'party',
+                        dataField: 'party_name',
                         text: 'Partei',
                         sort: true,
                     },
                     {
-                        dataField: 'wahlkreis',
+                        dataField: 'wahlkreis_name',
                         text: 'Wahlkreis',
                         sort: true,
                     }

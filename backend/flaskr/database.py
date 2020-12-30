@@ -407,7 +407,7 @@ class Database:
         self._cursor.execute(script)
         return [dto.Sitzverteilung(rec[0], rec[1]) for rec in self._cursor.fetchall()]
 
-    def get_elected_candidates(
+    def get_mitglieder(
             self,
             wahl_id: int,
     ) -> list[dto.Mitglied]:

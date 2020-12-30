@@ -39,14 +39,14 @@ export class App extends React.Component {
 
                     {/*Content*/}
                     <Switch>
-                        <Route path={"/mitglieder"}>
+                        <Route exact path={"/"}>
+                            <SitzverteilungPage/>
+                        </Route>
+                        <Route exact path={"/mitglieder"}>
                             <MitgliederPage/>
                         </Route>
-                        <Route path={"/stimmkreise"}>
+                        <Route exact path={"/stimmkreise"}>
                             <StimmkreisPage/>
-                        </Route>
-                        <Route path={"/"}>
-                            <SitzverteilungPage/>
                         </Route>
                     </Switch>
                 </div>
