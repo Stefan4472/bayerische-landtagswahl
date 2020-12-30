@@ -42,7 +42,7 @@ def get_stimmkreis_overview(stimmkreis_nr: int):
     # Look up StimmkreisID
     stimmkreis_id = db.get_stimmkreis_id(WAHL_ID, stimmkreis_nr)
     # Perform queries
-    turnout = db.get_stimmkreis_turnout(WAHL_ID, stimmkreis_id)
+    turnout_pct = db.get_stimmkreis_turnout(WAHL_ID, stimmkreis_id)
     erst_by_party = {
         rec.party_name: rec for rec in db.get_stimmkreis_erststimmen(WAHL_ID, stimmkreis_id)
     }
@@ -51,15 +51,15 @@ def get_stimmkreis_overview(stimmkreis_nr: int):
     }
     # Form response. The 'results' dictionary requires coalescing first-
     # and second-votes by party
-    # TODO: SIMPLIFY
     return jsonify({
-        'turnout_percent': turnout,
+        'turnout_percent': turnout_pct,
         'results': [
             {
-                'party': party_name,
-                'candidate': erst_by_party[party_name].candidate_fname + ', ' + erst_by_party[party_name].candidate_lname,
-                'erststimmen': erst_by_party[party_name].num_erststimmen,
-                'zweitstimmen': gesamt_by_party[party_name].num_gesamtstimmen - erst_by_party[party_name].num_erststimmen,
+                'party_name': party_name,
+                'candidate_fname': erst_by_party[party_name].candidate_fname,
+                'candidate_lname': erst_by_party[party_name].candidate_lname,
+                'erst_stimmen': erst_by_party[party_name].num_erststimmen,
+                'gesamt_stimmen': gesamt_by_party[party_name].num_gesamtstimmen,
             } for party_name in erst_by_party.keys()
         ],
     })

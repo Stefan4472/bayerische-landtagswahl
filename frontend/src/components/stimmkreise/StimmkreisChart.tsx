@@ -60,15 +60,15 @@ export class StimmkreisChart extends React.Component<Props> {
             // Create result objects for the main parties
             let num_other_votes = 0;
             for (const stimmkreis of this.props.stimmkreis.results) {
-                if (this.state.partyColorInfo.has(stimmkreis.party)) {
-                    results.set(stimmkreis.party, {
-                        id: stimmkreis.party,
-                        value: stimmkreis.erststimmen,
+                if (this.state.partyColorInfo.has(stimmkreis.party_name)) {
+                    results.set(stimmkreis.party_name, {
+                        id: stimmkreis.party_name,
+                        value: stimmkreis.erst_stimmen,
                     })
                 }
                 // Track votes of the minor parties
                 else {
-                    num_other_votes += stimmkreis.erststimmen;
+                    num_other_votes += stimmkreis.erst_stimmen;
                 }
             }
             // Now order result objects into a list

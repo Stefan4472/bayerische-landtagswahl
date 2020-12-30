@@ -6,10 +6,11 @@ import {StimmkreisChart} from "./StimmkreisChart";
 
 
 interface StimmkreisResult {
-    party: string;
-    candidate: string;
-    erststimmen: number;
-    zweitstimmen: number;
+    party_name: string;
+    candidate_fname: string;
+    candidate_lname: string;
+    erst_stimmen: number;
+    gesamt_stimmen: number;
 }
 
 export interface Stimmkreis {
