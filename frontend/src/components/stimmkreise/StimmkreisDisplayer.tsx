@@ -1,25 +1,10 @@
 import {Card, Col, Form, Row} from "react-bootstrap";
-import {StimmkreisInfo, StimmkreisSelector} from "./StimmkreisSelector";
+import {StimmkreisSelector} from "./StimmkreisSelector";
 import React from "react";
 import {StimmkreisTable} from "./StimmkreisTable";
 import {StimmkreisChart} from "./StimmkreisChart";
+import StimmkreisEndpoints, {Stimmkreis, StimmkreisInfo} from "../../rest_client/StimmkreisEndpoints";
 
-
-interface StimmkreisResult {
-    party_name: string;
-    candidate_fname: string;
-    candidate_lname: string;
-    erst_stimmen: number;
-    gesamt_stimmen: number;
-}
-
-export interface Stimmkreis {
-    id: number;
-    name: string;
-    number: number;
-    turnout_percent: number;
-    results: StimmkreisResult[];
-}
 
 interface Props {
 
@@ -52,20 +37,17 @@ export class StimmkreisDisplayer extends React.Component<Props> {
         if (this.state.currStimmkreis && stimmkreisInfo.id === this.state.currStimmkreis.id) {
             return;
         }
-        // TODO: BETTER FORMATTING OF URLS
-        fetch('/api/results/stimmkreis/' + stimmkreisInfo.number.toString())
-            .then(response => response.json())
-            .then(data => {
-                this.setState({
-                    currStimmkreis: {
-                        'id': stimmkreisInfo.id,
-                        'name': stimmkreisInfo.name,
-                        'number': stimmkreisInfo.number,
-                        'turnout_percent': data.turnout_percent,
-                        'results': data.results,
-                    }
-                })
-            });
+        StimmkreisEndpoints.getResults(stimmkreisInfo.number).then(data => {
+            this.setState({
+                currStimmkreis: {
+                    'id': stimmkreisInfo.id,
+                    'name': stimmkreisInfo.name,
+                    'number': stimmkreisInfo.number,
+                    'turnout_percent': data.turnout_percent,
+                    'results': data.results,
+                }
+            })
+        });
     }
 
     render() {

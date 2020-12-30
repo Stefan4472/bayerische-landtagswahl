@@ -1,7 +1,7 @@
 import React from "react";
 import BootstrapTable from "react-bootstrap-table-next";
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
-import {Stimmkreis} from "./StimmkreisDisplayer";
+import {Stimmkreis} from "../../rest_client/StimmkreisEndpoints";
 
 interface Props {
     stimmkreis?: Stimmkreis,

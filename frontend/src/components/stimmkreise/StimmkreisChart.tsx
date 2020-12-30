@@ -1,7 +1,7 @@
 import React from "react";
 import { ResponsivePie } from '@nivo/pie'
-import {Stimmkreis} from "./StimmkreisDisplayer";
 import assert from "assert";
+import StimmkreisEndpoints, {Stimmkreis} from "../../rest_client/StimmkreisEndpoints";
 
 interface PartyInfo {
     name: string;
