@@ -1,6 +1,5 @@
 lxml
 beautifulsoup4
-mysql-connector-python
 click
 psycopg2
 flask

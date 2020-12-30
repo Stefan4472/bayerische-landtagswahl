@@ -1,7 +1,6 @@
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, jsonify,
 )
-from flask_cors import cross_origin
 from werkzeug.exceptions import abort
 import db_context
 
@@ -13,15 +12,6 @@ API_BLUEPRINT = Blueprint('api', __name__, url_prefix='/api')
 WAHL_ID = 1
 
 
-@API_BLUEPRINT.route('/')
-# @cross_origin
-def index():
-    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
-    response = jsonify({'some': 'data'})
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
-
-
 # TODO: HOW TO IMPLEMENT THIS PROPERLY?
 @API_BLUEPRINT.route('/main-parties/')
 def get_main_parties():
@@ -29,7 +19,7 @@ def get_main_parties():
     and with display color."""
     # Temporary CORS workaround: https://stackoverflow.com/a/33091782
     # Now using colors from the Material Design chart: https://htmlcolorcodes.com/color-chart/
-    response = jsonify([
+    return jsonify([
         {'name': 'CSU', 'color': '#90caf9 '},
         {'name': 'SPD', 'color': '#ef5350 '},
         {'name': 'FREIE WÄHLER', 'color': '#ffb74d '},
@@ -38,27 +28,19 @@ def get_main_parties():
         {'name': 'DIE LINKE', 'color': '#ab47bc'},
         {'name': 'AfD', 'color': '#5c6bc0'},
     ])
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
 
 
 @API_BLUEPRINT.route('/stimmkreise')
 def get_stimmkreise():
     db = db_context.get_db()
-    stimmkreis_info = db.get_stimmkreise(WAHL_ID)
-    # Construct json
     # TODO: DO THIS PROPERLY WITH DATA TRANSFER OBJECTS (/PYTHON-EQUIVALENT)
-    stimmkreis_json = [
+    return jsonify([
         {
             'id': info[0],
             'name': info[1],
             'number': info[3],
-        } for info in stimmkreis_info
-    ]
-    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
-    response = jsonify(stimmkreis_json)
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
+        } for info in db.get_stimmkreise(WAHL_ID)
+    ])
 
 
 # TODO: GENERALLY, NEED A TON OF LEGIBILITY IMPROVEMENTS, NAMED TUPLES, DTOS, ETC.
@@ -82,36 +64,23 @@ def get_stimmkreis_overview(number: int):
             'zweitstimmen': gesamt_by_party[party_name] - erst_by_party[party_name][2],
         } for party_name in erst_by_party.keys()
     ]
-    # Form the response
-    response = jsonify({
+    return jsonify({
         'turnout_percent': turnout,
         'results': results,
     })
-    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
 
 
 @API_BLUEPRINT.route('/results/sitzverteilung')
 def get_sitzverteilung():
     db = db_context.get_db()
-    response = jsonify(db.get_sitz_verteilung(WAHL_ID))
-    # response = jsonify([
-    #     {
-    #         'party': party_name,
-    #         'num_seats': num_seats,
-    #     } for party_name, num_seats in db.get_sitz_verteilung(WAHL_ID).items()
-    # ])
-    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
+    return jsonify(db.get_sitz_verteilung(WAHL_ID))
 
 
 @API_BLUEPRINT.route('/results/elected-candidates')
 def get_elected_candidates():
     db = db_context.get_db()
     # TODO: USE DATACLASS DTOs
-    response = jsonify([
+    return jsonify([
         {
             'fname': rec[0],
             'lname': rec[1],
@@ -119,6 +88,3 @@ def get_elected_candidates():
             'wahlkreis': rec[3],
         } for rec in db.get_elected_candidates(WAHL_ID)
     ])
-    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
