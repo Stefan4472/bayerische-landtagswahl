@@ -6,8 +6,7 @@ export interface StimmkreisInfo {
     number: number;
 }
 
-// TODO: NAMING IS CONFUSING
-export interface StimmkreisResult {
+export interface StimmkreisPartyResult {
     party_name: string;
     candidate_fname: string;
     candidate_lname: string;
@@ -20,19 +19,17 @@ export interface Stimmkreis {
     name: string;
     number: number;
     turnout_percent: number;
-    results: StimmkreisResult[];
+    results: StimmkreisPartyResult[];
 }
 
 class StimmkreisEndpoints {
 
     async getAllInfo() : Promise<StimmkreisInfo[]> {
         const result = await http.get("/stimmkreise");
-        console.log(result.data);
         return result.data as StimmkreisInfo[];
     }
 
-
-    async getResults(stimmkreisNr: number) {
+    async getResults(stimmkreisNr: number) : Promise<Stimmkreis> {
         const result = await http.get('/results/stimmkreis/' + stimmkreisNr)
         return result.data as Stimmkreis;
     }
