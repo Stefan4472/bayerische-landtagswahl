@@ -1,5 +1,5 @@
 import React from "react";
-import {Jumbotron, Container, Navbar, Nav, Form, Row, Card} from "react-bootstrap";
+import {Jumbotron, Container, Navbar, Nav, Form, Card} from "react-bootstrap";
 import {BrowserRouter, Switch, Route} from "react-router-dom"
 import {StimmkreisPage} from "./components/stimmkreise/StimmkreisPage";
 import {MitgliederPage} from "./components/mitglieder/MitgliederPage";
@@ -30,6 +30,13 @@ export class App extends React.Component {
                 possibleYears: data,
             })
         })
+    }
+
+    // Handle user changing the year they want to view data from
+    onYearChanged(newYear: number) {
+        this.setState({
+            selectedYear: newYear,
+        });
     }
 
     render() {
@@ -69,8 +76,12 @@ export class App extends React.Component {
                             <Card.Body>
                                 <Form>
                                     <Form.Label>Wahljahr Auswahl</Form.Label>
-                                    <Form.Control as="select" custom value={this.state.selectedYear}>
-                                        {this.state.possibleYears.map(year => <option>{year}</option>)}
+                                    <Form.Control
+                                        as="select"
+                                        custom
+                                        onChange={(event: { target: { value: any; }; }) => {this.onYearChanged(event.target.value)}}
+                                    >
+                                        {this.state.possibleYears.map(year => <option value={year}>{year}</option>)}
                                     </Form.Control>
                                 </Form>
                             </Card.Body>
@@ -81,7 +92,7 @@ export class App extends React.Component {
                     {/*Content*/}
                     <Switch>
                         <Route exact path={"/"}>
-                            <SitzverteilungPage/>
+                            <SitzverteilungPage selectedYear={this.state.selectedYear}/>
                         </Route>
                         <Route exact path={"/mitglieder"}>
                             <MitgliederPage/>
