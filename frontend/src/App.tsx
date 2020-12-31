@@ -95,7 +95,7 @@ export class App extends React.Component {
                             <SitzverteilungPage selectedYear={this.state.selectedYear}/>
                         </Route>
                         <Route exact path={"/mitglieder"}>
-                            <MitgliederPage/>
+                            <MitgliederPage selectedYear={this.state.selectedYear}/>
                         </Route>
                         <Route exact path={"/stimmkreise"}>
                             <StimmkreisPage/>

@@ -9,8 +9,7 @@ export interface Mitglied {
 
 class MitlgliederEndpoints {
 
-    async getAll() : Promise<Mitglied[]> {
-        let year = 2018;
+    async getAll(year: number) : Promise<Mitglied[]> {
         const result = await http.get(`/results/${year}/mitglieder`);
         return result.data as Mitglied[];
     }
