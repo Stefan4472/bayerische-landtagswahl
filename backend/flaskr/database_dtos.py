@@ -36,7 +36,7 @@ class StimmkreisGesamtstimmen:
 @dc.dataclass
 class Sitzverteilung:
     party_name: str
-    num_sitze: int
+    num_seats: int
 
 
 @dc.dataclass

@@ -2,6 +2,7 @@ import React from "react";
 import {SitzverteilungChart} from "./SitzverteilungChart";
 import {SitzverteilungTable} from "./SitzverteilungTable";
 import {Card} from "react-bootstrap";
+import SitzverteilungEndpoints from "../../rest_client/SitzverteilungEndpoints";
 
 interface Props {
 
@@ -23,18 +24,15 @@ export class SitzverteilungOverview extends React.Component<Props> {
     }
 
     componentDidMount() {
-        fetch('/api/results/sitzverteilung')
-            .then(response => response.json())
-            .then(data => {
-                // Transform list into Map
-                // TODO: JUST USE A LIST
-                this.setState({
-                    sitzVerteilung: new Map(data.map(
-                        (rec: { num_sitze: number, party_name: string }) =>
-                            [rec.party_name, rec.num_sitze]
-                    )),
-                })
-            });
+        SitzverteilungEndpoints.getAll().then(data => {
+            // Transform list into Map
+            // TODO: JUST USE A LIST
+            this.setState({
+                sitzVerteilung: new Map(
+                    data.map(rec => [rec.party_name, rec.num_seats])
+                ),
+            })
+        });
     }
 
     render() {
