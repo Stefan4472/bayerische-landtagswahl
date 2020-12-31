@@ -3,6 +3,7 @@ import {ListGroup} from "react-bootstrap";
 import StimmkreisEndpoints, {StimmkreisInfo} from "../../rest_client/StimmkreisEndpoints";
 
 interface Props {
+    selectedYear: number,
     filterText?: string,
     onSelect: (stimmkreisInfo: StimmkreisInfo)=>void;
 }
@@ -23,7 +24,18 @@ export class StimmkreisSelector extends React.Component<Props> {
     }
 
     componentDidMount() {
-        StimmkreisEndpoints.getAllInfo().then(data => {
+        this.fetchDataAndSetState(this.props.selectedYear);
+    }
+
+    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any) {
+        // Re-fetch data if selected year has changed
+        if (prevProps.selectedYear !== this.props.selectedYear) {
+            this.fetchDataAndSetState(this.props.selectedYear);
+        }
+    }
+
+    fetchDataAndSetState(year: number) {
+        StimmkreisEndpoints.getAllInfo(year).then(data => {
             this.setState({
                 stimmkreisInfo: data,
             });
@@ -33,10 +45,7 @@ export class StimmkreisSelector extends React.Component<Props> {
             }
         })
     }
-
     performFilter(stimmkreise: StimmkreisInfo[], filterTerm: string|undefined) : StimmkreisInfo[] {
-        console.log('Performing filter');
-        // TODO: MINOR IMPROVEMENTS + MAKE IT SO THE STIMMKREIS SEARCH BAR DOESN'T SCROLL
         if (filterTerm === '' || !filterTerm) {
             return stimmkreise;
         }
@@ -56,8 +65,8 @@ export class StimmkreisSelector extends React.Component<Props> {
     }
 
     render() {
-        return <div>
-            {/*List of Stimmkreis buttons*/}
+        return (
+            // List of Stimmkreis buttons
             <ListGroup>
                 {this.performFilter(this.state.stimmkreisInfo, this.props.filterText).map((info) => {
                     // Set the currently-selected stimmkreis to "active"
@@ -69,6 +78,6 @@ export class StimmkreisSelector extends React.Component<Props> {
                     }
                 })}
             </ListGroup>
-        </div>
+        )
     }
 }
