@@ -1,13 +1,37 @@
 import React from "react";
-import {Jumbotron, Container, Navbar, Nav} from "react-bootstrap";
+import {Jumbotron, Container, Navbar, Nav, Form, Row, Card} from "react-bootstrap";
 import {BrowserRouter, Switch, Route} from "react-router-dom"
 import {StimmkreisPage} from "./components/stimmkreise/StimmkreisPage";
 import {MitgliederPage} from "./components/mitglieder/MitgliederPage";
 import {SitzverteilungPage} from "./components/sitzverteilung/SitzverteilungPage";
 import "./App.css"
+import WahlEndpoints from "./rest_client/WahlEndpoints";
 
+interface State {
+    selectedYear: number,
+    possibleYears: number[],
+}
 
 export class App extends React.Component {
+    state: State;
+
+    constructor() {
+        super({});
+        this.state = {
+            selectedYear: 2018,
+            possibleYears: [2018,],
+        }
+    }
+
+    // Fetch the list of supported election years
+    componentDidMount() {
+        WahlEndpoints.getAllYears().then(data => {
+            this.setState({
+                possibleYears: data,
+            })
+        })
+    }
+
     render() {
         return (
             <BrowserRouter>
@@ -24,6 +48,7 @@ export class App extends React.Component {
                     </Jumbotron>
 
                     {/*Navbar*/}
+                    {/*Year selection*/}
                     <Container>
                         <Navbar collapseOnSelect expand="md" variant="light" bg="light" className="rounded" style={{marginBottom: "2rem"}}>
                             <Navbar.Toggle aria-controls="responsive-navbar-nav" />
@@ -36,6 +61,22 @@ export class App extends React.Component {
                             </Navbar.Collapse>
                         </Navbar>
                     </Container>
+
+                    <Container>
+                        <h2>Das Bayerische Landtagswahl System</h2>
+                        <p>This website stores data from Bavarian State Parliament elections. It can be used to view and analyze the results from a given election (use the "Wahljahr Auswahl", below) and to compare data between elections.</p>
+                        <Card>
+                            <Card.Body>
+                                <Form>
+                                    <Form.Label>Wahljahr Auswahl</Form.Label>
+                                    <Form.Control as="select" custom value={this.state.selectedYear}>
+                                        {this.state.possibleYears.map(year => <option>{year}</option>)}
+                                    </Form.Control>
+                                </Form>
+                            </Card.Body>
+                        </Card>
+                    </Container>
+                    <hr/>
 
                     {/*Content*/}
                     <Switch>
