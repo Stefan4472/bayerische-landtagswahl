@@ -115,6 +115,13 @@ class Database:
         self._cursor.execute(query, val)
         return self._cursor.fetchone()[0]
 
+    def get_wahl_jahre(self) -> list[int]:
+        query = 'SELECT Jahr ' \
+                'FROM Wahl ' \
+                'ORDER BY Jahr ASC'
+        self._cursor.execute(query)
+        return [int(rec[0]) for rec in self._cursor.fetchall()]
+
     def add_stimmkreis(
             self,
             wahl_id: int,

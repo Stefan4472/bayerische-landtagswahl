@@ -27,7 +27,13 @@ def get_main_parties():
     ])
 
 
-# TODO: ERROR MESSAGE IF INVALID YEAR
+@API_BLUEPRINT.route('/wahl-jahre')
+def get_wahljahre():
+    """Return list of all election years in the database."""
+    db = db_context.get_db()
+    return jsonify(db.get_wahl_jahre())
+
+
 @API_BLUEPRINT.route('/<int:year>/stimmkreise')
 def get_stimmkreise(year: int):
     db = db_context.get_db()
