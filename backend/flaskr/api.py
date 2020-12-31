@@ -8,9 +8,6 @@ import db_context
 # Blueprint under which all API routes will be registered
 API_BLUEPRINT = Blueprint('api', __name__, url_prefix='/api')
 
-# NOTE: CURRENTLY HARDCODED TO WAHL_ID = 1
-WAHL_ID = 1
-
 
 # TODO: HOW TO IMPLEMENT THIS PROPERLY?
 @API_BLUEPRINT.route('/main-parties/')
@@ -30,24 +27,27 @@ def get_main_parties():
     ])
 
 
-@API_BLUEPRINT.route('/stimmkreise')
-def get_stimmkreise():
+# TODO: ERROR MESSAGE IF INVALID YEAR
+@API_BLUEPRINT.route('/<int:year>/stimmkreise')
+def get_stimmkreise(year: int):
     db = db_context.get_db()
-    return jsonify(db.get_stimmkreise(WAHL_ID))
+    wahl_id = db.get_wahl_id(year)
+    return jsonify(db.get_stimmkreise(wahl_id))
 
 
-@API_BLUEPRINT.route('/results/stimmkreis/<int:stimmkreis_nr>')
-def get_stimmkreis_overview(stimmkreis_nr: int):
+@API_BLUEPRINT.route('/results/<int:year>/stimmkreis/<int:stimmkreis_nr>')
+def get_stimmkreis_overview(year: int, stimmkreis_nr: int):
     db = db_context.get_db()
+    wahl_id = db.get_wahl_id(year)
     # Look up StimmkreisID
-    stimmkreis_id = db.get_stimmkreis_id(WAHL_ID, stimmkreis_nr)
+    stimmkreis_id = db.get_stimmkreis_id(wahl_id, stimmkreis_nr)
     # Perform queries
-    turnout_pct = db.get_stimmkreis_turnout(WAHL_ID, stimmkreis_id)
+    turnout_pct = db.get_stimmkreis_turnout(wahl_id, stimmkreis_id)
     erst_by_party = {
-        rec.party_name: rec for rec in db.get_stimmkreis_erststimmen(WAHL_ID, stimmkreis_id)
+        rec.party_name: rec for rec in db.get_stimmkreis_erststimmen(wahl_id, stimmkreis_id)
     }
     gesamt_by_party = {
-        rec.party_name: rec for rec in db.get_stimmkreis_gesamtstimmen(WAHL_ID, stimmkreis_id)
+        rec.party_name: rec for rec in db.get_stimmkreis_gesamtstimmen(wahl_id, stimmkreis_id)
     }
     # Form response. The 'results' dictionary requires coalescing first-
     # and second-votes by party
@@ -65,13 +65,15 @@ def get_stimmkreis_overview(stimmkreis_nr: int):
     })
 
 
-@API_BLUEPRINT.route('/results/sitzverteilung')
-def get_sitzverteilung():
+@API_BLUEPRINT.route('/results/<int:year>/sitzverteilung')
+def get_sitzverteilung(year: int):
     db = db_context.get_db()
-    return jsonify(db.get_sitz_verteilung(WAHL_ID))
+    wahl_id = db.get_wahl_id(year)
+    return jsonify(db.get_sitz_verteilung(wahl_id))
 
 
-@API_BLUEPRINT.route('/results/mitglieder')
-def get_mitglieder():
+@API_BLUEPRINT.route('/results/<int:year>/mitglieder')
+def get_mitglieder(year: int):
     db = db_context.get_db()
-    return jsonify(db.get_mitglieder(WAHL_ID))
+    wahl_id = db.get_wahl_id(year)
+    return jsonify(db.get_mitglieder(wahl_id))

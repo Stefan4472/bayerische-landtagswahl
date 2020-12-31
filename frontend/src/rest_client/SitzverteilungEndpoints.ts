@@ -8,7 +8,8 @@ export interface SitzVerteilung {
 class SitzverteilungEndpoints {
 
     async getAll() : Promise<SitzVerteilung[]> {
-        const result = await http.get("/results/sitzverteilung");
+        let year = 2018;
+        const result = await http.get(`/results/${year}/sitzverteilung`);
         return result.data as SitzVerteilung[];
     }
 }

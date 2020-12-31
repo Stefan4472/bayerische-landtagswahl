@@ -25,12 +25,14 @@ export interface Stimmkreis {
 class StimmkreisEndpoints {
 
     async getAllInfo() : Promise<StimmkreisInfo[]> {
-        const result = await http.get("/stimmkreise");
+        let year = 2018;
+        const result = await http.get(`/${year}/stimmkreise`);
         return result.data as StimmkreisInfo[];
     }
 
     async getResults(stimmkreisNr: number) : Promise<Stimmkreis> {
-        const result = await http.get('/results/stimmkreis/' + stimmkreisNr)
+        let year = 2018;
+        const result = await http.get(`/results/${year}/stimmkreis/${stimmkreisNr}`)
         return result.data as Stimmkreis;
     }
 }
