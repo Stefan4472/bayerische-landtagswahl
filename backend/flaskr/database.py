@@ -98,7 +98,11 @@ class Database:
                 'WHERE Jahr = %s'
         values = (wahl_year,)
         self._cursor.execute(query, values)
-        return self._cursor.fetchone()[0]
+        result = self._cursor.fetchone()
+        if result:
+            return result[0]
+        else:
+            raise ValueError('Provided `wahl_year` ({}) does not exist in database'.format(wahl_year))
 
     def add_wahl(
             self,
@@ -145,7 +149,11 @@ class Database:
                 'ORDER BY Nummer ASC'
         values = (wahl_id,)
         self._cursor.execute(query, values)
-        return [dto.StimmkreisInfo(rec[0], rec[1], rec[2]) for rec in self._cursor.fetchall()]
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.StimmkreisInfo(rec[0], rec[1], rec[2]) for rec in result]
+        else:
+            raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
 
     def get_stimmkreis_id(
             self,
@@ -156,7 +164,11 @@ class Database:
                 'WHERE WahlID = %s and Nummer = %s'
         values = (wahl_id, stimmkreis_nr)
         self._cursor.execute(query, values)
-        return self._cursor.fetchone()[0]
+        result = self._cursor.fetchone()
+        if result:
+            return result[0]
+        else:
+            raise ValueError('Provided `wahl_id`, `stimmkreis_nr` pair ({}, {}) does not exist in database'.format(wahl_id, stimmkreis_nr))
 
     # TODO: USE WAHL_ID
     def get_stimmkreis_turnout(
@@ -169,7 +181,11 @@ class Database:
                 'WHERE StimmkreisID = %s'
         values = (stimmkreis_id,)
         self._cursor.execute(query, values)
-        return float(self._cursor.fetchone()[0])
+        result = self._cursor.fetchone()
+        if result:
+            return float(result[0])
+        else:
+            raise ValueError('Provided `wahl_id`, `stimmkreis_id` pair ({}, {}) does not exist in database'.format(wahl_id, stimmkreis_id))
 
     def get_stimmkreis_winner(
             self,
@@ -181,8 +197,11 @@ class Database:
                 'WHERE StimmkreisID = %s'
         values = (stimmkreis_id,)
         self._cursor.execute(query, values)
-        rec = self._cursor.fetchone()
-        return dto.StimmkreisWinner(rec[0], rec[1])
+        result = self._cursor.fetchone()
+        if result:
+            return dto.StimmkreisWinner(result[0], result[1])
+        else:
+            raise ValueError('Provided `wahl_id`, `stimmkreis_id` pair ({}, {}) does not exist in database'.format(wahl_id, stimmkreis_id))
 
     def get_stimmkreis_erststimmen(
             self,
@@ -194,8 +213,12 @@ class Database:
                 'WHERE stimmkreis = %s'
         values = (stimmkreis_id,)
         self._cursor.execute(query, values)
-        return [dto.StimmkreisErststimmen(rec[0], rec[1], rec[2], int(rec[3]))
-                for rec in self._cursor.fetchall()]
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.StimmkreisErststimmen(rec[0], rec[1], rec[2], int(rec[3]))
+                    for rec in result]
+        else:
+            raise ValueError('Provided `wahl_id`, `stimmkreis_id` pair ({}, {}) does not exist in database'.format(wahl_id, stimmkreis_id))
 
     def get_stimmkreis_gesamtstimmen(
             self,
@@ -207,8 +230,12 @@ class Database:
                 'WHERE StimmkreisID = %s'
         values = (stimmkreis_id,)
         self._cursor.execute(query, values)
-        return [dto.StimmkreisGesamtstimmen(rec[0], int(rec[1]))
-                for rec in self._cursor.fetchall()]
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.StimmkreisGesamtstimmen(rec[0], int(rec[1]))
+                    for rec in result]
+        else:
+            raise ValueError('Provided `wahl_id`, `stimmkreis_id` pair ({}, {}) does not exist in database'.format(wahl_id, stimmkreis_id))
 
     def has_party(
             self,
@@ -230,7 +257,11 @@ class Database:
                 'WHERE ParteiName = %s'
         values = (party_name,)
         self._cursor.execute(query, values)
-        return self._cursor.fetchone()[0]
+        result = self._cursor.fetchone()
+        if result:
+            return result[0]
+        else:
+            raise ValueError('Provided `party_name` ({}) does not exist in database'.format(party_name))
 
     def add_party(
             self,
@@ -405,7 +436,11 @@ class Database:
         script = 'SELECT parteiname, anzahl_der_sitze ' \
                  'FROM Sitzverteilung'
         self._cursor.execute(script)
-        return [dto.Sitzverteilung(rec[0], rec[1]) for rec in self._cursor.fetchall()]
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.Sitzverteilung(rec[0], rec[1]) for rec in result]
+        else:
+            raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
 
     def get_mitglieder(
             self,
@@ -417,5 +452,8 @@ class Database:
         script = 'SELECT vorname, nachname, partei, wahlkreis ' \
                  'FROM Mitglieder_des_LandtagesUI'
         self._cursor.execute(script)
-        return [dto.Mitglied(rec[0], rec[1], rec[2], rec[3]) for rec in self._cursor.fetchall()]
-
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.Mitglied(rec[0], rec[1], rec[2], rec[3]) for rec in result]
+        else:
+            raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))

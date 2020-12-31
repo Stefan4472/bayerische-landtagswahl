@@ -1,7 +1,7 @@
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, jsonify,
 )
-from werkzeug.exceptions import abort
+from werkzeug.exceptions import abort, NotFound
 import db_context
 
 
@@ -31,49 +31,61 @@ def get_main_parties():
 @API_BLUEPRINT.route('/<int:year>/stimmkreise')
 def get_stimmkreise(year: int):
     db = db_context.get_db()
-    wahl_id = db.get_wahl_id(year)
-    return jsonify(db.get_stimmkreise(wahl_id))
+    try:
+        wahl_id = db.get_wahl_id(year)
+        return jsonify(db.get_stimmkreise(wahl_id))
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
 
 
 @API_BLUEPRINT.route('/results/<int:year>/stimmkreis/<int:stimmkreis_nr>')
 def get_stimmkreis_overview(year: int, stimmkreis_nr: int):
     db = db_context.get_db()
-    wahl_id = db.get_wahl_id(year)
-    # Look up StimmkreisID
-    stimmkreis_id = db.get_stimmkreis_id(wahl_id, stimmkreis_nr)
-    # Perform queries
-    turnout_pct = db.get_stimmkreis_turnout(wahl_id, stimmkreis_id)
-    erst_by_party = {
-        rec.party_name: rec for rec in db.get_stimmkreis_erststimmen(wahl_id, stimmkreis_id)
-    }
-    gesamt_by_party = {
-        rec.party_name: rec for rec in db.get_stimmkreis_gesamtstimmen(wahl_id, stimmkreis_id)
-    }
-    # Form response. The 'results' dictionary requires coalescing first-
-    # and second-votes by party
-    return jsonify({
-        'turnout_percent': turnout_pct,
-        'results': [
-            {
-                'party_name': party_name,
-                'candidate_fname': erst_by_party[party_name].candidate_fname,
-                'candidate_lname': erst_by_party[party_name].candidate_lname,
-                'erst_stimmen': erst_by_party[party_name].num_erststimmen,
-                'gesamt_stimmen': gesamt_by_party[party_name].num_gesamtstimmen,
-            } for party_name in erst_by_party.keys()
-        ],
-    })
+    try:
+        wahl_id = db.get_wahl_id(year)
+        # Look up StimmkreisID
+        stimmkreis_id = db.get_stimmkreis_id(wahl_id, stimmkreis_nr)
+        # Perform queries
+        turnout_pct = db.get_stimmkreis_turnout(wahl_id, stimmkreis_id)
+        erst_by_party = {
+            rec.party_name: rec for rec in db.get_stimmkreis_erststimmen(wahl_id, stimmkreis_id)
+        }
+        gesamt_by_party = {
+            rec.party_name: rec for rec in db.get_stimmkreis_gesamtstimmen(wahl_id, stimmkreis_id)
+        }
+        # Form response. The 'results' dictionary requires coalescing first-
+        # and second-votes by party
+        return jsonify({
+            'turnout_percent': turnout_pct,
+            'results': [
+                {
+                    'party_name': party_name,
+                    'candidate_fname': erst_by_party[party_name].candidate_fname,
+                    'candidate_lname': erst_by_party[party_name].candidate_lname,
+                    'erst_stimmen': erst_by_party[party_name].num_erststimmen,
+                    'gesamt_stimmen': gesamt_by_party[party_name].num_gesamtstimmen,
+                } for party_name in erst_by_party.keys()
+            ],
+        })
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
 
 
 @API_BLUEPRINT.route('/results/<int:year>/sitzverteilung')
 def get_sitzverteilung(year: int):
     db = db_context.get_db()
-    wahl_id = db.get_wahl_id(year)
-    return jsonify(db.get_sitz_verteilung(wahl_id))
+    try:
+        wahl_id = db.get_wahl_id(year)
+        return jsonify(db.get_sitz_verteilung(wahl_id))
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
 
 
 @API_BLUEPRINT.route('/results/<int:year>/mitglieder')
 def get_mitglieder(year: int):
     db = db_context.get_db()
-    wahl_id = db.get_wahl_id(year)
-    return jsonify(db.get_mitglieder(wahl_id))
+    try:
+        wahl_id = db.get_wahl_id(year)
+        return jsonify(db.get_mitglieder(wahl_id))
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
