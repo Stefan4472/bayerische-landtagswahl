@@ -79,7 +79,7 @@ export class StimmkreisChart extends React.Component<Props> {
                 }
                 else {
                     // SHOULD NEVER HAPPEN
-                    assert(false);
+                    // assert(false);
                 }
             }
             // Add the sum of all tiny parties

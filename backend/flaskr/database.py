@@ -168,7 +168,7 @@ class Database:
             stimmkreis_nr: int,
     ) -> int:
         query = 'SELECT * FROM Stimmkreis ' \
-                'WHERE WahlID = %s and Nummer = %s'
+                'WHERE WahlID = %s AND Nummer = %s'
         values = (wahl_id, stimmkreis_nr)
         self._cursor.execute(query, values)
         result = self._cursor.fetchone()
@@ -177,7 +177,6 @@ class Database:
         else:
             raise ValueError('Provided `wahl_id`, `stimmkreis_nr` pair ({}, {}) does not exist in database'.format(wahl_id, stimmkreis_nr))
 
-    # TODO: USE WAHL_ID
     def get_stimmkreis_turnout(
             self,
             wahl_id: int,
@@ -185,8 +184,8 @@ class Database:
     ) -> float:
         query = 'SELECT wahlbeteiligung ' \
                 'FROM WahlbeteiligungUI ' \
-                'WHERE StimmkreisID = %s'
-        values = (stimmkreis_id,)
+                'WHERE WahlID = %s AND StimmkreisID = %s'
+        values = (wahl_id, stimmkreis_id)
         self._cursor.execute(query, values)
         result = self._cursor.fetchone()
         if result:
@@ -201,8 +200,8 @@ class Database:
     ) -> dto.StimmkreisWinner:
         query = 'SELECT vorname, nachname ' \
                 'FROM DirektkandidatenUI ' \
-                'WHERE StimmkreisID = %s'
-        values = (stimmkreis_id,)
+                'WHERE WahlID = %s AND StimmkreisID = %s'
+        values = (wahl_id, stimmkreis_id)
         self._cursor.execute(query, values)
         result = self._cursor.fetchone()
         if result:
@@ -216,9 +215,9 @@ class Database:
             stimmkreis_id: int,
     ) -> list[dto.StimmkreisErststimmen]:
         query = 'SELECT parteiname, vorname, nachname, anzahl ' \
-                'FROM ErstimmenKandidatStimmkreisUI ' \
-                'WHERE stimmkreis = %s'
-        values = (stimmkreis_id,)
+                'FROM ErststimmenKandidatStimmkreisUI ' \
+                'WHERE WahlID = %s AND stimmkreis = %s'
+        values = (wahl_id, stimmkreis_id)
         self._cursor.execute(query, values)
         result = self._cursor.fetchall()
         if result:
@@ -232,10 +231,12 @@ class Database:
             wahl_id: int,
             stimmkreis_id: int,
     ) -> list[dto.StimmkreisGesamtstimmen]:
+        self._cursor.execute('SELECT * FROM Gesamtstimmen_Partei_StimmkreisUI')
+        print([d[0] for d in self._cursor.description])
         query = 'SELECT parteiname, gesamtstimmen ' \
                 'FROM Gesamtstimmen_Partei_StimmkreisUI ' \
-                'WHERE StimmkreisID = %s'
-        values = (stimmkreis_id,)
+                'WHERE WahlID = %s AND StimmkreisID = %s'
+        values = (wahl_id, stimmkreis_id)
         self._cursor.execute(query, values)
         result = self._cursor.fetchall()
         if result:
@@ -440,9 +441,11 @@ class Database:
         """Returns party name -> number of seats. Only lists those parties
         that won at least one seat."""
         # TODO: ACCOUNT FOR WAHL_ID
-        script = 'SELECT parteiname, anzahl_der_sitze ' \
-                 'FROM Sitzverteilung'
-        self._cursor.execute(script)
+        query = 'SELECT parteiname, anzahl_der_sitze ' \
+                'FROM Sitzverteilung ' \
+                'WHERE WahlID = %s'
+        vals = (wahl_id,)
+        self._cursor.execute(query, vals)
         result = self._cursor.fetchall()
         if result:
             return [dto.Sitzverteilung(rec[0], rec[1]) for rec in result]
@@ -455,10 +458,11 @@ class Database:
     ) -> list[dto.Mitglied]:
         """Returns party name -> number of seats. Only lists those parties
         that won at least one seat."""
-        # TODO: ACCOUNT FOR WAHL_ID
-        script = 'SELECT vorname, nachname, partei, wahlkreis ' \
-                 'FROM Mitglieder_des_LandtagesUI'
-        self._cursor.execute(script)
+        query = 'SELECT vorname, nachname, partei, wahlkreis ' \
+                'FROM Mitglieder_des_LandtagesUI ' \
+                'WHERE WahlID = %s'
+        vals = (wahl_id,)
+        self._cursor.execute(query, vals)
         result = self._cursor.fetchall()
         if result:
             return [dto.Mitglied(rec[0], rec[1], rec[2], rec[3]) for rec in result]

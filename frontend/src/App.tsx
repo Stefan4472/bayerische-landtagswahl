@@ -55,7 +55,6 @@ export class App extends React.Component {
                     </Jumbotron>
 
                     {/*Navbar*/}
-                    {/*Year selection*/}
                     <Container>
                         <Navbar collapseOnSelect expand="md" variant="light" bg="light" className="rounded" style={{marginBottom: "2rem"}}>
                             <Navbar.Toggle aria-controls="responsive-navbar-nav" />
@@ -72,6 +71,7 @@ export class App extends React.Component {
                     <Container>
                         <h2>Das Bayerische Landtagswahl System</h2>
                         <p>This website stores data from Bavarian State Parliament elections. It can be used to view and analyze the results from a given election (use the "Wahljahr Auswahl", below) and to compare data between elections.</p>
+                        {/*Year selection*/}
                         <Card>
                             <Card.Body>
                                 <Form>

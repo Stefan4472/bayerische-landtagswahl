@@ -51,6 +51,7 @@ def get_stimmkreis_overview(year: int, stimmkreis_nr: int):
         wahl_id = db.get_wahl_id(year)
         # Look up StimmkreisID
         stimmkreis_id = db.get_stimmkreis_id(wahl_id, stimmkreis_nr)
+        db.get_stimmkreis_winner(wahl_id, stimmkreis_id)
         # Perform queries
         turnout_pct = db.get_stimmkreis_turnout(wahl_id, stimmkreis_id)
         erst_by_party = {
