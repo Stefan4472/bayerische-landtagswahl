@@ -81,7 +81,14 @@ export class App extends React.Component {
                                         custom
                                         onChange={(event: { target: { value: any; }; }) => {this.onYearChanged(event.target.value)}}
                                     >
-                                        {this.state.possibleYears.map(year => <option value={year}>{year}</option>)}
+                                        {this.state.possibleYears.map(year => {
+                                            if (year === this.state.selectedYear) {
+                                                return <option value={year} selected>{year}</option>
+                                            }
+                                            else {
+                                                return <option value={year}>{year}</option>
+                                            }
+                                        })}
                                     </Form.Control>
                                 </Form>
                             </Card.Body>
