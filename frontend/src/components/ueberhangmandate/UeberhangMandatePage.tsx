@@ -1,6 +1,6 @@
 import React from "react";
 import {Container} from "react-bootstrap";
-// import {MitgliederTable} from "./MitgliederTable";
+import {UeberhangMandateTable} from "./UeberhangMandateTable";
 
 interface Props {
     selectedYear: number,
@@ -11,7 +11,7 @@ export class UeberhangMandatePage extends React.Component<Props> {
     render() {
         return (
             <Container>
-                {/*<MitgliederTable selectedYear={this.props.selectedYear}/>*/}
+                <UeberhangMandateTable selectedYear={this.props.selectedYear}/>
             </Container>
         )
     }
