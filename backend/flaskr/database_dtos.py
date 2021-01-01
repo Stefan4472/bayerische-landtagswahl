@@ -45,3 +45,10 @@ class Mitglied:
     last_name: str
     party_name: str
     wahlkreis_name: str
+
+
+@dc.dataclass
+class Ueberhangmandat:
+    party_name: str
+    wahlkreis_name: str
+    num_mandates: int

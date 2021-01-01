@@ -96,3 +96,13 @@ def get_mitglieder(year: int):
         return jsonify(db.get_mitglieder(wahl_id))
     except ValueError as e:
         raise NotFound(description=e.args[0])
+
+
+@API_BLUEPRINT.route('/results/<int:year>/ueberhangmandate')
+def get_ueberhangmandate(year: int):
+    db = db_context.get_db()
+    try:
+        wahl_id = db.get_wahl_id(year)
+        return jsonify(db.get_ueberhangmandate(wahl_id))
+    except ValueError as e:
+        raise NotFound(description=e.args[0])

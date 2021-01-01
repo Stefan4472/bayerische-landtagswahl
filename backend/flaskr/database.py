@@ -473,9 +473,13 @@ class Database:
     ):
         query = 'SELECT ParteiName, Wahlkreis, Ueberhangsmandate ' \
                 'FROM UeberhangmandateUI ' \
-                'WHERE WahlID = %s'
+                'WHERE WahlID = %s ' \
+                'ORDER BY ParteiName ASC'
         vals = (wahl_id,)
         self._cursor.execute(query, vals)
-        print([d[0] for d in self._cursor.description])
-        result = [(rec[0], rec[1], int(rec[2])) for rec in self._cursor.fetchall()]
-        print(result)
+        # print([d[0] for d in self._cursor.description])
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.Ueberhangmandat(rec[0], rec[1], int(rec[2])) for rec in result]
+        else:
+            raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
