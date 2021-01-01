@@ -231,8 +231,6 @@ class Database:
             wahl_id: int,
             stimmkreis_id: int,
     ) -> list[dto.StimmkreisGesamtstimmen]:
-        self._cursor.execute('SELECT * FROM Gesamtstimmen_Partei_StimmkreisUI')
-        print([d[0] for d in self._cursor.description])
         query = 'SELECT parteiname, gesamtstimmen ' \
                 'FROM Gesamtstimmen_Partei_StimmkreisUI ' \
                 'WHERE WahlID = %s AND StimmkreisID = %s'
@@ -468,3 +466,16 @@ class Database:
             return [dto.Mitglied(rec[0], rec[1], rec[2], rec[3]) for rec in result]
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
+
+    def get_ueberhangmandate(
+            self,
+            wahl_id: int,
+    ):
+        query = 'SELECT ParteiName, Wahlkreis, Ueberhangsmandate ' \
+                'FROM UeberhangmandateUI ' \
+                'WHERE WahlID = %s'
+        vals = (wahl_id,)
+        self._cursor.execute(query, vals)
+        print([d[0] for d in self._cursor.description])
+        result = [(rec[0], rec[1], int(rec[2])) for rec in self._cursor.fetchall()]
+        print(result)

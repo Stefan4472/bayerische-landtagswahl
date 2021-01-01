@@ -302,7 +302,7 @@ WHERE s.rk = 1;
 
 -- Q5 Ueberhangmandate
 CREATE MATERIALIZED VIEW UeberhangmandateUI AS
-SELECT w.jahr, wk.id as wahlkreisID, wk.name as wahlkreis, p.parteiname, Ueberhangsmandate
+SELECT w.id as WahlID, w.jahr, wk.id as wahlkreisID, wk.name as wahlkreis, p.parteiname, Ueberhangsmandate
 FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
          INNER JOIN wahl w ON w.id = gsp.wahl
          INNER JOIN wahlkreis wk ON wk.id = gsp.wahlkreis
