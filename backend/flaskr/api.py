@@ -1,25 +1,12 @@
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, jsonify,
 )
-from flask_cors import cross_origin
-from werkzeug.exceptions import abort
+from werkzeug.exceptions import abort, NotFound
 import db_context
 
 
 # Blueprint under which all API routes will be registered
 API_BLUEPRINT = Blueprint('api', __name__, url_prefix='/api')
-
-# NOTE: CURRENTLY HARDCODED TO WAHL_ID = 1
-WAHL_ID = 1
-
-
-@API_BLUEPRINT.route('/')
-# @cross_origin
-def index():
-    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
-    response = jsonify({'some': 'data'})
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
 
 
 # TODO: HOW TO IMPLEMENT THIS PROPERLY?
@@ -29,7 +16,7 @@ def get_main_parties():
     and with display color."""
     # Temporary CORS workaround: https://stackoverflow.com/a/33091782
     # Now using colors from the Material Design chart: https://htmlcolorcodes.com/color-chart/
-    response = jsonify([
+    return jsonify([
         {'name': 'CSU', 'color': '#90caf9 '},
         {'name': 'SPD', 'color': '#ef5350 '},
         {'name': 'FREIE WÄHLER', 'color': '#ffb74d '},
@@ -38,87 +25,84 @@ def get_main_parties():
         {'name': 'DIE LINKE', 'color': '#ab47bc'},
         {'name': 'AfD', 'color': '#5c6bc0'},
     ])
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
 
 
-@API_BLUEPRINT.route('/stimmkreise')
-def get_stimmkreise():
+@API_BLUEPRINT.route('/wahl-jahre')
+def get_wahljahre():
+    """Return list of all election years in the database."""
     db = db_context.get_db()
-    stimmkreis_info = db.get_stimmkreise(WAHL_ID)
-    # Construct json
-    # TODO: DO THIS PROPERLY WITH DATA TRANSFER OBJECTS (/PYTHON-EQUIVALENT)
-    stimmkreis_json = [
-        {
-            'id': info[0],
-            'name': info[1],
-            'number': info[3],
-        } for info in stimmkreis_info
-    ]
-    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
-    response = jsonify(stimmkreis_json)
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
+    return jsonify(db.get_wahl_jahre())
 
 
-# TODO: GENERALLY, NEED A TON OF LEGIBILITY IMPROVEMENTS, NAMED TUPLES, DTOS, ETC.
-@API_BLUEPRINT.route('/results/stimmkreis/<number>')
-def get_stimmkreis_overview(number: int):
+@API_BLUEPRINT.route('/<int:year>/stimmkreise')
+def get_stimmkreise(year: int):
     db = db_context.get_db()
-    # Look up StimmkreisID
-    stimmkreis_id = db.get_stimmkreis_id(WAHL_ID, number)
-    # Perform queries
-    turnout = db.get_stimmkreis_turnout(WAHL_ID, stimmkreis_id)
-    # winner_fname, winner_lname = db.get_stimmkreis_winner(WAHL_ID, stimmkreis_id)
-    erst_by_party = db.get_stimmkreis_erststimmen(WAHL_ID, stimmkreis_id)
-    gesamt_by_party = db.get_stimmkreis_gesamtstimmen(WAHL_ID, stimmkreis_id)
-    # Form the 'results' dictionary, which requires coalescing first-
-    # and second-votes by party
-    results = [
-        {
-            'party': party_name,
-            'candidate': erst_by_party[party_name][1] + ', ' + erst_by_party[party_name][0],
-            'erststimmen': erst_by_party[party_name][2],
-            'zweitstimmen': gesamt_by_party[party_name] - erst_by_party[party_name][2],
-        } for party_name in erst_by_party.keys()
-    ]
-    # Form the response
-    response = jsonify({
-        'turnout_percent': turnout,
-        'results': results,
-    })
-    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
+    try:
+        wahl_id = db.get_wahl_id(year)
+        return jsonify(db.get_stimmkreise(wahl_id))
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
 
 
-@API_BLUEPRINT.route('/results/sitzverteilung')
-def get_sitzverteilung():
+@API_BLUEPRINT.route('/results/<int:year>/stimmkreis/<int:stimmkreis_nr>')
+def get_stimmkreis_overview(year: int, stimmkreis_nr: int):
     db = db_context.get_db()
-    response = jsonify(db.get_sitz_verteilung(WAHL_ID))
-    # response = jsonify([
-    #     {
-    #         'party': party_name,
-    #         'num_seats': num_seats,
-    #     } for party_name, num_seats in db.get_sitz_verteilung(WAHL_ID).items()
-    # ])
-    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
+    try:
+        wahl_id = db.get_wahl_id(year)
+        # Look up StimmkreisID
+        stimmkreis_id = db.get_stimmkreis_id(wahl_id, stimmkreis_nr)
+        db.get_stimmkreis_winner(wahl_id, stimmkreis_id)
+        # Perform queries
+        turnout_pct = db.get_stimmkreis_turnout(wahl_id, stimmkreis_id)
+        erst_by_party = {
+            rec.party_name: rec for rec in db.get_stimmkreis_erststimmen(wahl_id, stimmkreis_id)
+        }
+        gesamt_by_party = {
+            rec.party_name: rec for rec in db.get_stimmkreis_gesamtstimmen(wahl_id, stimmkreis_id)
+        }
+        # Form response. The 'results' dictionary requires coalescing first-
+        # and second-votes by party
+        return jsonify({
+            'turnout_percent': turnout_pct,
+            'results': [
+                {
+                    'party_name': party_name,
+                    'candidate_fname': erst_by_party[party_name].candidate_fname,
+                    'candidate_lname': erst_by_party[party_name].candidate_lname,
+                    'erst_stimmen': erst_by_party[party_name].num_erststimmen,
+                    'gesamt_stimmen': gesamt_by_party[party_name].num_gesamtstimmen,
+                } for party_name in erst_by_party.keys()
+            ],
+        })
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
 
 
-@API_BLUEPRINT.route('/results/elected-candidates')
-def get_elected_candidates():
+@API_BLUEPRINT.route('/results/<int:year>/sitzverteilung')
+def get_sitzverteilung(year: int):
     db = db_context.get_db()
-    # TODO: USE DATACLASS DTOs
-    response = jsonify([
-        {
-            'fname': rec[0],
-            'lname': rec[1],
-            'party': rec[2],
-            'wahlkreis': rec[3],
-        } for rec in db.get_elected_candidates(WAHL_ID)
-    ])
-    # Temporary CORS workaround: https: // stackoverflow.com / a / 33091782
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
+    try:
+        wahl_id = db.get_wahl_id(year)
+        return jsonify(db.get_sitz_verteilung(wahl_id))
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
+
+
+@API_BLUEPRINT.route('/results/<int:year>/mitglieder')
+def get_mitglieder(year: int):
+    db = db_context.get_db()
+    try:
+        wahl_id = db.get_wahl_id(year)
+        return jsonify(db.get_mitglieder(wahl_id))
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
+
+
+@API_BLUEPRINT.route('/results/<int:year>/ueberhangmandate')
+def get_ueberhangmandate(year: int):
+    db = db_context.get_db()
+    try:
+        wahl_id = db.get_wahl_id(year)
+        return jsonify(db.get_ueberhangmandate(wahl_id))
+    except ValueError as e:
+        raise NotFound(description=e.args[0])

@@ -202,10 +202,10 @@ FROM Listkandidaten lk;
 
 -- Q1 Sitzverteilung
 CREATE MATERIALIZED VIEW Sitzverteilung AS
-SELECT w.jahr, p.parteiname, count(Kandidat) as Anzahl_der_Sitze FROM Mitglieder_des_Landtages mds
+SELECT w.id as WahlID, w.jahr, p.parteiname, count(Kandidat) as Anzahl_der_Sitze FROM Mitglieder_des_Landtages mds
 INNER JOIN Wahl w ON w.ID = mds.wahl
 INNER JOIN Partei p ON p.ID = mds.partei
-GROUP BY w.jahr, p.parteiname;
+GROUP BY w.id, w.jahr, p.parteiname;
 
 
 -- Q2 Mitglieder des Landtages
@@ -214,6 +214,7 @@ SELECT k.vorname,
        k.nachname,
        mdl.Direktkandidat,
        p.parteiname as Partei,
+       w.id         as WahlID,
        w.jahr,
        wk.name      as Wahlkreis,
        s.id         as StimmkreisID,
@@ -230,7 +231,8 @@ FROM Mitglieder_des_Landtages mdl
 
 -- Wahlbeteiligung
 CREATE MATERIALIZED VIEW WahlbeteiligungUI AS
-SELECT w.jahr,
+SELECT w.id                                               as WahlID,
+       w.jahr,
        wk.name                                            as Wahlkreis,
        s.id                                               as StimmkreisID,
        s.name                                             as Stimmkreis,
@@ -239,12 +241,13 @@ FROM erststimme es
          INNER JOIN stimmkreis s ON es.stimmkreis = s.id
          INNER JOIN wahlkreis wk ON wk.id = s.wahlkreis
          INNER JOIN wahl w on es.wahl = w.id
-GROUP BY w.jahr, wk.name, s.id, s.name
+GROUP BY w.id, w.jahr, wk.name, s.id, s.name
 ORDER BY s.id;
 
 -- Die prozentuale und absolute Anzahl an Stimmen fuer jede Partei.
 CREATE MATERIALIZED VIEW Gesamtstimmen_Partei_StimmkreisUI AS
-SELECT w.jahr,
+SELECT w.id as WahlID,
+       w.jahr,
        wk.name as Wahlkreis,
        s.id    as StimmkreisID,
        s.name  as Stimmkreis,
@@ -261,7 +264,8 @@ FROM Gesamtstimmen_Partei_Stimmkreis gps
 
 -- Direktkandidaten
 CREATE MATERIALIZED VIEW DirektkandidatenUI AS
-SELECT w.jahr,
+SELECT w.id as WahlID,
+       w.jahr,
        wk.name as Wahlkreis,
        s.id    as StimmkreisID,
        s.name  as Stimmkreis,
@@ -298,15 +302,15 @@ WHERE s.rk = 1;
 
 -- Q5 Ueberhangmandate
 CREATE MATERIALIZED VIEW UeberhangmandateUI AS
-SELECT w.jahr, wk.id as wahlkreisID, wk.name as wahlkreis, p.parteiname, Ueberhangsmandate
+SELECT w.id as WahlID, w.jahr, wk.id as wahlkreisID, wk.name as wahlkreis, p.parteiname, Ueberhangsmandate
 FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
          INNER JOIN wahl w ON w.id = gsp.wahl
          INNER JOIN wahlkreis wk ON wk.id = gsp.wahlkreis
          INNER JOIN partei p ON p.id = gsp.partei;
 
 -- Erststimmen pro Kandidat, pro Stimmkreis (Q7?)
-CREATE MATERIALIZED VIEW ErstimmenKandidatStimmkreisUI AS
-SELECT ek.stimmkreis, k.vorname, k.nachname, ek.anzahl, p.ParteiName
+CREATE MATERIALIZED VIEW ErststimmenKandidatStimmkreisUI AS
+SELECT ek.Wahl as WahlID, ek.stimmkreis, k.vorname, k.nachname, ek.anzahl, p.ParteiName
 FROM Erststimme_Kandidat ek
     INNER JOIN Kandidat k ON k.ID = ek.kandidat
     INNER JOIN Partei p ON p.ID = ek.partei;

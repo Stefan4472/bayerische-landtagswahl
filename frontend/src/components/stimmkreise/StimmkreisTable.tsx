@@ -1,7 +1,7 @@
 import React from "react";
 import BootstrapTable from "react-bootstrap-table-next";
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
-import {Stimmkreis} from "./StimmkreisDisplayer";
+import {Stimmkreis} from "../../rest_client/StimmkreisEndpoints";
 
 interface Props {
     stimmkreis?: Stimmkreis,
@@ -23,28 +23,29 @@ export class StimmkreisTable extends React.Component<Props> {
         // TODO: MAKE `STIMMKREIS` A REQUIRED PROP
         if (this.props.stimmkreis) {
             return (
+                // TODO: SHOW CANDIDATE'S FULL NAME, NOT JUST FIRSTNAME
                 <BootstrapTable
                     bootstrap4
                     keyField={'party'}
                     columns={[
                         {
-                            dataField: 'party',
+                            dataField: 'party_name',
                             text: 'Partei',
                             sort: true,
                         },
                         {
-                            dataField: 'candidate',
+                            dataField: 'candidate_lname',
                             text: 'Kandidat',
                             sort: true,
                         },
                         {
-                            dataField: 'erststimmen',
+                            dataField: 'erst_stimmen',
                             text: 'Erststimmen',
                             sort: true,
                         },
                         {
-                            dataField: 'zweitstimmen',
-                            text: 'Zweitstimmen',
+                            dataField: 'gesamt_stimmen',
+                            text: 'Gesamtstimmen',
                             sort: true,
                         }
                     ]}
@@ -52,27 +53,6 @@ export class StimmkreisTable extends React.Component<Props> {
                     striped
                 />
             )
-            // // TODO: HOW TO SET ROW HEIGHT CORRECTLY?
-            // return <Table striped bordered hover>
-            //     <thead>
-            //         <tr>
-            //             <th>Partei</th>
-            //             <th>Kandidat</th>
-            //             <th>Ersttimmen</th>
-            //             <th>Zweitstimmen</th>
-            //         </tr>
-            //     </thead>
-            //     <tbody>
-            //     {this.props.stimmkreis.results.map((result) =>
-            //         <tr key={result.party}>
-            //             <td>{result.party}</td>
-            //             <td>{result.candidate}</td>
-            //             <td>{result.erststimmen}</td>
-            //             <td>{result.zweitstimmen}</td>
-            //         </tr>
-            //     )}
-            //     </tbody>
-            // </Table>
         }
         else {
             // TODO: WHAT TO RETURN?
