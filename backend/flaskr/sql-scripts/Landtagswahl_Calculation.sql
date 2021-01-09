@@ -200,6 +200,48 @@ SELECT lk.Kandidat, lk.Partei, lk.Wahlkreis, null, lk.Wahl, false as Direktkandi
 FROM Listkandidaten lk;
 
 
+-- Q6 Knappste Sieger
+WITH erststimmen_stimmkreis AS (
+    SELECT *,
+           ROW_NUMBER() OVER (PARTITION BY wahl, wahlkreis, stimmkreis
+               ORDER BY anzahl DESC) as rk
+    FROM erststimme_kandidat
+    ORDER BY wahl, wahlkreis, stimmkreis, anzahl DESC),
+     gewinner_vorsprung as (SELECT wahl,
+                                   wahlkreis,
+                                   stimmkreis,
+                                   partei,
+                                   kandidat,
+                                   anzahl,
+                                   erst.anzahl - (SELECT e.anzahl
+                                                  FROM erststimmen_stimmkreis e
+                                                  WHERE e.rk = 2
+                                                    AND e.wahl = erst.wahl
+                                                    AND e.stimmkreis = erst.stimmkreis) as vorsprung
+                            FROM erststimmen_stimmkreis erst
+                            WHERE erst.rk = 1),
+     sieger_partei AS (
+         SELECT *,
+                ROW_NUMBER() OVER (PARTITION BY wahl, partei
+                    ORDER BY vorsprung) as rk
+         FROM gewinner_vorsprung gv
+         ORDER BY wahl, partei, rk),
+     zehn_knappsten_sieger_partei as (
+         SELECT *
+         FROM sieger_partei
+         WHERE rk <= 10),
+     partein_ohne_gewinner AS (
+         SELECT wahlid, partei
+         FROM parteizuwahl pzw
+         WHERE partei not in (
+             SELECT distinct partei
+             FROM sieger_partei sp
+             WHERE pzw.wahlid = sp.wahl)
+     )
+SELECT *
+FROM zehn_knappsten_sieger_partei;
+
+
 -- Q1 Sitzverteilung
 CREATE MATERIALIZED VIEW Sitzverteilung AS
 SELECT w.id as WahlID, w.jahr, p.parteiname, count(Kandidat) as Anzahl_der_Sitze FROM Mitglieder_des_Landtages mds
