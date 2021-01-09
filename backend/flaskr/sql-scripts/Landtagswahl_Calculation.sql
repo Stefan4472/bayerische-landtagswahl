@@ -204,8 +204,13 @@ FROM Listkandidaten lk;
 WITH erststimmen_stimmkreis AS (
     SELECT *,
            ROW_NUMBER() OVER (PARTITION BY wahl, wahlkreis, stimmkreis
-               ORDER BY anzahl DESC) as rk
-    FROM erststimme_kandidat
+               ORDER BY es2.anzahl DESC) as rk,
+           es2.Anzahl - (SELECT MAX(anzahl)
+                        FROM erststimme_kandidat es
+                        WHERE es.Wahl = es2.Wahl
+                          AND es.Stimmkreis = es2.Stimmkreis
+                        GROUP BY es.Wahl, es.Stimmkreis) as rueckstand
+    FROM erststimme_kandidat es2
     ORDER BY wahl, wahlkreis, stimmkreis, anzahl DESC),
      gewinner_vorsprung as (SELECT wahl,
                                    wahlkreis,
@@ -238,8 +243,12 @@ WITH erststimmen_stimmkreis AS (
              FROM sieger_partei sp
              WHERE pzw.wahlid = sp.wahl)
      )
-SELECT *
-FROM zehn_knappsten_sieger_partei;
+SELECT es.Wahl, Wahlkreis, Stimmkreis, es.Partei, Kandidat, Anzahl, es.rueckstand,
+       ROW_NUMBER() OVER (PARTITION BY es.wahl, es.partei
+           ORDER BY rueckstand DESC) as rk
+FROM erststimmen_stimmkreis es
+         INNER JOIN partein_ohne_gewinner pog ON es.Wahl = pog.wahlid AND pog.partei = es.Partei
+ORDER BY es.Wahl, es.partei, rueckstand DESC;
 
 
 -- Q1 Sitzverteilung
