@@ -483,3 +483,20 @@ class Database:
             return [dto.Ueberhangmandat(rec[0], rec[1], int(rec[2])) for rec in result]
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
+
+    def get_stimmkreis_sieger(
+            self,
+            wahl_id: int,
+    ) -> list[dto.StimmkreisSieger]:
+        query = 'SELECT StimmkreisNr, ParteiName, Erststimmen, Zweitstimmen ' \
+                'FROM StimmkreissiegerUI ' \
+                'WHERE WahlID = %s'
+        vals = (wahl_id,)
+        self._cursor.execute(query, vals)
+        print([d[0] for d in self._cursor.description])
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.StimmkreisSieger(rec[0], rec[1], int(rec[2]), int(rec[3]))
+                    for rec in result]
+        else:
+            raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))

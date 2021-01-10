@@ -52,3 +52,11 @@ class Ueberhangmandat:
     party_name: str
     wahlkreis_name: str
     num_mandates: int
+
+
+@dc.dataclass
+class StimmkreisSieger:
+    stimmkreis_num: int
+    party_name: str
+    num_erststimmen: int
+    num_zweitstimmen: int
