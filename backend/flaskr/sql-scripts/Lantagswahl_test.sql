@@ -23,3 +23,9 @@ SELECT * FROM StimmkreisSiegerUi;
 
 -- Q5 Ueberhangmandate
 SELECT * FROM UeberhangmandateUI;
+
+
+-- Q6 Knappste Sieger
+SELECT * FROM knappstesiegerui;
+-- Knappste Verlierer
+SELECT * FROM knappsteverliererui;

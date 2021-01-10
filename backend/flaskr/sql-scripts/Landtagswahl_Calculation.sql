@@ -15,6 +15,9 @@ DROP MATERIALIZED VIEW IF EXISTS DirektkandidatenUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS StimmkreissiegerUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS UeberhangmandateUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS ErstimmenKandidatStimmkreisUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Knappste_Sieger_Verlierer CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS KnappsteSiegerUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS KnappsteVerliererUI CASCADE;
 
 -- Anzahl Erststimme für jeden Kandidat
 CREATE MATERIALIZED VIEW Erststimme_Kandidat AS
@@ -201,15 +204,16 @@ FROM Listkandidaten lk;
 
 
 -- Q6 Knappste Sieger
+CREATE MATERIALIZED VIEW Knappste_Sieger_Verlierer AS
 WITH erststimmen_stimmkreis AS (
     SELECT *,
            ROW_NUMBER() OVER (PARTITION BY wahl, wahlkreis, stimmkreis
-               ORDER BY es2.anzahl DESC) as rk,
+               ORDER BY es2.anzahl DESC)                  as rk,
            es2.Anzahl - (SELECT MAX(anzahl)
-                        FROM erststimme_kandidat es
-                        WHERE es.Wahl = es2.Wahl
-                          AND es.Stimmkreis = es2.Stimmkreis
-                        GROUP BY es.Wahl, es.Stimmkreis) as rueckstand
+                         FROM erststimme_kandidat es
+                         WHERE es.Wahl = es2.Wahl
+                           AND es.Stimmkreis = es2.Stimmkreis
+                         GROUP BY es.Wahl, es.Stimmkreis) as rueckstand
     FROM erststimme_kandidat es2
     ORDER BY wahl, wahlkreis, stimmkreis, anzahl DESC),
      gewinner_vorsprung as (SELECT wahl,
@@ -241,14 +245,26 @@ WITH erststimmen_stimmkreis AS (
          WHERE partei not in (
              SELECT distinct partei
              FROM sieger_partei sp
-             WHERE pzw.wahlid = sp.wahl)
-     )
-SELECT es.Wahl, Wahlkreis, Stimmkreis, es.Partei, Kandidat, Anzahl, es.rueckstand,
-       ROW_NUMBER() OVER (PARTITION BY es.wahl, es.partei
-           ORDER BY rueckstand DESC) as rk
-FROM erststimmen_stimmkreis es
-         INNER JOIN partein_ohne_gewinner pog ON es.Wahl = pog.wahlid AND pog.partei = es.Partei
-ORDER BY es.Wahl, es.partei, rueckstand DESC;
+             WHERE pzw.wahlid = sp.wahl)),
+     am_knappsten_verloren AS (
+         SELECT es.Wahl,
+                Wahlkreis,
+                Stimmkreis,
+                es.Partei,
+                Kandidat,
+                Anzahl as Erststimmen,
+                es.rueckstand,
+                ROW_NUMBER() OVER (PARTITION BY es.wahl, es.partei
+                    ORDER BY rueckstand DESC) as rk
+         FROM erststimmen_stimmkreis es
+                  INNER JOIN partein_ohne_gewinner pog ON es.Wahl = pog.wahlid AND pog.partei = es.Partei)
+SELECT *
+FROM am_knappsten_verloren akv
+WHERE rk <= 10
+UNION ALL
+SELECT *
+FROM zehn_knappsten_sieger_partei
+ORDER BY Wahl, partei, rueckstand DESC;
 
 
 -- Q1 Sitzverteilung
@@ -358,6 +374,50 @@ FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
          INNER JOIN wahl w ON w.id = gsp.wahl
          INNER JOIN wahlkreis wk ON wk.id = gsp.wahlkreis
          INNER JOIN partei p ON p.id = gsp.partei;
+
+
+-- Q6 Knappste Sieger
+CREATE MATERIALIZED VIEW KnappsteSiegerUI AS
+SELECT w.jahr,
+       p.parteiname,
+       rk             as Nr,
+       wk.name        as Wahlkreis,
+       s.id           as StimmkreisID,
+       s.name         as Stimmkreis,
+       k.vorname,
+       k.nachname,
+       ksv.erststimmen,
+       ksv.rueckstand as Vorsprung
+FROM Knappste_Sieger_Verlierer ksv
+         INNER JOIN wahl w ON w.id = ksv.wahl
+         INNER JOIN wahlkreis wk ON wk.id = ksv.wahlkreis
+         INNER JOIN partei p ON p.id = ksv.partei
+         INNER JOIN stimmkreis s ON s.id = ksv.stimmkreis
+         INNER JOIN kandidat k ON k.id = ksv.kandidat
+WHERE rueckstand > 0
+ORDER BY ksv.wahl DESC, ksv.partei, rk;
+
+-- Knappste Verlierer
+CREATE MATERIALIZED VIEW KnappsteVerliererUI AS
+SELECT w.jahr,
+       p.parteiname,
+       rk      as Nr,
+       wk.name as Wahlkreis,
+       s.id    as StimmkreisID,
+       s.name  as Stimmkreis,
+       k.vorname,
+       k.nachname,
+       ksv.erststimmen,
+       ksv.rueckstand
+FROM Knappste_Sieger_Verlierer ksv
+         INNER JOIN wahl w ON w.id = ksv.wahl
+         INNER JOIN wahlkreis wk ON wk.id = ksv.wahlkreis
+         INNER JOIN partei p ON p.id = ksv.partei
+         INNER JOIN stimmkreis s ON s.id = ksv.stimmkreis
+         INNER JOIN kandidat k ON k.id = ksv.kandidat
+WHERE rueckstand < 0
+ORDER BY ksv.wahl DESC, ksv.partei, rk;
+
 
 -- Erststimmen pro Kandidat, pro Stimmkreis (Q7?)
 CREATE MATERIALIZED VIEW ErststimmenKandidatStimmkreisUI AS
