@@ -37,8 +37,18 @@ work_plan = random.choices(
     k=num_requests_per_terminal,
 )
 
+results = {url: [] for url in work_plan}
 for url in work_plan:
+    test_url = 'http://localhost:3000/#{}'.format(url)
+
     start_time = time.perf_counter()
-    urllib.request.urlopen('http://localhost:3000/#{}'.format(url))
+    urllib.request.urlopen(test_url)
     end_time = time.perf_counter()
-    print('{}'.format(end_time - start_time))
+
+    load_time = end_time - start_time
+    results[url].append(load_time)
+
+    wait_time = random.uniform(0.8 * avg_wait_sec, 1.2 * avg_wait_sec)
+    time.sleep(wait_time)
+
+print(results)
