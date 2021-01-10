@@ -56,6 +56,7 @@ class Ueberhangmandat:
 
 @dc.dataclass
 class StimmkreisSieger:
+    stimmkreis_name: str
     stimmkreis_num: int
     party_name: str
     num_erststimmen: int

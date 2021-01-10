@@ -12,7 +12,7 @@ export class SiegerTable extends React.Component<Props> {
         return sieger.map((sieger, index) => {
             return {
                 'id': index,
-                'stimmkreis_nr': sieger.stimmkreis_num,
+                'stimmkreis': '(' + sieger.stimmkreis_num + ') ' + sieger.stimmkreis_name,
                 'party_name': sieger.party_name,
                 'erststimmen': sieger.num_erststimmen,
                 'zweitstimmen': sieger.num_zweitstimmen,
@@ -21,14 +21,15 @@ export class SiegerTable extends React.Component<Props> {
     }
 
     render() {
+        // TODO: NEED ERST- AND ZWEIT- PERCENTAGES
         return (
             <BootstrapTable
                 bootstrap4
                 keyField={'id'}
                 columns={[
                     {
-                        dataField: 'stimmkreis_nr',
-                        text: 'Stimmkreis Nr.',
+                        dataField: 'stimmkreis',
+                        text: 'Stimmkreis',
                         sort: true,
                     },
                     {
@@ -40,11 +41,17 @@ export class SiegerTable extends React.Component<Props> {
                         dataField: 'erststimmen',
                         text: 'Num. Erststimmen',
                         sort: true,
+                        formatter: (value) => (
+                            <span>{value.toLocaleString()}</span>
+                        )
                     },
                     {
                         dataField: 'zweitstimmen',
                         text: 'Num. Zweitstimmen',
                         sort: true,
+                        formatter: (value) => (
+                            <span>{value.toLocaleString()}</span>
+                        )
                     },
                 ]}
                 data={this.formatData(this.props.sieger)}
