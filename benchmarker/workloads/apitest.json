@@ -1,0 +1,7 @@
+{
+  "http://localhost:5000/api/results/2018/stimmkreis/101": 0.20,
+  "http://localhost:5000/api/results/2018/sitzverteilung": 0.20,
+  "http://localhost:5000/api/results/2018/mitglieder": 0.20,
+  "http://localhost:5000/api/results/2018/ueberhangmandate": 0.20,
+  "http://localhost:5000/api/results/2018/stimmkreis-sieger": 0.20
+}

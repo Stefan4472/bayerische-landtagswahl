@@ -1,5 +1,6 @@
 import click
 import threading
+import json
 from terminal import Terminal
 
 
@@ -38,28 +39,35 @@ def run_benchmark(
     print(averages)
 
 
+def read_workload_file(
+        filepath: str,
+) -> tuple[list[str], list[float]]:
+    """Reads JSON work-definition file"""
+    with open(filepath) as f:
+        _json = json.load(f)
+        return list(_json.keys()), list(_json.values())
+
+
 @click.command(name='run')
-# @click.argument('work_file', type=click.Path(exists=True, readable=True))
+@click.argument('workfile', type=click.Path(exists=True, readable=True))
 @click.argument('num_terminals', type=int)
 @click.argument('avg_wait', type=float)
 @click.argument('requests_per_terminal', type=int)
 def cmd_run_benchmark(
-        # work_file: str,
+        workfile: str,
         num_terminals: int,
         avg_wait: float,
         requests_per_terminal: int,
 ):
     # TODO: ADD KNAPPSTE-SIEGER PAGE
-    urls = [
-        'http://localhost:3000/#/',
-        'http://localhost:3000/#/mitglieder',
-        'http://localhost:3000/#/stimmkreise',
-        'http://localhost:3000/#/ueberhangmandate',
-        'http://localhost:3000/#/sieger',
-        'http://localhost:3000/#/sieger',
-    ]
-    frequencies = [0.25, 0.10, 0.25, 0.10, 0.10, 0.20]
-    run_benchmark(urls, frequencies, num_terminals, avg_wait, requests_per_terminal)
+    urls, frequencies = read_workload_file(workfile)
+    run_benchmark(
+        urls,
+        frequencies,
+        num_terminals,
+        avg_wait,
+        requests_per_terminal,
+    )
 
 
 if __name__ == '__main__':
