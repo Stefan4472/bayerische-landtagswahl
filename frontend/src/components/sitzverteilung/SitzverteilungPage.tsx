@@ -2,15 +2,14 @@ import React from "react";
 import {SitzverteilungChart} from "./SitzverteilungChart";
 import {SitzverteilungTable} from "./SitzverteilungTable";
 import {Card, Container} from "react-bootstrap";
-import SitzverteilungEndpoints from "../../rest_client/SitzverteilungEndpoints";
+import SitzverteilungEndpoints, {SitzVerteilung} from "../../rest_client/SitzverteilungEndpoints";
 
 interface Props {
     selectedYear: number,
 }
 
 interface State {
-    // TODO: USE LIST INSTEAD
-    sitzVerteilung: Map<string, number>,
+    sitzVerteilung: SitzVerteilung[],
 }
 
 export class SitzverteilungPage extends React.Component<Props> {
@@ -19,7 +18,7 @@ export class SitzverteilungPage extends React.Component<Props> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            sitzVerteilung: new Map(),
+            sitzVerteilung: [],
         };
     }
 
@@ -35,37 +34,28 @@ export class SitzverteilungPage extends React.Component<Props> {
     }
 
     fetchDataAndSetState(year: number) {
-        console.log('Fetching data for ', year);
         SitzverteilungEndpoints.getAll(year).then(data => {
-            // Transform list into Map
-            // TODO: JUST USE A LIST
             this.setState({
-                sitzVerteilung: new Map(
-                    data.map(rec => [rec.party_name, rec.num_seats])
-                ),
+                sitzVerteilung: data,
             })
         });
     }
 
     render() {
-        if (this.state.sitzVerteilung) {
-            return (
-                <Container>
-                    <Card>
-                        <Card.Body>
-                            <SitzverteilungChart sitzVerteilung={this.state.sitzVerteilung}/>
-                        </Card.Body>
-                    </Card>
-                    <div className={"my-1"}/>
-                    <SitzverteilungTable sitzVerteilung={this.state.sitzVerteilung}/>
-                </Container>
-            )
-        }
-        else {
-            return <div/>;
-        }
+        return (
+            <Container>
+                <Card>
+                    <Card.Body>
+                        <SitzverteilungChart
+                            sitzVerteilung={this.state.sitzVerteilung}
+                        />
+                    </Card.Body>
+                </Card>
+                <div className={"my-1"}/>
+                <SitzverteilungTable
+                    sitzVerteilung={this.state.sitzVerteilung}
+                />
+            </Container>
+        )
     }
 }
-
-
-

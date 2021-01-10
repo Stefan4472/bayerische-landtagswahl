@@ -1,25 +1,14 @@
 import React from "react";
 import BootstrapTable from "react-bootstrap-table-next";
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
+import {SitzVerteilung} from "../../rest_client/SitzverteilungEndpoints";
 
 
 interface Props {
-    sitzVerteilung: Map<string, number>,
+    sitzVerteilung: SitzVerteilung[],
 }
 
 export class SitzverteilungTable extends React.Component<Props> {
-
-    formatData(sitzVerteilung: Map<string, number>) {
-        let data: { party: string; numSeats: number; }[] = [];
-        sitzVerteilung.forEach(function(value, key) {
-                data.push({
-                    party: key,
-                    numSeats: value,
-                });
-            });
-        return data;
-    }
-
     render() {
         return (
             <BootstrapTable
@@ -27,17 +16,17 @@ export class SitzverteilungTable extends React.Component<Props> {
                 keyField={'party'}
                 columns={[
                     {
-                        dataField: 'party',
+                        dataField: 'party_name',
                         text: 'Partei',
                         sort: true,
                     },
                     {
-                        dataField: 'numSeats',
+                        dataField: 'num_seats',
                         text: 'Sitze',
                         sort: true,
                     }
                 ]}
-                data={this.formatData(this.props.sitzVerteilung)}
+                data={this.props.sitzVerteilung}
                 striped
             />
         )
