@@ -114,41 +114,35 @@ export class StimmkreisChart extends React.Component<Props> {
 
     render() {
         // TODO: TOOLTIP SHOULD SHOW WELL-FORMATTED NUMBER AND PERCENT
-        // TODO: RESPONSIVE SIZING?
         // A link that helped me to figure out custom coloring: https://github.com/plouc/nivo/issues/581
-        if (this.props.stimmkreis) {
-            return (
-                <div style={{"height": "400px"}}>
-                    <ResponsivePie
-                        data={this.formatData()}
-                        innerRadius={0.43}
-                        enableRadialLabels={false}
-                        sliceLabel={'id'}
-                        // colors={{"scheme": "pastel1"}}
-                        colors={d => this.getColor(d.id)}
-                        legends={[
-                            {
-                                anchor: 'top-left',
-                                direction: 'column',
-                                justify: false,
-                                translateX: 0,
-                                translateY: 0,
-                                itemWidth: 100,
-                                itemHeight: 20,
-                                itemsSpacing: 0,
-                                symbolSize: 20,
-                                itemDirection: 'left-to-right',
-                                symbolShape: 'circle'
-                            }
-                        ]}
-                    />
-                </div>
-            )
-        }
-        else {
-            // TODO: WHAT TO RETURN?
-            return <div></div>;
-        }
+        // if (this.props.stimmkreis) {
+        return (
+            <div style={{"height": "400px"}}>
+                <ResponsivePie
+                    data={this.formatData()}
+                    innerRadius={0.43}
+                    enableRadialLabels={false}
+                    sliceLabel={'id'}
+                    // colors={{"scheme": "pastel1"}}
+                    colors={d => this.getColor(d.id)}
+                    legends={[
+                        {
+                            anchor: 'top-left',
+                            direction: 'column',
+                            justify: false,
+                            translateX: 0,
+                            translateY: 0,
+                            itemWidth: 100,
+                            itemHeight: 20,
+                            itemsSpacing: 0,
+                            symbolSize: 20,
+                            itemDirection: 'left-to-right',
+                            symbolShape: 'circle'
+                        }
+                    ]}
+                />
+            </div>
+        )
     }
 }
 
