@@ -1,4 +1,5 @@
 # TODO: MAKE INTO ITS OWN PACKAGE
+import threading
 import terminal
 
 
@@ -13,14 +14,23 @@ all_work = [
     # TODO: ADD KNAPPSTE-SIEGER PAGE
 ]
 avg_wait_sec = 0.2
-# num_terminals = 10
-num_requests_per_terminal = 10
+num_terminals = 10
+num_requests_per_terminal = 5
 
-t = terminal.Terminal(terminal.Workload(
-    base_url,
-    all_work,
-    avg_wait_sec,
-    num_requests_per_terminal,
-))
-t.run()
-print(t.results)
+terminals = [
+    terminal.Terminal(terminal.Workload(
+        base_url,
+        all_work,
+        avg_wait_sec,
+        num_requests_per_terminal,
+    )) for _ in range(num_terminals)
+]
+
+# Create and run threads
+threads = [threading.Thread(target=terminal.run) for terminal in terminals]
+for thread in threads:
+    thread.start()
+for thread in threads:
+    thread.join()
+
+print([t.results for t in terminals])

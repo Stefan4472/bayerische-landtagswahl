@@ -37,6 +37,7 @@ class Terminal:
     def run(self):
         for _url in self._work_plan:
             test_url = self.workload.base_url + _url
+            print(test_url)
 
             start_time = time.perf_counter()
             urllib.request.urlopen(test_url)
