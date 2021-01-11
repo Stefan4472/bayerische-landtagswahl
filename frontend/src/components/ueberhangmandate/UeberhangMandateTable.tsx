@@ -1,49 +1,13 @@
 import React from "react";
 import BootstrapTable from "react-bootstrap-table-next";
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
-import UeberhangMandateEndpoints, {UeberhangMandat} from "../../rest_client/UeberhangMandateEndpoints";
+import {UeberhangMandat} from "../../rest_client/UeberhangMandateEndpoints";
 
 interface Props {
-    selectedYear: number,
-}
-
-interface State {
     mandates: UeberhangMandat[],
 }
 
 export class UeberhangMandateTable extends React.Component<Props> {
-    state: State;
-
-    constructor(props: Props) {
-        super(props);
-        this.state = {
-            mandates: [],
-        };
-    }
-
-    componentDidMount() {
-        this.fetchDataAndSetState(this.props.selectedYear);
-    }
-
-    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any) {
-        // Re-fetch data if selected year has changed
-        if (prevProps.selectedYear !== this.props.selectedYear) {
-            this.fetchDataAndSetState(this.props.selectedYear);
-        }
-    }
-
-    fetchDataAndSetState(year: number) {
-        UeberhangMandateEndpoints.getAll(year).then(data => {
-            console.log(data)
-            // Sort the data alphabetically by party name
-            data.sort((a, b) => (a.party_name > b.party_name) ? 1 : -1);
-            this.setState({
-                mandates: data,
-            });
-        });
-    }
-
-    // TODO: THIS ONLY HAS TO BE DONE ONCE
     formatData(mandates: UeberhangMandat[]) {
         return mandates.map((mandat, index) => {
             return {
@@ -77,7 +41,7 @@ export class UeberhangMandateTable extends React.Component<Props> {
                         sort: true,
                     },
                 ]}
-                data={this.formatData(this.state.mandates)}
+                data={this.formatData(this.props.mandates)}
                 striped
             />
         )

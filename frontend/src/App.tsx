@@ -1,12 +1,13 @@
 import React from "react";
 import {Jumbotron, Container, Navbar, Nav, Form, Card} from "react-bootstrap";
-import {BrowserRouter, Switch, Route} from "react-router-dom"
+import {BrowserRouter, Switch, Route, HashRouter} from "react-router-dom"
 import {StimmkreisPage} from "./components/stimmkreise/StimmkreisPage";
 import {MitgliederPage} from "./components/mitglieder/MitgliederPage";
 import {SitzverteilungPage} from "./components/sitzverteilung/SitzverteilungPage";
 import "./App.css"
 import WahlEndpoints from "./rest_client/WahlEndpoints";
 import {UeberhangMandatePage} from "./components/ueberhangmandate/UeberhangMandatePage";
+import {SiegerPage} from "./components/sieger/SiegerPage";
 
 interface State {
     selectedYear: number,
@@ -42,7 +43,7 @@ export class App extends React.Component {
 
     render() {
         return (
-            <BrowserRouter>
+            <HashRouter>
                 <div className="App">
                     {/* Banner */}
                     {/* Image source: https://commons.wikimedia.org/wiki/File:Flag_of_Bavaria_(lozengy).svg */}
@@ -62,9 +63,10 @@ export class App extends React.Component {
                             <Navbar.Collapse>
                                 <Nav className="mr-auto">
                                     <Nav.Link href="/">Sitzverteilung</Nav.Link>
-                                    <Nav.Link href="/mitglieder">Mitglieder</Nav.Link>
-                                    <Nav.Link href="/stimmkreise">Stimmkreise</Nav.Link>
-                                    <Nav.Link href="/ueberhangmandate">Überhangmandate</Nav.Link>
+                                    <Nav.Link href="#mitglieder">Mitglieder</Nav.Link>
+                                    <Nav.Link href="#stimmkreise">Stimmkreise</Nav.Link>
+                                    <Nav.Link href="#ueberhangmandate">Überhangmandate</Nav.Link>
+                                    <Nav.Link href="#sieger">Sieger</Nav.Link>
                                 </Nav>
                             </Navbar.Collapse>
                         </Navbar>
@@ -112,9 +114,12 @@ export class App extends React.Component {
                         <Route exact path={"/ueberhangmandate"}>
                             <UeberhangMandatePage selectedYear={this.state.selectedYear}/>
                         </Route>
+                        <Route exact path={"/sieger"}>
+                            <SiegerPage selectedYear={this.state.selectedYear}/>
+                        </Route>
                     </Switch>
                 </div>
-            </BrowserRouter>
+            </HashRouter>
         )
     }
 }

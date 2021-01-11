@@ -318,6 +318,7 @@ SELECT w.id as WahlID,
        wk.name as Wahlkreis,
        s.id    as StimmkreisID,
        s.name  as Stimmkreis,
+       s.nummer as StimmkreisNr,
        p.parteiname,
        gps.gesamtstimmen,
        gps.prozent,
@@ -355,10 +356,12 @@ WITH summary AS (
            ROW_NUMBER() OVER (PARTITION BY gps.jahr, gps.stimmkreisID
                ORDER BY gps.gesamtstimmen DESC) AS rk
     FROM Gesamtstimmen_Partei_StimmkreisUI gps)
-SELECT s.jahr,
+SELECT s.WahlID,
+       s.jahr,
        s.wahlkreis,
        s.stimmkreisid,
        s.stimmkreis,
+       s.StimmkreisNr,
        s.parteiname,
        s.gesamtstimmen,
        s.prozent,
@@ -378,12 +381,14 @@ FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
 
 -- Q6 Knappste Sieger
 CREATE MATERIALIZED VIEW KnappsteSiegerUI AS
-SELECT w.jahr,
+SELECT w.id as WahlID,
+       w.jahr,
        p.parteiname,
        rk             as Nr,
        wk.name        as Wahlkreis,
        s.id           as StimmkreisID,
        s.name         as Stimmkreis,
+       s.nummer       as StimmkreisNr,
        k.vorname,
        k.nachname,
        ksv.erststimmen,
@@ -419,7 +424,7 @@ WHERE rueckstand < 0
 ORDER BY ksv.wahl DESC, ksv.partei, rk;
 
 
--- Erststimmen pro Kandidat, pro Stimmkreis (Q7?)
+-- Erststimmen pro Kandidat, pro Stimmkreis
 CREATE MATERIALIZED VIEW ErststimmenKandidatStimmkreisUI AS
 SELECT ek.Wahl as WahlID, ek.stimmkreis, k.vorname, k.nachname, ek.anzahl, p.ParteiName
 FROM Erststimme_Kandidat ek

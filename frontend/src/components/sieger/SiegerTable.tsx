@@ -1,64 +1,62 @@
 import React from "react";
 import BootstrapTable from "react-bootstrap-table-next";
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
-import {Stimmkreis, StimmkreisPartyResult} from "../../rest_client/StimmkreisEndpoints";
+import {StimmkreisSieger} from "../../rest_client/StimmkreisEndpoints";
 
 interface Props {
-    stimmkreis?: Stimmkreis,
+    sieger: StimmkreisSieger[],
 }
 
-export class StimmkreisTable extends React.Component<Props> {
-
-    formatData(results: StimmkreisPartyResult[]) {
-        return results.map((result) => {
+export class SiegerTable extends React.Component<Props> {
+    formatData(sieger: StimmkreisSieger[]) {
+        return sieger.map((sieger, index) => {
             return {
-                'party_name': result.party_name,
-                'candidate': result.candidate_lname + ', ' + result.candidate_lname,
-                'erststimmen': result.erst_stimmen,
-                'gesamtstimmen': result.gesamt_stimmen,
+                'id': index,
+                'stimmkreis': '(' + sieger.stimmkreis_num + ') ' + sieger.stimmkreis_name,
+                'party_name': sieger.party_name,
+                'erststimmen': sieger.num_erststimmen,
+                'zweitstimmen': sieger.num_zweitstimmen,
             }
         });
     }
 
     render() {
+        // TODO: NEED ERST- AND ZWEIT- PERCENTAGES
         return (
             <BootstrapTable
                 bootstrap4
-                keyField={'party_name'}
+                keyField={'id'}
                 columns={[
                     {
-                        dataField: 'party_name',
-                        text: 'Partei',
+                        dataField: 'stimmkreis',
+                        text: 'Stimmkreis',
                         sort: true,
                     },
                     {
-                        dataField: 'candidate',
-                        text: 'Kandidat',
+                        dataField: 'party_name',
+                        text: 'Sieger Partei',
                         sort: true,
                     },
                     {
                         dataField: 'erststimmen',
-                        text: 'Erststimmen',
+                        text: 'Num. Erststimmen',
                         sort: true,
                         formatter: (value) => (
                             <span>{value.toLocaleString()}</span>
                         )
                     },
                     {
-                        dataField: 'gesamtstimmen',
-                        text: 'Gesamtstimmen',
+                        dataField: 'zweitstimmen',
+                        text: 'Num. Zweitstimmen',
                         sort: true,
                         formatter: (value) => (
                             <span>{value.toLocaleString()}</span>
                         )
-                    }
+                    },
                 ]}
-                data={this.props.stimmkreis ? this.formatData(this.props.stimmkreis.results) : []}
+                data={this.formatData(this.props.sieger)}
                 striped
             />
         )
     }
 }
-
-
-

@@ -73,7 +73,9 @@ export class StimmkreisPage extends React.Component<Props> {
                             <StimmkreisSelector
                                 selectedYear={this.props.selectedYear}
                                 filterText={this.state.filterText}
-                                onSelect={(stkInfo) => this.onStimmkreisRequested(stkInfo)}
+                                onSelect={(stkInfo) => {
+                                    return this.onStimmkreisRequested(stkInfo);
+                                }}
                             />
                         </div>
                     </Col>
@@ -81,16 +83,26 @@ export class StimmkreisPage extends React.Component<Props> {
                     <Col>
                         <Card>
                             <div className={"m-3"}>
-                                <Card.Title>({this.state.currStimmkreis?.number}) {this.state.currStimmkreis?.name}</Card.Title>
-                                <StimmkreisChart stimmkreis={this.state.currStimmkreis}/>
+                                <Card.Title>
+                                    {this.state.currStimmkreis && (
+                                        <span>({this.state.currStimmkreis?.number}) {this.state.currStimmkreis?.name}</span>
+                                    )}
+                                </Card.Title>
+                                <StimmkreisChart
+                                    stimmkreis={this.state.currStimmkreis}
+                                />
                                 <div className={"float-right"}>
-                                    Wahlbeteiligung: {this.state.currStimmkreis?.turnout_percent.toFixed(2)}%
+                                    {this.state.currStimmkreis && (
+                                        <span>Wahlbeteiligung: {this.state.currStimmkreis?.turnout_percent.toFixed(2)}%</span>
+                                    )}
                                 </div>
                             </div>
                         </Card>
                     </Col>
                 </Row>
-                <StimmkreisTable stimmkreis={this.state.currStimmkreis}/>
+                <StimmkreisTable
+                    stimmkreis={this.state.currStimmkreis}
+                />
             </Container>
         )
     }

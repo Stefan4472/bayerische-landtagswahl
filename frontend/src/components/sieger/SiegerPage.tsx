@@ -1,24 +1,23 @@
 import React from "react";
 import {Container} from "react-bootstrap";
-import {UeberhangMandateTable} from "./UeberhangMandateTable";
-import UeberhangMandateEndpoints, {UeberhangMandat} from "../../rest_client/UeberhangMandateEndpoints";
+import StimmkreisEndpoints, {StimmkreisSieger} from "../../rest_client/StimmkreisEndpoints";
+import {SiegerTable} from "./SiegerTable";
 
 interface Props {
     selectedYear: number,
 }
 
 interface State {
-    mandates: UeberhangMandat[],
+    sieger: StimmkreisSieger[];
 }
 
-// The "Ueberhangmandate" page
-export class UeberhangMandatePage extends React.Component<Props> {
+export class SiegerPage extends React.Component<Props> {
     state: State;
 
     constructor(props: Props) {
         super(props);
         this.state = {
-            mandates: [],
+            sieger: [],
         };
     }
 
@@ -34,22 +33,22 @@ export class UeberhangMandatePage extends React.Component<Props> {
     }
 
     fetchDataAndSetState(year: number) {
-        UeberhangMandateEndpoints.getAll(year).then(data => {
-            // Sort the data alphabetically by party name
-            data.sort((a, b) => (a.party_name > b.party_name) ? 1 : -1);
+        StimmkreisEndpoints.getAllSieger(year).then(data => {
+            console.log(data);
             this.setState({
-                mandates: data,
-            });
+                sieger: data,
+            })
         });
     }
 
     render() {
         return (
             <Container>
-                <UeberhangMandateTable
-                    mandates={this.state.mandates}
-                />
+                <SiegerTable sieger={this.state.sieger}/>
             </Container>
         )
     }
 }
+
+
+

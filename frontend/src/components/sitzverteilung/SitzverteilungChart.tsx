@@ -1,32 +1,20 @@
 import React from "react";
 import { ResponsivePie } from '@nivo/pie'
+import {SitzVerteilung} from "../../rest_client/SitzverteilungEndpoints";
 
 
 interface Props {
-    sitzVerteilung: Map<string, number>,
-}
-
-interface State {
-
+    sitzVerteilung: SitzVerteilung[],
 }
 
 export class SitzverteilungChart extends React.Component<Props> {
-    state: State;
-
-    constructor(props: Props) {
-        super(props);
-        this.state = {};
-    }
-
-    formatData() : { id: string; value: number; }[] {
-        let data: { id: string; value: number; }[] = [];
-        this.props.sitzVerteilung.forEach(function(value, key) {
-            data.push({
-                id: key,
-                value: value,
-            });
+    formatData(sitzVerteilung: SitzVerteilung[]) : { id: string; value: number; }[] {
+        return sitzVerteilung.map((sitz_verteilung) => {
+           return {
+               id: sitz_verteilung.party_name,
+               value: sitz_verteilung.num_seats,
+           }
         });
-        return data;
     }
 
     render() {
@@ -35,7 +23,7 @@ export class SitzverteilungChart extends React.Component<Props> {
         return (
             <div style={{"height": "400px"}}>
                 <ResponsivePie
-                    data={this.formatData()}
+                    data={this.formatData(this.props.sitzVerteilung)}
                     innerRadius={0.5}
                     enableRadialLabels={false}
                     sliceLabel={'id'}
