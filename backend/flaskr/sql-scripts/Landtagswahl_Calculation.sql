@@ -381,12 +381,14 @@ FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
 
 -- Q6 Knappste Sieger
 CREATE MATERIALIZED VIEW KnappsteSiegerUI AS
-SELECT w.jahr,
+SELECT w.id as WahlID,
+       w.jahr,
        p.parteiname,
        rk             as Nr,
        wk.name        as Wahlkreis,
        s.id           as StimmkreisID,
        s.name         as Stimmkreis,
+       s.nummer       as StimmkreisNr,
        k.vorname,
        k.nachname,
        ksv.erststimmen,
