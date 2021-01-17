@@ -157,6 +157,28 @@ def get_wahl_info(voterkey: str):
             'direct_candidates': d_candidates,
             'list_candidates': l_candidates,
         })
-
     except ValueError as e:
         raise NotFound(description=e.args[0])
+
+
+@API_BLUEPRINT.route('/voting/<string:voterkey>', methods=['POST'])
+def submit_vote(voterkey: str):
+    db = db_context.get_db()
+    dcandidate_id = request.json['directID'] if 'directID' in request.json else None
+    lcandidate_id = request.json['listID'] if 'listID' in request.json else None
+
+    try:
+        db.submit_vote(
+            voterkey,
+            dcandidate_id,
+            lcandidate_id,
+        )
+        return {
+            'success': True,
+            'message': 'Success',
+        }
+    except ValueError as e:
+        return {
+            'success': False,
+            'message': e.args[0],
+        }

@@ -541,6 +541,14 @@ class Database:
         # TODO
         return dto.VoterInfo(1, 101, False)
 
+    def submit_vote(
+            self,
+            voter_key: str,
+            dcandidate_id: typing.Optional[int],
+            lcandidate_id: typing.Optional[int],
+    ):
+        return True, 'success'
+
     def get_dcandidates(
             self,
             wahl_id: int,

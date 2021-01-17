@@ -29,19 +29,19 @@ export class StimmabgabePage extends React.Component<Props> {
         console.log(key.length);
         if (key.length === 64) {
             console.log('Valid!');
-            let ballot_info = StimmabgabeEndpoints.getWahlInfo(key).then((ballotInfo) => {
+            StimmabgabeEndpoints.getWahlInfo(key).then((ballotInfo) => {
+                console.log('Got reply ', ballotInfo);
                 this.setState({
-                    key: key,
+                    voterKey: key,
                     isKeyValid: true,
                     isKeyInvalid: false,
                     ballotInfo: ballotInfo,
                 })
             })
-
         }
         else {
             this.setState({
-                key: key,
+                voterKey: key,
                 isKeyValid: false,
                 isKeyInvalid: true,
             })

@@ -21,16 +21,20 @@ export interface VoteResult {
 
 class StimmabgabeEndpoints {
 
-    async getWahlInfo(voterKey: string) {
+    async getWahlInfo(voterKey: string) : Promise<BallotInfo[]> {
         const result = await http.get(`/voting/{voterKey}`);
         return result.data as BallotInfo[];
     }
 
-    async submitVote(voterKey: string, directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) {
-        return {
-            'success': true,
-            'message': '',
-        }
+    async submitVote(voterKey: string, directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) : Promise<VoteResult> {
+        const result = await http.post(
+            `/voting/{voterKey}`,
+            {
+                    'directID': directCandidate ? directCandidate.id : -1,
+                    'listID': listCandidate ? listCandidate.id : -1,
+            }
+        )
+        return result.data as VoteResult;
     }
 }
 
