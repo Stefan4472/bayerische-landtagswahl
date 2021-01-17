@@ -29,3 +29,7 @@ SELECT * FROM UeberhangmandateUI;
 SELECT * FROM knappstesiegerui;
 -- Knappste Verlierer
 SELECT * FROM knappsteverliererui;
+
+
+-- Wahlzettel
+SELECT * FROM erststimmeWahlzettelUI;

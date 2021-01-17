@@ -430,3 +430,15 @@ SELECT ek.Wahl as WahlID, ek.stimmkreis, k.vorname, k.nachname, ek.anzahl, p.Par
 FROM Erststimme_Kandidat ek
     INNER JOIN Kandidat k ON k.ID = ek.kandidat
     INNER JOIN Partei p ON p.ID = ek.partei;
+
+
+-- Wahlzettel
+CREATE MATERIALIZED VIEW erststimmeWahlzettelUI AS
+SELECT w.jahr, wk.name, s.name as Stimmkreis, k.id as KandidatID, vorname, nachname, p.parteiname
+FROM dkandidatzustimmkreis ks
+         INNER JOIN Kandidat k ON k.ID = ks.kandidat
+         INNER JOIN wahl w ON w.id = k.wahlid
+         INNER JOIN stimmkreis s ON s.id = ks.stimmkreis
+         INNER JOIN wahlkreis wk ON wk.id = s.wahlkreis
+         INNER JOIN Partei p ON p.ID = k.partei
+ORDER BY w.id DESC, s.id;
