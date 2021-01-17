@@ -32,6 +32,6 @@ SELECT * FROM knappsteverliererui;
 
 
 -- Wahlzettel
-SELECT * FROM erststimmeWahlzettelUI;
+SELECT * FROM erststimmewahlzettel(2018, 95);
 
 SELECT * FROM zweitstimmeWahlzettel(2018, 94);
