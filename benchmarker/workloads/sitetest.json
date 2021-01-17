@@ -1,7 +1,7 @@
 {
-  "http://localhost:3000/#/": 0.25,
-  "http://localhost:3000/#/mitglieder": 0.10,
-  "http://localhost:3000/#/stimmkreise": 0.25,
-  "http://localhost:3000/#/ueberhangmandate": 0.10,
-  "http://localhost:3000/#/sieger": 0.30
+  "http://127.0.0.1:3000/#/": 0.25,
+  "http://127.0.0.1:3000/#/mitglieder": 0.10,
+  "http://127.0.0.1:3000/#/stimmkreise": 0.25,
+  "http://127.0.0.1:3000/#/ueberhangmandate": 0.10,
+  "http://127.0.0.1:3000/#/sieger": 0.30
 }
