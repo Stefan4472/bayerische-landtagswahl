@@ -1,14 +1,13 @@
 import React from "react";
 import {Container, Form} from "react-bootstrap";
 import {Ballot} from "./Ballot";
-import StimmabgabeEndpoints, {BallotInfo} from "../../rest_client/StimmabgabeEndpoints";
+import StimmabgabeEndpoints, {BallotCandidate, BallotInfo} from "../../rest_client/StimmabgabeEndpoints";
 
 interface Props {
 }
 
 interface State {
-    key: string,
-    validated: boolean,
+    voterKey: string,
     isKeyValid: boolean,
     isKeyInvalid: boolean,
     ballotInfo?: BallotInfo,
@@ -20,8 +19,7 @@ export class StimmabgabePage extends React.Component<Props> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            key: '',
-            validated: false,
+            voterKey: '',
             isKeyValid: false,
             isKeyInvalid: false,
         };
@@ -34,7 +32,6 @@ export class StimmabgabePage extends React.Component<Props> {
             let ballot_info = StimmabgabeEndpoints.getWahlInfo(key).then((ballotInfo) => {
                 this.setState({
                     key: key,
-                    validated: true,
                     isKeyValid: true,
                     isKeyInvalid: false,
                     ballotInfo: ballotInfo,
@@ -45,11 +42,26 @@ export class StimmabgabePage extends React.Component<Props> {
         else {
             this.setState({
                 key: key,
-                validated: false,
                 isKeyValid: false,
                 isKeyInvalid: true,
             })
         }
+    }
+
+    submitVote(directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) {
+        console.log('Submitting vote...', directCandidate, listCandidate);
+        StimmabgabeEndpoints.submitVote(
+            this.state.voterKey,
+            directCandidate,
+            listCandidate,
+        ).then(result => {
+            if (result.success) {
+                alert('You have successfully voted');
+            }
+            else {
+                alert('Error: ' + result.message);
+            }
+        })
     }
 
     render() {
@@ -71,12 +83,17 @@ export class StimmabgabePage extends React.Component<Props> {
                             }}
                         />
                         <Form.Control.Feedback type="invalid">
-                            Key must be 64 characters long (currently {this.state.key.length})
+                            Key must be 64 characters long (currently {this.state.voterKey.length})
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Form>
                 {(this.state.isKeyValid && this.state.ballotInfo) && (
-                    <Ballot ballotInfo={this.state.ballotInfo}/>
+                    <Ballot
+                        ballotInfo={this.state.ballotInfo}
+                        onVoted={(directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) =>
+                            this.submitVote(directCandidate, listCandidate)
+                        }
+                    />
                 )}
             </Container>
         )

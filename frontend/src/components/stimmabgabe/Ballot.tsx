@@ -4,10 +4,12 @@ import {BallotCandidate, BallotInfo} from "../../rest_client/StimmabgabeEndpoint
 
 interface Props {
     ballotInfo: BallotInfo,
+    onVoted: (directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) => void,
 }
 
 interface State {
-    isValidated: boolean,
+    selectedDirectCandidate?: BallotCandidate,
+    selectedListCandidate?: BallotCandidate,
 }
 
 export class Ballot extends React.Component<Props> {
@@ -16,31 +18,28 @@ export class Ballot extends React.Component<Props> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            isValidated: false,
         };
     }
 
     handleDirectCandidateSelected(candidate: BallotCandidate) {
         console.log("Selected direct candidate ", candidate);
+        this.setState({
+            selectedDirectCandidate: candidate,
+        })
     }
 
     handleListCandidateSelected(candidate: BallotCandidate) {
         console.log("Selected list candidate ", candidate);
+        this.setState({
+            selectedListCandidate: candidate,
+        })
     }
 
-    handleSubmit(event: any) {
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            if (event.nativeEvent.submitter.id === "submit-button") {
-            //    TODO: ONSUBMIT()
-                console.log('Submitted');
-            }
-        }
-        else {
-            event.stopPropagation();
-        }
-        event.preventDefault();
+    handleSubmit() {
+        this.props.onVoted(
+            this.state.selectedDirectCandidate,
+            this.state.selectedListCandidate,
+        );
     }
 
     render() {
@@ -79,7 +78,7 @@ export class Ballot extends React.Component<Props> {
                             className="button float-right"
                             id="submit-button"
                             variant="primary"
-                            type="submit"
+                            onClick={() => this.handleSubmit()}
                         >
                             Submit
                         </Button>

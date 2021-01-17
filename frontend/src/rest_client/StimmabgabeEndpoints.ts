@@ -14,6 +14,11 @@ export interface BallotInfo {
     list_candidates: BallotCandidate[],
 }
 
+export interface VoteResult {
+    success: boolean,
+    message: string,
+}
+
 class StimmabgabeEndpoints {
 
     async getWahlInfo(voterKey: string) {
@@ -81,7 +86,7 @@ class StimmabgabeEndpoints {
         }
     }
 
-    async submitVote(voterKey: string, direkt: string, list: string) {
+    async submitVote(voterKey: string, directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) {
         return {
             'success': true,
             'message': '',
