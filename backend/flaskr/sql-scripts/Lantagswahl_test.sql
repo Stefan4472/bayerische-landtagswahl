@@ -29,3 +29,9 @@ SELECT * FROM UeberhangmandateUI;
 SELECT * FROM knappstesiegerui;
 -- Knappste Verlierer
 SELECT * FROM knappsteverliererui;
+
+
+-- Wahlzettel
+SELECT * FROM erststimmewahlzettel(2018, 95);
+
+SELECT * FROM zweitstimmeWahlzettel(2018, 94);

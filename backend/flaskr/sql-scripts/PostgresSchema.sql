@@ -109,6 +109,16 @@ CREATE TABLE ZweitstimmePartei (
     FOREIGN KEY (Wahl) REFERENCES Wahl(ID) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+CREATE TABLE VoteRecords (
+    Key varchar(64) NOT NULL UNIQUE,
+    HasVoted bool DEFAULT false,
+    Stimmkreis int NOT NULL,
+	Wahl int NOT NULL,
+    Primary key (Key, Wahl),
+    FOREIGN KEY (Stimmkreis) REFERENCES Stimmkreis(ID) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (Wahl) REFERENCES Wahl(ID) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
 INSERT INTO Wahlkreis(ID, Name, Direktmandate, Listenmandate) VALUES
     (1, 'Oberbayern', 31, 30),
     (2, 'Niederbayern', 9, 9),

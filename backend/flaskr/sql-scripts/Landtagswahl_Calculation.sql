@@ -430,3 +430,61 @@ SELECT ek.Wahl as WahlID, ek.stimmkreis, k.vorname, k.nachname, ek.anzahl, p.Par
 FROM Erststimme_Kandidat ek
     INNER JOIN Kandidat k ON k.ID = ek.kandidat
     INNER JOIN Partei p ON p.ID = ek.partei;
+
+
+-- Wahlzettel
+CREATE OR REPLACE FUNCTION erststimmeWahlzettel(jahrParam integer, stimmkreisParam integer)
+    returns TABLE
+            (
+                jahr       integer,
+                wahlkreis  varchar(255),
+                stimmkreis  varchar(255),
+                KandidatID integer,
+                vorname    varchar(255),
+                nachname   varchar(255),
+                parteiname varchar(255)
+            )
+as
+$func$
+BEGIN
+    RETURN QUERY
+        SELECT w.jahr, wk.name,s.name as Stimmkreis, k.id as KandidatID, k.vorname, k.nachname, p.parteiname
+        FROM dkandidatzustimmkreis ks
+                 INNER JOIN Kandidat k ON k.ID = ks.kandidat
+                 INNER JOIN wahl w ON w.id = k.wahlid
+                 INNER JOIN stimmkreis s ON s.id = ks.stimmkreis
+                 INNER JOIN wahlkreis wk ON wk.id = s.wahlkreis
+                 INNER JOIN Partei p ON p.ID = k.partei
+        WHERE w.jahr = jahrParam AND s.id = stimmkreisParam
+        ORDER BY w.id DESC, s.id;
+END
+$func$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION zweitstimmeWahlzettel(jahrParam integer, stimmkreisParam integer)
+    returns TABLE
+            (
+                jahr       integer,
+                name       varchar(255),
+                KandidatID integer,
+                vorname    varchar(255),
+                nachname   varchar(255),
+                parteiname varchar(255)
+            )
+as
+$func$
+BEGIN
+    RETURN QUERY
+        SELECT w.jahr, wk.name as Wahlkreis, k.id as KandidatID, k.vorname, k.nachname, p.parteiname
+        FROM dkandidatzustimmkreis ks
+                 INNER JOIN Kandidat k ON k.ID = ks.kandidat
+                 INNER JOIN wahl w ON w.id = k.wahlid
+                 INNER JOIN stimmkreis s ON s.id = ks.stimmkreis
+                 INNER JOIN wahlkreis wk ON wk.id = s.wahlkreis
+                 INNER JOIN Partei p ON p.ID = k.partei
+        WHERE w.jahr = jahrParam
+          AND wk.id = (SELECT st.wahlkreis FROM stimmkreis st where st.id = stimmkreisParam AND st.wahlid = w.id)
+          AND k.id not in (SELECT erst.KandidatID FROM erststimmewahlzettel(jahrParam, stimmkreisParam) erst)
+        ORDER BY p.id;
+
+END
+$func$ LANGUAGE plpgsql;
