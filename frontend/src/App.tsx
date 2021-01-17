@@ -8,6 +8,7 @@ import "./App.css"
 import WahlEndpoints from "./rest_client/WahlEndpoints";
 import {UeberhangMandatePage} from "./components/ueberhangmandate/UeberhangMandatePage";
 import {SiegerPage} from "./components/sieger/SiegerPage";
+import {StimmabgabePage} from "./components/stimmabgabe/StimmabgabePage";
 
 interface State {
     selectedYear: number,
@@ -67,6 +68,7 @@ export class App extends React.Component {
                                     <Nav.Link href="#stimmkreise">Stimmkreise</Nav.Link>
                                     <Nav.Link href="#ueberhangmandate">Überhangmandate</Nav.Link>
                                     <Nav.Link href="#sieger">Sieger</Nav.Link>
+                                    <Nav.Link href="#stimmabgabe">Stimmabgabe</Nav.Link>
                                 </Nav>
                             </Navbar.Collapse>
                         </Navbar>
@@ -113,6 +115,9 @@ export class App extends React.Component {
                         </Route>
                         <Route exact path={"/ueberhangmandate"}>
                             <UeberhangMandatePage selectedYear={this.state.selectedYear}/>
+                        </Route>
+                        <Route exact path={"/stimmabgabe"}>
+                            <StimmabgabePage/>
                         </Route>
                         <Route exact path={"/sieger"}>
                             <SiegerPage selectedYear={this.state.selectedYear}/>
