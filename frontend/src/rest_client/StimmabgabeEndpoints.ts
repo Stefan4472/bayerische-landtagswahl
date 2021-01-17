@@ -20,21 +20,21 @@ class StimmabgabeEndpoints {
         return {
             'stimmkreis': 'München-Hadern',
             'stimmkreis_nr': 101,
-            'direkt_candidates': [
+            'direct_candidates': [
                 {
-                    'partei': 'CSU',
+                    'party_name': 'CSU',
                     'first_name': 'Sebastian',
                     'last_name': 'Wahl',
                     'id': 1,
                 },
                 {
-                    'partei': 'SPD',
+                    'party_name': 'SPD',
                     'first_name': 'Sebastian',
                     'last_name': 'Wahl',
                     'id': 2,
                 },
                 {
-                    'partei': 'FDP',
+                    'party_name': 'FDP',
                     'first_name': 'Sebastian',
                     'last_name': 'Wahl',
                     'id': 3,
@@ -42,37 +42,37 @@ class StimmabgabeEndpoints {
             ],
             'list_candidates': [
                 {
-                    'partei': 'CSU',
+                    'party_name': 'CSU',
                     'first_name': 'Sebastian',
                     'last_name': 'Wahl',
                     'id': 4,
                 },
                 {
-                    'partei': 'SPD',
+                    'party_name': 'SPD',
                     'first_name': 'Sebastian',
                     'last_name': 'Wahl',
                     'id': 4,
                 },
                 {
-                    'partei': 'FDP',
+                    'party_name': 'FDP',
                     'first_name': 'Sebastian',
                     'last_name': 'Wahl',
                     'id': 4,
                 },
                 {
-                    'partei': 'CSU',
+                    'party_name': 'CSU',
                     'first_name': 'Sebastian',
                     'last_name': 'Wahl',
                     'id': 4,
                 },
                 {
-                    'partei': 'SPD',
+                    'party_name': 'SPD',
                     'first_name': 'Sebastian',
                     'last_name': 'Wahl',
                     'id': 4,
                 },
                 {
-                    'partei': 'FDP',
+                    'party_name': 'FDP',
                     'first_name': 'Sebastian',
                     'last_name': 'Wahl',
                     'id': 4,

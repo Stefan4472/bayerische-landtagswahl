@@ -1,6 +1,6 @@
 import React from "react";
-import {Button, Container, Form} from "react-bootstrap";
-import {BallotInfo} from "../../rest_client/StimmabgabeEndpoints";
+import {Button, Card, Col, Container, Form, Row} from "react-bootstrap";
+import {BallotCandidate, BallotInfo} from "../../rest_client/StimmabgabeEndpoints";
 
 interface Props {
     ballotInfo: BallotInfo,
@@ -20,6 +20,14 @@ export class Ballot extends React.Component<Props> {
         };
     }
 
+    handleDirectCandidateSelected(candidate: BallotCandidate) {
+        console.log("Selected direct candidate ", candidate);
+    }
+
+    handleListCandidateSelected(candidate: BallotCandidate) {
+        console.log("Selected list candidate ", candidate);
+    }
+
     handleSubmit(event: any) {
         const form = event.currentTarget;
 
@@ -37,47 +45,47 @@ export class Ballot extends React.Component<Props> {
 
     render() {
         return (
-            <Form noValidate validated={this.state.isValidated} onSubmit={this.handleSubmit}>
-                <Form.Group controlId="form-direktChoice">
-                    <Form.Label>
-                        Select a Direct Candidate
-                    </Form.Label>
-                    <div className={"radio"}>
-
-                        <label><input type="radio" name="optradio" checked/> Option 1</label><br/>
-                        <label><input type="radio" name="optradio" checked/> Option 1</label><br/>
-                        <label><input type="radio" name="optradio" checked/> Option 1</label><br/>
-                        <label><input type="radio" name="optradio" checked/> Option 1</label><br/>
-                        <label><input type="radio" name="optradio" checked/> Option 1</label><br/>
-                        <label><input type="radio" name="optradio" checked/> Option 1</label><br/>
-
+            <Card>
+                <Card.Body>
+                    <h3>({this.props.ballotInfo.stimmkreis_nr}) {this.props.ballotInfo.stimmkreis}</h3>
+                    <Row>
+                        <Col>
+                            <h3>
+                                Select a Direct Candidate
+                            </h3>
+                            {this.props.ballotInfo.direct_candidates.map(candidate =>
+                                <Row>
+                                    <label><input type="radio" name="direct" onClick={() => this.handleDirectCandidateSelected(candidate)}/>
+                                        ({candidate.party_name}) {candidate.first_name} {candidate.last_name}
+                                    </label>
+                                </Row>
+                            )}
+                        </Col>
+                        <Col>
+                            <h3>
+                                Select a List Candidate
+                            </h3>
+                            {this.props.ballotInfo.list_candidates.map(candidate =>
+                                <Row>
+                                    <label><input type="radio" name="list" onClick={() => this.handleListCandidateSelected(candidate)}/>
+                                        ({candidate.party_name}) {candidate.first_name} {candidate.last_name}
+                                    </label>
+                                </Row>
+                            )}
+                        </Col>
+                    </Row>
+                    <div className="buttonBar clearfix">
+                        <Button
+                            className="button float-right"
+                            id="submit-button"
+                            variant="primary"
+                            type="submit"
+                        >
+                            Submit
+                        </Button>
                     </div>
-
-                    {/*<Form.Control*/}
-                    {/*    required*/}
-                    {/*    placeholder="64-character key"*/}
-                    {/*    disabled={this.state.isKeyValid}*/}
-                    {/*    isValid={this.state.isKeyValid}*/}
-                    {/*    isInvalid={this.state.isKeyInvalid}*/}
-                    {/*    onChange={newValue => {*/}
-                    {/*        this.validateKey(newValue.target.value);*/}
-                    {/*    }}*/}
-                    {/*/>*/}
-                    {/*<Form.Control.Feedback type="invalid">*/}
-                    {/*    Key must be 64 characters long (currently {this.state.key.length})*/}
-                    {/*</Form.Control.Feedback>*/}
-                </Form.Group>
-                <div className="buttonBar clearfix">
-                    <Button
-                        className="button float-right"
-                        id="submit-button"
-                        variant="primary"
-                        type="submit"
-                    >
-                        Submit
-                    </Button>
-                </div>
-            </Form>
+                </Card.Body>
+            </Card>
         )
     }
 }

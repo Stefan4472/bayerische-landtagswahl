@@ -1,6 +1,7 @@
 import React from "react";
 import {Container, Form} from "react-bootstrap";
 import {Ballot} from "./Ballot";
+import StimmabgabeEndpoints, {BallotInfo} from "../../rest_client/StimmabgabeEndpoints";
 
 interface Props {
 }
@@ -10,6 +11,7 @@ interface State {
     validated: boolean,
     isKeyValid: boolean,
     isKeyInvalid: boolean,
+    ballotInfo?: BallotInfo,
 }
 
 export class StimmabgabePage extends React.Component<Props> {
@@ -29,12 +31,16 @@ export class StimmabgabePage extends React.Component<Props> {
         console.log(key.length);
         if (key.length === 64) {
             console.log('Valid!');
-            this.setState({
-                key: key,
-                validated: true,
-                isKeyValid: true,
-                isKeyInvalid: false,
+            let ballot_info = StimmabgabeEndpoints.getWahlInfo(key).then((ballotInfo) => {
+                this.setState({
+                    key: key,
+                    validated: true,
+                    isKeyValid: true,
+                    isKeyInvalid: false,
+                    ballotInfo: ballotInfo,
+                })
             })
+
         }
         else {
             this.setState({
@@ -69,7 +75,9 @@ export class StimmabgabePage extends React.Component<Props> {
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Form>
-                <Ballot></Ballot>
+                {(this.state.isKeyValid && this.state.ballotInfo) && (
+                    <Ballot ballotInfo={this.state.ballotInfo}/>
+                )}
             </Container>
         )
     }
