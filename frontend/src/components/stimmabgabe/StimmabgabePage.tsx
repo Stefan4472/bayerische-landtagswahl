@@ -1,5 +1,6 @@
 import React from "react";
 import {Container, Form} from "react-bootstrap";
+import {Ballot} from "./Ballot";
 
 interface Props {
 }
@@ -37,6 +38,7 @@ export class StimmabgabePage extends React.Component<Props> {
         }
         else {
             this.setState({
+                key: key,
                 validated: false,
                 isKeyValid: false,
                 isKeyInvalid: true,
@@ -63,10 +65,11 @@ export class StimmabgabePage extends React.Component<Props> {
                             }}
                         />
                         <Form.Control.Feedback type="invalid">
-                            Key must be 64 characters long
+                            Key must be 64 characters long (currently {this.state.key.length})
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Form>
+                <Ballot></Ballot>
             </Container>
         )
     }
