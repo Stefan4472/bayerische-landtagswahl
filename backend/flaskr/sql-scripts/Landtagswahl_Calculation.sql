@@ -483,6 +483,7 @@ BEGIN
                  INNER JOIN Partei p ON p.ID = k.partei
         WHERE w.jahr = jahrParam
           AND wk.id = (SELECT st.wahlkreis FROM stimmkreis st where st.id = stimmkreisParam AND st.wahlid = w.id)
+          AND k.id not in (SELECT erst.KandidatID FROM erststimmewahlzettel(jahrParam, stimmkreisParam) erst)
         ORDER BY p.id;
 
 END
