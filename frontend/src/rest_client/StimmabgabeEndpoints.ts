@@ -22,68 +22,8 @@ export interface VoteResult {
 class StimmabgabeEndpoints {
 
     async getWahlInfo(voterKey: string) {
-        return {
-            'stimmkreis': 'München-Hadern',
-            'stimmkreis_nr': 101,
-            'direct_candidates': [
-                {
-                    'party_name': 'CSU',
-                    'first_name': 'Sebastian',
-                    'last_name': 'Wahl',
-                    'id': 1,
-                },
-                {
-                    'party_name': 'SPD',
-                    'first_name': 'Sebastian',
-                    'last_name': 'Wahl',
-                    'id': 2,
-                },
-                {
-                    'party_name': 'FDP',
-                    'first_name': 'Sebastian',
-                    'last_name': 'Wahl',
-                    'id': 3,
-                },
-            ],
-            'list_candidates': [
-                {
-                    'party_name': 'CSU',
-                    'first_name': 'Sebastian',
-                    'last_name': 'Wahl',
-                    'id': 4,
-                },
-                {
-                    'party_name': 'SPD',
-                    'first_name': 'Sebastian',
-                    'last_name': 'Wahl',
-                    'id': 4,
-                },
-                {
-                    'party_name': 'FDP',
-                    'first_name': 'Sebastian',
-                    'last_name': 'Wahl',
-                    'id': 4,
-                },
-                {
-                    'party_name': 'CSU',
-                    'first_name': 'Sebastian',
-                    'last_name': 'Wahl',
-                    'id': 4,
-                },
-                {
-                    'party_name': 'SPD',
-                    'first_name': 'Sebastian',
-                    'last_name': 'Wahl',
-                    'id': 4,
-                },
-                {
-                    'party_name': 'FDP',
-                    'first_name': 'Sebastian',
-                    'last_name': 'Wahl',
-                    'id': 4,
-                },
-            ],
-        }
+        const result = await http.get(`/voting/{voterKey}`);
+        return result.data as BallotInfo[];
     }
 
     async submitVote(voterKey: string, directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) {

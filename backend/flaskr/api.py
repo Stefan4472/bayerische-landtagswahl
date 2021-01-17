@@ -126,3 +126,37 @@ def get_knappste_sieger(year: int):
         return jsonify(db.get_knappste_sieger(wahl_id))
     except ValueError as e:
         raise NotFound(description=e.args[0])
+
+
+@API_BLUEPRINT.route('/voting/<string:voterkey>')
+def get_wahl_info(voterkey: str):
+    # TODO: EFFICIENCY IMPROVEMENTS (EVERYWHERE). MINIMIZE THE NUMBER OF DATABASE CALLS REQUIRED
+    db = db_context.get_db()
+    try:
+        voter_info = db.get_voter_info(
+            voterkey,
+        )
+        stimmkreis_id = db.get_stimmkreis_id(
+            voter_info.wahl_id,
+            voter_info.stimmkreis_nr,
+        )
+        d_candidates = db.get_dcandidates(
+            voter_info.wahl_id,
+            stimmkreis_id,
+        )
+        l_candidates = db.get_lcandidates(
+            voter_info.wahl_id,
+            stimmkreis_id,
+        )
+        stimmkreis_info = db.get_stimmkreis(
+            stimmkreis_id,
+        )
+        return jsonify({
+            'stimmkreis': stimmkreis_info.name,
+            'stimmkreis_nr': stimmkreis_info.number,
+            'direct_candidates': d_candidates,
+            'list_candidates': l_candidates,
+        })
+
+    except ValueError as e:
+        raise NotFound(description=e.args[0])

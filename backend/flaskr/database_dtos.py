@@ -71,3 +71,26 @@ class KnappsteSieger:
     candidate_fname: str
     candidate_lname: str
     win_margin: int
+
+
+@dc.dataclass
+class VoterInfo:
+    wahl_id: int
+    stimmkreis_nr: int
+    has_voted: bool
+
+
+@dc.dataclass
+class BallotKandidat:
+    id: int
+    party_name: str
+    first_name: str
+    last_name: str
+
+
+# @dc.dataclass
+# class BallotInfo:
+#     stimmkreis: str
+#     stimmkreis_nr: int
+#     direct_candidates: list[BallotKandidat]
+#     list_candidates: list[BallotKandidat]
