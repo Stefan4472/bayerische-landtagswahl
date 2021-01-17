@@ -511,6 +511,7 @@ BEGIN
                  INNER JOIN Partei p ON p.ID = k.partei
         WHERE w.jahr = jahrParam
           AND wk.id = (SELECT st.wahlkreis FROM stimmkreis st where st.id = stimmkreisParam AND st.wahlid = w.id)
+
         ORDER BY p.id;
 
 END
