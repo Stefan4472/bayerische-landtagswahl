@@ -28,7 +28,7 @@ class StimmabgabeEndpoints {
 
     async submitVote(voterKey: string, directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) : Promise<VoteResult> {
         const result = await http.post(
-            `/voting/{voterKey}`,
+            `/voting/{voterKey}/vote`,
             {
                     'directID': directCandidate ? directCandidate.id : -1,
                     'listID': listCandidate ? listCandidate.id : -1,

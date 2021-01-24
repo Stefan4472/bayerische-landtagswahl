@@ -534,11 +534,29 @@ class Database:
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
 
+    def add_voter(
+            self,
+            voter_key: str,
+            wahl_id: int,
+            stimmkreis_nr: int,
+    ):
+        # TODO
+        return
+
     def get_voter_info(
             self,
             voter_key: str,
     ) -> dto.VoterInfo:
-        # TODO
+        # Key varchar(64) NOT NULL UNIQUE,
+        #     HasVoted bool DEFAULT false,
+        #     Stimmkreis int NOT NULL,
+        # 	Wahl int NOT NULL,
+        query = 'SELECT HasVoted, Stimmkreis, Wahl ' \
+                'FROM VoteRecords ' \
+                'WHERE Key = %s'
+        values = (voter_key,)
+        self._cursor.execute()
+        print(self._cursor.fetchone())
         return dto.VoterInfo(1, 101, False)
 
     def submit_vote(
@@ -547,6 +565,7 @@ class Database:
             dcandidate_id: typing.Optional[int],
             lcandidate_id: typing.Optional[int],
     ):
+        
         return True, 'success'
 
     def get_dcandidates(

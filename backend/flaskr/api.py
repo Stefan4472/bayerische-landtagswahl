@@ -128,6 +128,16 @@ def get_knappste_sieger(year: int):
         raise NotFound(description=e.args[0])
 
 
+@API_BLUEPRINT.route('/voting/<string:voterkey>', methods=['POST'])
+def add_voter_key(voterkey: str):
+    db = db_context.get_db()
+    db.add_voter(
+        voterkey,
+        request.json['wahl_id'],
+        request.json['stimmkreis_nr'],
+    )
+
+
 @API_BLUEPRINT.route('/voting/<string:voterkey>')
 def get_wahl_info(voterkey: str):
     # TODO: EFFICIENCY IMPROVEMENTS (EVERYWHERE). MINIMIZE THE NUMBER OF DATABASE CALLS REQUIRED
@@ -161,12 +171,11 @@ def get_wahl_info(voterkey: str):
         raise NotFound(description=e.args[0])
 
 
-@API_BLUEPRINT.route('/voting/<string:voterkey>', methods=['POST'])
+@API_BLUEPRINT.route('/voting/<string:voterkey>/vote', methods=['POST'])
 def submit_vote(voterkey: str):
     db = db_context.get_db()
     dcandidate_id = request.json['directID'] if 'directID' in request.json else None
     lcandidate_id = request.json['listID'] if 'listID' in request.json else None
-
     try:
         db.submit_vote(
             voterkey,
