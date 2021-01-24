@@ -2,7 +2,7 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, jsonify,
 )
 from werkzeug.exceptions import abort, NotFound
-import db_context
+from . import db_context
 
 
 # Blueprint under which all API routes will be registered

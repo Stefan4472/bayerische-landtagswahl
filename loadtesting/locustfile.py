@@ -1,6 +1,10 @@
 import random
 from locust import HttpUser, task
 
+'''
+Locustfile for Homework #7. This exercises most of the API.
+'''
+
 
 # List of all Stimmkreis numbers in 2018
 STIMMKREISE_2018 = [
