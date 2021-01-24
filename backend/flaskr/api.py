@@ -2,7 +2,7 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, jsonify,
 )
 from werkzeug.exceptions import abort, NotFound
-import db_context
+from . import db_context
 
 
 # Blueprint under which all API routes will be registered
@@ -126,3 +126,68 @@ def get_knappste_sieger(year: int):
         return jsonify(db.get_knappste_sieger(wahl_id))
     except ValueError as e:
         raise NotFound(description=e.args[0])
+
+
+@API_BLUEPRINT.route('/voting/<string:voterkey>', methods=['POST'])
+def add_voter_key(voterkey: str):
+    db = db_context.get_db()
+    db.add_voter(
+        voterkey,
+        request.json['wahl_id'],
+        request.json['stimmkreis_nr'],
+    )
+
+
+@API_BLUEPRINT.route('/voting/<string:voterkey>')
+def get_wahl_info(voterkey: str):
+    # TODO: EFFICIENCY IMPROVEMENTS (EVERYWHERE). MINIMIZE THE NUMBER OF DATABASE CALLS REQUIRED
+    db = db_context.get_db()
+    try:
+        voter_info = db.get_voter_info(
+            voterkey,
+        )
+        stimmkreis_id = db.get_stimmkreis_id(
+            voter_info.wahl_id,
+            voter_info.stimmkreis_nr,
+        )
+        d_candidates = db.get_dcandidates(
+            voter_info.wahl_id,
+            stimmkreis_id,
+        )
+        l_candidates = db.get_lcandidates(
+            voter_info.wahl_id,
+            stimmkreis_id,
+        )
+        stimmkreis_info = db.get_stimmkreis(
+            stimmkreis_id,
+        )
+        return jsonify({
+            'stimmkreis': stimmkreis_info.name,
+            'stimmkreis_nr': stimmkreis_info.number,
+            'direct_candidates': d_candidates,
+            'list_candidates': l_candidates,
+        })
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
+
+
+@API_BLUEPRINT.route('/voting/<string:voterkey>/vote', methods=['POST'])
+def submit_vote(voterkey: str):
+    db = db_context.get_db()
+    dcandidate_id = request.json['directID'] if 'directID' in request.json else None
+    lcandidate_id = request.json['listID'] if 'listID' in request.json else None
+    try:
+        db.submit_vote(
+            voterkey,
+            dcandidate_id,
+            lcandidate_id,
+        )
+        return {
+            'success': True,
+            'message': 'Success',
+        }
+    except ValueError as e:
+        return {
+            'success': False,
+            'message': e.args[0],
+        }

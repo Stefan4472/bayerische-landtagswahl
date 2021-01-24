@@ -1,8 +1,8 @@
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import typing
-import util
-import database_dtos as dto
+from . import util
+from . import database_dtos as dto
 
 
 class Database:
@@ -141,6 +141,23 @@ class Database:
         )
         self._cursor.execute(query, vals)
         return self._cursor.fetchone()[0]
+
+    def get_stimmkreis(
+            self,
+            stimmkreis_id: int,
+    ) -> dto.StimmkreisInfo:
+        query = 'SELECT id, name, nummer ' \
+                'FROM Stimmkreis ' \
+                'WHERE ID = %s'
+        values = (stimmkreis_id,)
+        self._cursor.execute(query, values)
+        result = self._cursor.fetchone()
+        if result:
+            return dto.StimmkreisInfo(result[0], result[1], result[2])
+        else:
+            raise ValueError('Provided `stimmkreis_id` ({}) does not exist in database'.format(
+                stimmkreis_id,
+            ))
 
     # TODO: SHOULD THE OBJECT THAT GOES IN BE THE SAME AS THE OBJECT THAT COMES OUT?
     def get_stimmkreise(
@@ -500,13 +517,6 @@ class Database:
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
 
-    stimmkreis_name: str
-    stimmkreis_num: int
-    party_name: str
-    candidate_fname: str
-    candidate_lname: str
-    win_margin: int
-
     def get_knappste_sieger(
             self,
             wahl_id: int,
@@ -523,3 +533,67 @@ class Database:
                     for rec in result]
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
+
+    def add_voter(
+            self,
+            voter_key: str,
+            wahl_id: int,
+            stimmkreis_nr: int,
+    ):
+        # TODO
+        return
+
+    def get_voter_info(
+            self,
+            voter_key: str,
+    ) -> dto.VoterInfo:
+        # Key varchar(64) NOT NULL UNIQUE,
+        #     HasVoted bool DEFAULT false,
+        #     Stimmkreis int NOT NULL,
+        # 	Wahl int NOT NULL,
+        query = 'SELECT HasVoted, Stimmkreis, Wahl ' \
+                'FROM VoteRecords ' \
+                'WHERE Key = %s'
+        values = (voter_key,)
+        self._cursor.execute()
+        print(self._cursor.fetchone())
+        return dto.VoterInfo(1, 101, False)
+
+    def submit_vote(
+            self,
+            voter_key: str,
+            dcandidate_id: typing.Optional[int],
+            lcandidate_id: typing.Optional[int],
+    ):
+        
+        return True, 'success'
+
+    def get_dcandidates(
+            self,
+            wahl_id: int,
+            stimmkreis_id: int,
+    ) -> list[dto.BallotKandidat]:
+        """Return all direct candidates running for election in
+        the specified election and Stimmkreis"""
+        # TODO
+        return [
+            dto.BallotKandidat(1, 'CSU', 'Sebastian', 'Wahl'),
+            dto.BallotKandidat(2, 'SPD', 'Adrian', 'Hemmer'),
+            dto.BallotKandidat(3, 'FDP', 'Max', 'Mustermann'),
+            dto.BallotKandidat(4, 'Gruene', 'Maximiliana', 'Handlemine'),
+        ]
+
+    def get_lcandidates(
+            self,
+            wahl_id: int,
+            stimmkreis_id: int,
+    ) -> list[dto.BallotKandidat]:
+        """Return all list candidates running for election in
+        the specified election and Stimmkreis"""
+        # TODO
+        return [
+            dto.BallotKandidat(1, 'CSU', 'Sebastian', 'Wahl'),
+            dto.BallotKandidat(2, 'SPD', 'Adrian', 'Hemmer'),
+            dto.BallotKandidat(3, 'FDP', 'Max', 'Mustermann'),
+            dto.BallotKandidat(4, 'Gruene', 'Maximiliana', 'Handlemine'),
+        ]

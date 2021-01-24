@@ -1,5 +1,98 @@
 # bayerische-landtagswahl
-DatenbankSysteme Prof. Kemper
+This is a semester-project for the Database Systems class taught by Professor Alfons Kemper, Winter 2020, in the Elite Software Engineering Master's Program at the University of Augsburg | Technical University of Munich | Ludwig Maximillian University of Munich.
 
-## Data Importer
-The `data-importer` directory contains a Python 3.9 program written to parse XML election data, import it into a database, and generate individual vote records according to our schema. For more information, see the README in `data-importer`.
+The goal of the project was to develop a online elections-system that could handle the Bavarian Parliamentary elections.
+# Overview
+- `backend`: Code for the Flask backend
+- `benchmarker`: A benchmarking program (no longer used)
+- `data`: XML data from the 2013 and 2018 elections
+- `database`: Code for the election database. Contains a Python package called `landtagswahldb`
+- `documentation`: Contains a few documents we had to create at the beginning of the project
+- `frontend`: Code for the React frontend
+- `loadtesting`: Locustfile definitions used for load-testing with the Python `locust` framework
+- `mockup`: HTML code from our first website mockup
+- `sql-scripts`: SQL scripts used with the database
+
+# Requirements
+- Python 3.9
+- Node and NPM
+- Postgres
+
+# Setup
+
+*Note: It is recommended you install all Python packages into their own virtual environment.*
+
+## Set up the database
+
+`cd` into `database` and install the required Python packages:
+
+```
+pip install requirements.txt
+```
+
+Note: for each of the following commands, you will be prompted to enter your Postgres password. To avoid the prompt, you can provide your password as an option: `--password=[YOUR_POSTGRES_PASSWORD]`
+
+Use the `manage_db.py` script to set up a database with the proper schema. In this case, we'll create a new Postgres database called "bayerische_landtagswahl":
+```
+python manage_db.py reset ../sql-scripts/PostgresSchema.sql --db_name=bayerische_landtagswahl
+```
+
+Now import the XML election data and generate votes for the 2013 and 2018 elections (contained in `data/2018-info.xml` and `data/2018-results.xml`):
+```
+python manage_db.py import_data ../../../data/2013-info.xml ../../../data/2013-results.xml --year=2013 --db_name=bayerische_landtagswahl
+python manage_db.py import_data ../../../data/2018-info.xml ../../../data/2018-results.xml --year=2018 --db_name=bayerische_landtagswahl
+```
+
+Now run the script to create materialized views (`sql-scripts/Landtagswahl_Calculation.sql`):
+```
+python manage_db.py runscript ../sql-scripts/Landtagswahl_Calculation.sql --db_name=bayerische_landtagswahl
+```
+
+## Set up the Flask backend
+
+`cd` into `backend` and install the required Python packages:
+
+```
+pip install requirements.txt
+```
+
+Edit `instance/db-config.json`, inserting the values you need to connect to your database. Make sure not to commit `instance/db-config.json` after you've entered your password!
+
+## Set up the React frontend
+
+`cd` into `frontend` and install the required NPM packages:
+
+```
+npm install
+```
+
+# Run
+
+Once you have your database correctly set up, you can run the website.
+
+First, start the Flask server. Instructions from [the Flask Tutorial](https://flask.palletsprojects.com/en/1.1.x/tutorial/factory/#run-the-application):
+```
+For Linux and Mac:
+$ export FLASK_APP=flaskr
+$ export FLASK_ENV=development
+$ flask run
+
+For Windows cmd, use set instead of export:
+> set FLASK_APP=flaskr
+> set FLASK_ENV=development
+> flask run
+
+For Windows PowerShell, use $env: instead of export:
+> $env:FLASK_APP = "flaskr"
+> $env:FLASK_ENV = "development"
+> flask run
+```
+
+Next, in a separate terminal, start the React server:
+```
+npm start
+```
+
+# Load Testing
+
+We originally wrote our own program to perform load testing (in the `benchmarker` directory). However, we later learned about [Locust](https://locust.io/), a Python load-testing framework, and have adopted it for use. You will find our load-test definitions in the `loadtesting` directory. Please follow the instructions in the `Readme` there.
