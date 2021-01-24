@@ -3,12 +3,7 @@ import dataclasses
 import pathlib
 import typing
 import json
-# Note: This is a path hack to get access to code in the parent directory.
-# TODO: FIGURE OUT HOW TO DO THIS PROPERLY WITH PACKAGES
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from util import StimmKreis, Wahlkreis, Candidate, DirectResult, \
+from .util import StimmKreis, Wahlkreis, Candidate, DirectResult, \
     StimmkreisResult, ListResults, VoteType, get_vote_type
 
 
@@ -180,7 +175,7 @@ def write_to_json(
 
 if __name__ == '__main__':
     year = 2018
-    xml_info = parse_info_xml(pathlib.Path('../data/2018-info.xml'))
-    xml_results = parse_results_xml(pathlib.Path('../data/2018-results.xml'))
+    xml_info = parse_info_xml(pathlib.Path('../../data/2018-info.xml'))
+    xml_results = parse_results_xml(pathlib.Path('../../data/2018-results.xml'))
 
     write_to_json(year, xml_info, xml_results, pathlib.Path('../data/wahl-2018.json'))

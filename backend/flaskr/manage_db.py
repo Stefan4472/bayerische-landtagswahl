@@ -1,16 +1,9 @@
-# Command-line interface for managing our MySQL Landtagswahl database.
-# Will provide functions to import election results from XML.
 import click
 import pathlib
 import time
-# Note: This is a path hack to get access to code in the parent directory.
-# TODO: FIGURE OUT HOW TO DO THIS PROPERLY WITH PACKAGES
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import database as db
-import data_parser
-import data_importer
+from landtagswahldb import database as db
+from landtagswahldb import data_parser
+from landtagswahldb import data_importer
 
 
 @click.group()

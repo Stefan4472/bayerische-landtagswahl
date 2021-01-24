@@ -1,8 +1,8 @@
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import typing
-import util
-import database_dtos as dto
+from . import util
+from . import database_dtos as dto
 
 
 class Database:
