@@ -18,7 +18,7 @@ STIMMKREISE_2018 = [
 ]
 
 
-class QuickstartUser(HttpUser):
+class APIUser(HttpUser):
     @task(25)
     def stimmkreis(self):
         stimmkreis_nr = random.choice(STIMMKREISE_2018)
