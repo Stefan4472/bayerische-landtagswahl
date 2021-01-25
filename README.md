@@ -22,12 +22,22 @@ The goal of the project was to develop a online elections-system that could hand
 
 *Note: It is recommended you install all Python packages into their own virtual environment.*
 
+## Install the internal database package
+
+You need to install our `landtagswahldb` package.
+
+```
+cd database
+pip install wheel
+pip install .
+```
+
 ## Set up the database
 
 `cd` into `database` and install the required Python packages:
 
 ```
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 Note: for each of the following commands, you will be prompted to enter your Postgres password. To avoid the prompt, you can provide your password as an option: `--password=[YOUR_POSTGRES_PASSWORD]`
@@ -53,16 +63,17 @@ python manage_db.py runscript ../sql-scripts/Landtagswahl_Calculation.sql --db_n
 `cd` into `backend` and install the required Python packages:
 
 ```
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 Edit `instance/db-config.json`, inserting the values you need to connect to your database. Make sure not to commit `instance/db-config.json` after you've entered your password!
 
 ## Set up the React frontend
 
-`cd` into `frontend` and install the required NPM packages:
+Install the required NPM packages:
 
 ```
+cd frontend
 npm install
 ```
 
@@ -71,6 +82,12 @@ npm install
 Once you have your database correctly set up, you can run the website.
 
 First, start the Flask server. Instructions from [the Flask Tutorial](https://flask.palletsprojects.com/en/1.1.x/tutorial/factory/#run-the-application):
+```
+cd backend
+```
+
+And then...
+
 ```
 For Linux and Mac:
 $ export FLASK_APP=flaskr
@@ -88,8 +105,11 @@ For Windows PowerShell, use $env: instead of export:
 > flask run
 ```
 
+You should now see a console message that the server is running on `127.0.0.1:5000`. To make sure it's working, open a web browser and go to one of the API endpoints, e.g. `http://127.0.0.1/api/results/2018/sitzverteilung`
+
 Next, in a separate terminal, start the React server:
 ```
+cd frontend
 npm start
 ```
 
