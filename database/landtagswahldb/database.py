@@ -526,7 +526,6 @@ class Database:
                 'WHERE WahlID = %s'
         values = (wahl_id,)
         self._cursor.execute(query, values)
-        # print([d[0] for d in self._cursor.description])
         result = self._cursor.fetchall()
         if result:
             return [dto.KnappsteSieger(rec[0], int(rec[1]), rec[2], rec[3], rec[4], int(rec[5]))
@@ -629,13 +628,17 @@ class Database:
     ) -> list[dto.BallotKandidat]:
         """Return all direct candidates running for election in
         the specified election and Stimmkreis"""
-        # TODO
-        return [
-            dto.BallotKandidat(1, 'CSU', 'Sebastian', 'Wahl'),
-            dto.BallotKandidat(2, 'SPD', 'Adrian', 'Hemmer'),
-            dto.BallotKandidat(3, 'FDP', 'Max', 'Mustermann'),
-            dto.BallotKandidat(4, 'Gruene', 'Maximiliana', 'Handlemine'),
-        ]
+        query = 'SELECT KandidatID, Parteiname, Vorname, Nachname ' \
+                'FROM erststimmeWahlzettel(%s, %s)'
+        values = (2018, stimmkreis_id)
+        self._cursor.execute(query, values)
+        # print([d[0] for d in self._cursor.description])
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.BallotKandidat(rec[0], rec[1], rec[2], rec[3])
+                    for rec in result]
+        else:
+            raise ValueError()
 
     def get_lcandidates(
             self,
@@ -644,10 +647,13 @@ class Database:
     ) -> list[dto.BallotKandidat]:
         """Return all list candidates running for election in
         the specified election and Stimmkreis"""
-        # TODO
-        return [
-            dto.BallotKandidat(1, 'CSU', 'Sebastian', 'Wahl'),
-            dto.BallotKandidat(2, 'SPD', 'Adrian', 'Hemmer'),
-            dto.BallotKandidat(3, 'FDP', 'Max', 'Mustermann'),
-            dto.BallotKandidat(4, 'Gruene', 'Maximiliana', 'Handlemine'),
-        ]
+        query = 'SELECT KandidatID, Parteiname, Vorname, Nachname ' \
+                'FROM zweitstimmeWahlzettel(%s, %s)'
+        values = (2018, stimmkreis_id)
+        self._cursor.execute(query, values)
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.BallotKandidat(rec[0], rec[1], rec[2], rec[3])
+                    for rec in result]
+        else:
+            raise ValueError()
