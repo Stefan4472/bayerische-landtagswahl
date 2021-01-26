@@ -1,7 +1,7 @@
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, jsonify,
 )
-from werkzeug.exceptions import abort, NotFound
+from werkzeug.exceptions import abort, NotFound, BadRequest
 from . import db_context
 
 
@@ -157,10 +157,13 @@ def get_wahl_info(voterkey: str):
         voter_info = db.get_voter_info(
             voterkey,
         )
-        # stimmkreis_id = db.get_stimmkreis_id(
-        #     voter_info.wahl_id,
-        #     voter_info.stimmkreis_nr,
-        # )
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
+
+    if voter_info.has_voted:
+        raise BadRequest(description='This key has already been used')
+
+    try:
         d_candidates = db.get_dcandidates(
             voter_info.wahl_id,
             voter_info.stimmkreis_id,
@@ -172,7 +175,6 @@ def get_wahl_info(voterkey: str):
         stimmkreis_info = db.get_stimmkreis(
             voter_info.stimmkreis_id,
         )
-        print('Done')
         return jsonify({
             'stimmkreis': stimmkreis_info.name,
             'stimmkreis_nr': stimmkreis_info.number,
@@ -180,11 +182,10 @@ def get_wahl_info(voterkey: str):
             'list_candidates': l_candidates,
         })
     except ValueError as e:
-        print('Not found')
         raise NotFound(description=e.args[0])
 
 
-@API_BLUEPRINT.route('/voting/<string:voterkey>/vote', methods=['POST'])
+@API_BLUEPRINT.route('/voting/<string:voterkey>', methods=['POST'])
 def submit_vote(voterkey: str):
     db = db_context.get_db()
     dcandidate_id = request.json['directID'] if 'directID' in request.json else None

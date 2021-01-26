@@ -10,6 +10,7 @@ interface State {
     voterKey: string,
     isKeyValid: boolean,
     isKeyInvalid: boolean,
+    keyErrorMessage?: string,
     ballotInfo?: BallotInfo,
 }
 
@@ -26,16 +27,22 @@ export class StimmabgabePage extends React.Component<Props> {
     }
 
     validateKey(key: string) {
-        console.log(key.length);
         if (key.length === 64) {
-            console.log('Valid!');
             StimmabgabeEndpoints.getWahlInfo(key).then((ballotInfo) => {
-                console.log('Got reply ', ballotInfo);
+                // if (ballotInfo.ha)
                 this.setState({
                     voterKey: key,
                     isKeyValid: true,
                     isKeyInvalid: false,
+                    keyErrorMessage: undefined,
                     ballotInfo: ballotInfo,
+                })
+            }).catch(() => {
+                this.setState({
+                    voterKey: key,
+                    isKeyValid: false,
+                    isKeyInvalid: true,
+                    keyErrorMessage: 'Invalid Key',
                 })
             })
         }
@@ -44,12 +51,12 @@ export class StimmabgabePage extends React.Component<Props> {
                 voterKey: key,
                 isKeyValid: false,
                 isKeyInvalid: true,
+                keyErrorMessage: undefined,
             })
         }
     }
 
     submitVote(directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) {
-        console.log('Submitting vote...', directCandidate, listCandidate);
         StimmabgabeEndpoints.submitVote(
             this.state.voterKey,
             directCandidate,
@@ -57,6 +64,13 @@ export class StimmabgabePage extends React.Component<Props> {
         ).then(result => {
             if (result.success) {
                 alert('You have successfully voted');
+                // Now clear the ballot and key
+                this.setState({
+                    voterKey: '',
+                    isKeyValid: false,
+                    isKeyInvalid: false,
+                    ballotInfo: undefined,
+                })
             }
             else {
                 alert('Error: ' + result.message);
@@ -75,6 +89,7 @@ export class StimmabgabePage extends React.Component<Props> {
                         <Form.Control
                             required
                             placeholder="64-character key"
+                            value={this.state.voterKey.length > 0 ? this.state.voterKey : undefined}
                             disabled={this.state.isKeyValid}
                             isValid={this.state.isKeyValid}
                             isInvalid={this.state.isKeyInvalid}
@@ -83,7 +98,11 @@ export class StimmabgabePage extends React.Component<Props> {
                             }}
                         />
                         <Form.Control.Feedback type="invalid">
-                            Key must be 64 characters long (currently {this.state.voterKey.length})
+                            {this.state.keyErrorMessage ? (
+                                this.state.keyErrorMessage
+                            ) : (
+                                <span>Key must be 64 characters long (currently {this.state.voterKey.length})</span>
+                            )}
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Form>

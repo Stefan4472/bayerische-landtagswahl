@@ -23,12 +23,13 @@ class StimmabgabeEndpoints {
 
     async getWahlInfo(voterKey: string) : Promise<BallotInfo[]> {
         const result = await http.get('/voting/' + voterKey);
+        console.log(result);
         return result.data as BallotInfo[];
     }
 
     async submitVote(voterKey: string, directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) : Promise<VoteResult> {
         const result = await http.post(
-            '/voting/' + voterKey + '/vote',
+            '/voting/' + voterKey,
             {
                     'directID': directCandidate ? directCandidate.id : -1,
                     'listID': listCandidate ? listCandidate.id : -1,

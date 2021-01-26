@@ -22,14 +22,12 @@ export class Ballot extends React.Component<Props> {
     }
 
     handleDirectCandidateSelected(candidate: BallotCandidate) {
-        console.log("Selected direct candidate ", candidate);
         this.setState({
             selectedDirectCandidate: candidate,
         })
     }
 
     handleListCandidateSelected(candidate: BallotCandidate) {
-        console.log("Selected list candidate ", candidate);
         this.setState({
             selectedListCandidate: candidate,
         })
