@@ -152,13 +152,11 @@ def add_voter_key():
 @API_BLUEPRINT.route('/voting/<string:voterkey>')
 def get_wahl_info(voterkey: str):
     # TODO: EFFICIENCY IMPROVEMENTS (EVERYWHERE). MINIMIZE THE NUMBER OF DATABASE CALLS REQUIRED
-    print('Hi voter {}'.format(voterkey))
     db = db_context.get_db()
     try:
         voter_info = db.get_voter_info(
             voterkey,
         )
-        print(voter_info)
         # stimmkreis_id = db.get_stimmkreis_id(
         #     voter_info.wahl_id,
         #     voter_info.stimmkreis_nr,

@@ -583,10 +583,38 @@ class Database:
             dcandidate_id: typing.Optional[int],
             lcandidate_id: typing.Optional[int],
     ):
-        if self.has_voted(voter_key):
+        voter_info = self.get_voter_info(voter_key)
+        if voter_info.has_voted:
             raise ValueError('A vote has already been submitted for this voter key ({})'.format(voter_key))
         else:
-            # TODO: REGISTER THE VOTE
+            # Register direct vote
+            if dcandidate_id:
+                query = 'INSERT INTO Erststimme (Kandidat, Stimmkreis, Wahl) ' \
+                        'VALUES (%s, %s, %s)'
+                values = (
+                    dcandidate_id,
+                    voter_info.stimmkreis_id,
+                    voter_info.wahl_id,
+                )
+                self._cursor.execute(query, values)
+            # else:
+                # TODO: ALLOW `KANDIDAT` TO BE NULL
+                # No candidate provided: register invalid vote
+                # query = 'INSERT INTO Erststimme (Kandidat, Stimmkreis, Wahl, IsValid) ' \
+                #         'VALUES (%s, %s, %s, %s, %s)'
+                # values = (dcandidate_id, voter_info.stimmkreis_id, voter_info.wahl_id, False)
+                # self._cursor.execute(query, values)
+            # Register list vote
+            if lcandidate_id:
+                query = 'INSERT INTO Zweitstimme (Kandidat, Stimmkreis, Wahl) ' \
+                        'VALUES (%s, %s, %s)'
+                values = (
+                    lcandidate_id,
+                    voter_info.stimmkreis_id,
+                    voter_info.wahl_id,
+                )
+                self._cursor.execute(query, values)
+            # Mark the voterkey as having voted
             query = 'UPDATE VoteRecords ' \
                     'SET HasVoted = %s ' \
                     'WHERE Key = %s'

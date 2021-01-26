@@ -15,7 +15,7 @@ result = requests.post(
     json={
         'key': key,
         'wahl_id': 1,
-        'stimmkreis_nr': 101,
+        'stimmkreis_nr': 105,
     }
 )
 print(result)
