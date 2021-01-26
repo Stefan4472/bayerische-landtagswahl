@@ -128,39 +128,53 @@ def get_knappste_sieger(year: int):
         raise NotFound(description=e.args[0])
 
 
-@API_BLUEPRINT.route('/voting/<string:voterkey>', methods=['POST'])
-def add_voter_key(voterkey: str):
+@API_BLUEPRINT.route('/voting/', methods=['POST'])
+def add_voter_key():
     db = db_context.get_db()
-    db.add_voter(
-        voterkey,
-        request.json['wahl_id'],
-        request.json['stimmkreis_nr'],
+    voter_key = request.json['key']
+    wahl_id = request.json['wahl_id']
+    stimmkreis_nr = request.json['stimmkreis_nr']
+    stimmkreis_id = db.get_stimmkreis_id(
+        wahl_id,
+        stimmkreis_nr,
     )
+    db.add_voter(
+        voter_key,
+        wahl_id,
+        stimmkreis_id,
+    )
+    return jsonify({
+        'success': True,
+        'message': 'Success',
+    })
 
 
 @API_BLUEPRINT.route('/voting/<string:voterkey>')
 def get_wahl_info(voterkey: str):
     # TODO: EFFICIENCY IMPROVEMENTS (EVERYWHERE). MINIMIZE THE NUMBER OF DATABASE CALLS REQUIRED
+    print('Hi voter {}'.format(voterkey))
     db = db_context.get_db()
     try:
         voter_info = db.get_voter_info(
             voterkey,
         )
-        stimmkreis_id = db.get_stimmkreis_id(
-            voter_info.wahl_id,
-            voter_info.stimmkreis_nr,
-        )
+        print(voter_info)
+        # stimmkreis_id = db.get_stimmkreis_id(
+        #     voter_info.wahl_id,
+        #     voter_info.stimmkreis_nr,
+        # )
         d_candidates = db.get_dcandidates(
             voter_info.wahl_id,
-            stimmkreis_id,
+            voter_info.stimmkreis_id,
         )
         l_candidates = db.get_lcandidates(
             voter_info.wahl_id,
-            stimmkreis_id,
+            voter_info.stimmkreis_id,
         )
         stimmkreis_info = db.get_stimmkreis(
-            stimmkreis_id,
+            voter_info.stimmkreis_id,
         )
+        print('Done')
         return jsonify({
             'stimmkreis': stimmkreis_info.name,
             'stimmkreis_nr': stimmkreis_info.number,
@@ -168,6 +182,7 @@ def get_wahl_info(voterkey: str):
             'list_candidates': l_candidates,
         })
     except ValueError as e:
+        print('Not found')
         raise NotFound(description=e.args[0])
 
 

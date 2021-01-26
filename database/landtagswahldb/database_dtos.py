@@ -76,7 +76,7 @@ class KnappsteSieger:
 @dc.dataclass
 class VoterInfo:
     wahl_id: int
-    stimmkreis_nr: int
+    stimmkreis_id: int
     has_voted: bool
 
 

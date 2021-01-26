@@ -538,26 +538,44 @@ class Database:
             self,
             voter_key: str,
             wahl_id: int,
-            stimmkreis_nr: int,
+            stimmkreis_id: int,
     ):
-        # TODO
-        return
+        query = 'INSERT INTO VoteRecords (Key, Wahl, Stimmkreis) ' \
+                'VALUES (%s, %s, %s)'
+        values = (voter_key, wahl_id, stimmkreis_id)
+        self._cursor.execute(query, values)
+        self.commit()
+        print('Added voter {}'.format(voter_key))
 
     def get_voter_info(
             self,
             voter_key: str,
     ) -> dto.VoterInfo:
-        # Key varchar(64) NOT NULL UNIQUE,
-        #     HasVoted bool DEFAULT false,
-        #     Stimmkreis int NOT NULL,
-        # 	Wahl int NOT NULL,
-        query = 'SELECT HasVoted, Stimmkreis, Wahl ' \
+        query = 'SELECT Wahl, Stimmkreis, HasVoted ' \
                 'FROM VoteRecords ' \
                 'WHERE Key = %s'
         values = (voter_key,)
-        self._cursor.execute()
-        print(self._cursor.fetchone())
-        return dto.VoterInfo(1, 101, False)
+        self._cursor.execute(query, values)
+        result = self._cursor.fetchone()
+        if result:
+            return dto.VoterInfo(result[0], result[1], result[2])
+        else:
+            raise ValueError('Provided `voter_key` ({}) does not exist in database'.format(voter_key))
+
+    def has_voted(
+            self,
+            voter_key: str,
+    ) -> bool:
+        query = 'SELECT HasVoted ' \
+                'FROM VoteRecords ' \
+                'WHERE Key = %s'
+        values = (voter_key,)
+        self._cursor.execute(query, values)
+        result = self._cursor.fetchone()
+        if result:
+            return bool(result[0])
+        else:
+            raise ValueError('Provided `voter_key` ({}) does not exist in database'.format(voter_key))
 
     def submit_vote(
             self,
@@ -565,8 +583,16 @@ class Database:
             dcandidate_id: typing.Optional[int],
             lcandidate_id: typing.Optional[int],
     ):
-        
-        return True, 'success'
+        if self.has_voted(voter_key):
+            raise ValueError('A vote has already been submitted for this voter key ({})'.format(voter_key))
+        else:
+            # TODO: REGISTER THE VOTE
+            query = 'UPDATE VoteRecords ' \
+                    'SET HasVoted = %s ' \
+                    'WHERE Key = %s'
+            values = (True, voter_key)
+            self._cursor.execute(query, values)
+            self.commit()
 
     def get_dcandidates(
             self,
