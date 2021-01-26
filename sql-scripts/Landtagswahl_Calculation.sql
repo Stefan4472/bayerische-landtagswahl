@@ -18,6 +18,7 @@ DROP MATERIALIZED VIEW IF EXISTS ErstimmenKandidatStimmkreisUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Knappste_Sieger_Verlierer CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteSiegerUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteVerliererUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Durchschnitt_Stimmen_Pro_VornameUI CASCADE;
 
 -- Anzahl Erststimme für jeden Kandidat
 CREATE MATERIALIZED VIEW Erststimme_Kandidat AS
@@ -488,3 +489,29 @@ BEGIN
 
 END
 $func$ LANGUAGE plpgsql;
+
+
+--Aufgabe2 Ausgedachte Analysen
+
+-- Durchschnittliche Anzahl an Stimmen pro Vorname. Es enthält nur Vornamen, die mindestens 2 mal vorkommen.
+CREATE MATERIALIZED VIEW Durchschnitt_Stimmen_Pro_VornameUI AS
+WITH Kandidat_Gesamtstimmen AS (
+    SELECT w.jahr,
+           k.vorname,
+           k.nachname,
+           azk.anzahl + COALESCE((SELECT ek.anzahl
+                                  FROM erststimme_kandidat ek
+                                  WHERE ek.wahl = azk.wahl
+                                    AND ek.kandidat = azk.kandidat), 0) as Gesamtstimmen
+    FROM anzhal_zweitstimme_kandidat azk
+             INNER JOIN Kandidat k ON k.ID = azk.kandidat
+             INNER JOIN wahl w ON w.id = azk.wahl)
+SELECT jahr,
+       vorname,
+       count(nachname) as Personenanzahl,
+       sum(Gesamtstimmen),
+       avg(Gesamtstimmen) DurchschnittStimmen
+FROM Kandidat_Gesamtstimmen
+GROUP BY jahr, vorname
+HAVING count(nachname) > 1
+ORDER BY jahr DESC, DurchschnittStimmen DESC

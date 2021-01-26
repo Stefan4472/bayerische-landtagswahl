@@ -35,3 +35,7 @@ SELECT * FROM knappsteverliererui;
 SELECT * FROM erststimmewahlzettel(2018, 95);
 
 SELECT * FROM zweitstimmeWahlzettel(2018, 94);
+
+
+-- Durchschnittliche Anzahl an Stimmen pro Vorname.
+SELECT * FROM Durchschnitt_Stimmen_Pro_VornameUI;
