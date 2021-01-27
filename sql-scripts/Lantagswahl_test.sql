@@ -39,3 +39,6 @@ SELECT * FROM zweitstimmeWahlzettel(2018, 94);
 
 -- Durchschnittliche Anzahl an Stimmen pro Vorname.
 SELECT * FROM Durchschnitt_Stimmen_Pro_VornameUI;
+
+-- 10 beste Stimmkreise für alle Parteien, wo sie größte prozentuale Anzahl an Stimmen haben.
+SELECT * FROM beste_stimmkreise_parteiui;

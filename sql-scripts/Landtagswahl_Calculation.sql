@@ -19,6 +19,7 @@ DROP MATERIALIZED VIEW IF EXISTS Knappste_Sieger_Verlierer CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteSiegerUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteVerliererUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Durchschnitt_Stimmen_Pro_VornameUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Beste_Stimmkreise_ParteiUI CASCADE;
 
 -- Anzahl Erststimme für jeden Kandidat
 CREATE MATERIALIZED VIEW Erststimme_Kandidat AS
@@ -514,4 +515,26 @@ SELECT jahr,
 FROM Kandidat_Gesamtstimmen
 GROUP BY jahr, vorname
 HAVING count(nachname) > 1
-ORDER BY jahr DESC, DurchschnittStimmen DESC
+ORDER BY jahr DESC, DurchschnittStimmen DESC;
+
+
+-- 10 beste Stimmkreise für alle Parteien, wo sie größte prozentuale Anzahl an Stimmen haben.
+CREATE MATERIALIZED VIEW Beste_Stimmkreise_ParteiUI AS
+WITH Gesamtstimmen_Partei_Rank AS (
+    SELECT rank() OVER (PARTITION BY gps.Wahl, gps.Partei ORDER BY gps.prozent DESC) as nr, gps.*
+    FROM Gesamtstimmen_Partei_Stimmkreis gps
+    ORDER BY gps.Wahl DESC)
+SELECT nr,
+       w.jahr,
+       p.parteiname,
+       s.id   as stimmkreisID,
+       s.name as stimmkreis,
+       gps.Erststimmen,
+       gps.Zweitstimmen,
+       gps.Gesamtstimmen,
+       gps.prozent
+FROM Gesamtstimmen_Partei_Rank gps
+         INNER JOIN wahl w ON w.id = gps.wahl
+         INNER JOIN stimmkreis s ON s.id = gps.stimmkreis
+         INNER JOIN Partei p ON p.ID = gps.partei
+WHERE nr <= 10;
