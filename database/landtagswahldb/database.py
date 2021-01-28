@@ -1,6 +1,7 @@
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import typing
+import hashlib
 from . import util
 from . import database_dtos as dto
 
@@ -12,14 +13,20 @@ class Database:
             user: str,
             password: str,
             database_name: str,
+            secret_key: str,
     ):
-        """Postgres database utility class."""
+        """Postgres database utility class.
+
+        Note: automatically hashes voter keys, using the provided secret_key
+        for "encryption".
+        """
         self._conn = psycopg2.connect(
             host=host,
             user=user,
             password=password,
             database=database_name,
         )
+        self._secret_key = secret_key
         self._cursor = self._conn.cursor()
 
     def get_cursor(self) -> psycopg2.extensions.cursor:
@@ -77,6 +84,12 @@ class Database:
         use the `create_database()` or `drop_database() methods.
         """
         self._cursor.execute(script)
+
+    def _hash_voterkey(
+            self,
+            voterkey: str,
+    ) -> str:
+        return hashlib.sha1((voterkey + self._secret_key).encode('utf-8')).hexdigest()
 
     def has_wahl(
             self,
@@ -541,10 +554,9 @@ class Database:
     ):
         query = 'INSERT INTO VoteRecords (Key, Wahl, Stimmkreis) ' \
                 'VALUES (%s, %s, %s)'
-        values = (voter_key, wahl_id, stimmkreis_id)
+        values = (self._hash_voterkey(voter_key), wahl_id, stimmkreis_id)
         self._cursor.execute(query, values)
         self.commit()
-        print('Added voter {}'.format(voter_key))
 
     def get_voter_info(
             self,
@@ -553,7 +565,7 @@ class Database:
         query = 'SELECT Wahl, Stimmkreis, HasVoted ' \
                 'FROM VoteRecords ' \
                 'WHERE Key = %s'
-        values = (voter_key,)
+        values = (self._hash_voterkey(voter_key),)
         self._cursor.execute(query, values)
         result = self._cursor.fetchone()
         if result:
@@ -568,7 +580,7 @@ class Database:
         query = 'SELECT HasVoted ' \
                 'FROM VoteRecords ' \
                 'WHERE Key = %s'
-        values = (voter_key,)
+        values = (self._hash_voterkey(voter_key),)
         self._cursor.execute(query, values)
         result = self._cursor.fetchone()
         if result:
@@ -617,7 +629,7 @@ class Database:
             query = 'UPDATE VoteRecords ' \
                     'SET HasVoted = %s ' \
                     'WHERE Key = %s'
-            values = (True, voter_key)
+            values = (True, self._hash_voterkey(voter_key))
             self._cursor.execute(query, values)
             self.commit()
 

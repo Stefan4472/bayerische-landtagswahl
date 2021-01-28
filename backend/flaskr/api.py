@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, jsonify,
+    Blueprint, flash, g, redirect, render_template, request, url_for, jsonify, current_app,
 )
 from werkzeug.exceptions import abort, NotFound, BadRequest
 from . import db_context

@@ -10,9 +10,10 @@ def get_db():
     if 'db' not in g:
         g.db = db.Database(
             current_app.config['DB_HOST'],
-            user=current_app.config['DB_USER'],
-            password=current_app.config['DB_PASSWORD'],
-            database_name=current_app.config['DB_NAME'],
+            current_app.config['DB_USER'],
+            current_app.config['DB_PASSWORD'],
+            current_app.config['DB_NAME'],
+            current_app.config['SECRET_KEY'],
         )
     return g.db
 
