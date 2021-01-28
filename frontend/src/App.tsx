@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
-import {Jumbotron, Container, Navbar, Nav, Form} from "react-bootstrap";
+import {Jumbotron, Container, Navbar, Nav, Form, NavDropdown, Button, OverlayTrigger, Tooltip} from "react-bootstrap";
 import {Switch, Route, HashRouter, useParams, useHistory} from "react-router-dom"
+import RefreshIcon from '@material-ui/icons/Refresh';
 import {StimmkreisPage} from "./components/stimmkreise/StimmkreisPage";
 import {MitgliederPage} from "./components/mitglieder/MitgliederPage";
 import {SitzverteilungPage} from "./components/sitzverteilung/SitzverteilungPage";
@@ -60,10 +61,12 @@ export const App: React.FC = () => {
                             {/*TODO: USE REACT-ROUTER-DOM LINK TAGS*/}
                             <Nav>
                                 <Nav.Link href="/">Sitzverteilung</Nav.Link>
-                                <Nav.Link href="#mitglieder">Mitglieder</Nav.Link>
                                 <Nav.Link href="#stimmkreise">Stimmkreise</Nav.Link>
-                                <Nav.Link href="#ueberhangmandate">Überhangmandate</Nav.Link>
-                                <Nav.Link href="#sieger">Sieger</Nav.Link>
+                                <NavDropdown title="Daten" id={"data-dropdown"}>
+                                    <NavDropdown.Item href="#mitglieder">Mitglieder</NavDropdown.Item>
+                                    <NavDropdown.Item href="#ueberhangmandate">Überhangmandate</NavDropdown.Item>
+                                    <NavDropdown.Item href="#sieger">Sieger</NavDropdown.Item>
+                                </NavDropdown>
                                 <Nav.Link href="#stimmabgabe">Stimmabgabe</Nav.Link>
                             </Nav>
                             <Nav className={"ml-auto"}>
@@ -85,6 +88,18 @@ export const App: React.FC = () => {
                                         })}
                                     </Form.Control>
                                 </Form>
+                                {/*Refresh button*/}
+                                {/*TODO: MOVE THIS INTO THE SITE FOOTER? "RESULTS LAST UPDATE --:--:-- --/--. CLICK HERE TO RECALCULATE*/}
+                                <OverlayTrigger
+                                    placement={'bottom'}
+                                    overlay={
+                                        <Tooltip id={`tooltip-refresh`}>
+                                            Click here to recalculate results across the site. This process can take up to 30 seconds.
+                                        </Tooltip>
+                                    }
+                                >
+                                   <Button className={"pr-0"} variant={"link"} style={{"color": "gray"}}><RefreshIcon/></Button>
+                                </OverlayTrigger>
                             </Nav>
                         </Navbar.Collapse>
                     </Navbar>
