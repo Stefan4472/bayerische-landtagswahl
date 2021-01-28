@@ -9,24 +9,6 @@ from . import db_context
 API_BLUEPRINT = Blueprint('api', __name__, url_prefix='/api')
 
 
-# TODO: HOW TO IMPLEMENT THIS PROPERLY?
-@API_BLUEPRINT.route('/main-parties/')
-def get_main_parties():
-    """Return list of parties in-order that they should be displayed,
-    and with display color."""
-    # Temporary CORS workaround: https://stackoverflow.com/a/33091782
-    # Now using colors from the Material Design chart: https://htmlcolorcodes.com/color-chart/
-    return jsonify([
-        {'name': 'CSU', 'color': '#90caf9 '},
-        {'name': 'SPD', 'color': '#ef5350 '},
-        {'name': 'FREIE WÄHLER', 'color': '#ffb74d '},
-        {'name': 'GRÜNE', 'color': '#66bb6a'},
-        {'name': 'FDP', 'color': '#ffee58'},
-        {'name': 'DIE LINKE', 'color': '#ab47bc'},
-        {'name': 'AfD', 'color': '#5c6bc0'},
-    ])
-
-
 @API_BLUEPRINT.route('/wahl-jahre')
 def get_wahljahre():
     """Return list of all election years in the database."""
