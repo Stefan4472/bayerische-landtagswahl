@@ -11,6 +11,8 @@ interface Props {
 }
 
 interface State {
+    directFilterText: string;
+    listFilterText: string;
     selectedDirectCandidate?: BallotCandidate,
     selectedListCandidate?: BallotCandidate,
 }
@@ -21,6 +23,8 @@ export class Ballot extends React.Component<Props> {
     constructor(props: Props) {
         super(props);
         this.state = {
+            directFilterText: "",
+            listFilterText: "",
         };
     }
 
@@ -33,6 +37,18 @@ export class Ballot extends React.Component<Props> {
     handleListCandidateSelected(candidate: BallotCandidate) {
         this.setState({
             selectedListCandidate: candidate,
+        })
+    }
+
+    onDirectFilterChanged(filter: string) {
+        this.setState({
+            directFilterText: filter,
+        })
+    }
+
+    onListFilterChanged(filter: string) {
+        this.setState({
+            listFilterText: filter,
         })
     }
 
@@ -53,25 +69,51 @@ export class Ballot extends React.Component<Props> {
                             <h3>
                                 Select a Direct Candidate
                             </h3>
-                            <DirectCandidateSelector
-                                candidates={this.props.ballotInfo.direct_candidates}
-                                onCandidateSelected={(candidate: BallotCandidate) => {
-                                    this.handleDirectCandidateSelected(candidate)
-                                }}
-                                selectedCandidate={this.state.selectedDirectCandidate}
-                            />
+                            <Form>
+                                <Form.Control
+                                    className={'mb-2'}
+                                    type="text"
+                                    placeholder="Search for Candidate or Party..."
+                                    onChange={(event) => {
+                                        this.onDirectFilterChanged(event.target.value);
+                                    }}
+                                />
+                            </Form>
+                            <div className={"overflow-auto"} style={{height: "500px"}}>
+                                <DirectCandidateSelector
+                                    candidates={this.props.ballotInfo.direct_candidates}
+                                    onCandidateSelected={(candidate: BallotCandidate) => {
+                                        this.handleDirectCandidateSelected(candidate)
+                                    }}
+                                    selectedCandidate={this.state.selectedDirectCandidate}
+                                    filterText={this.state.directFilterText}
+                                />
+                            </div>
                         </Col>
                         <Col>
                             <h3>
                                 Select a List Candidate
                             </h3>
-                            <ListCandidateSelector
-                                candidates={this.props.ballotInfo.list_candidates}
-                                onCandidateSelected={(candidate: BallotCandidate) => {
-                                    this.handleListCandidateSelected(candidate)
-                                }}
-                                selectedCandidate={this.state.selectedListCandidate}
-                            />
+                            <Form>
+                                <Form.Control
+                                    className={'mb-2'}
+                                    type="text"
+                                    placeholder="Search for Candidate or Party..."
+                                    onChange={(event) => {
+                                        this.onListFilterChanged(event.target.value);
+                                    }}
+                                />
+                            </Form>
+                            <div className={"overflow-auto"} style={{height: "500px"}}>
+                                <ListCandidateSelector
+                                    candidates={this.props.ballotInfo.list_candidates}
+                                    onCandidateSelected={(candidate: BallotCandidate) => {
+                                        this.handleListCandidateSelected(candidate)
+                                    }}
+                                    selectedCandidate={this.state.selectedListCandidate}
+                                    filterText={this.state.listFilterText}
+                                />
+                            </div>
                         </Col>
                     </Row>
                     <div className="buttonBar clearfix">
@@ -89,6 +131,3 @@ export class Ballot extends React.Component<Props> {
         )
     }
 }
-
-
-
