@@ -103,6 +103,9 @@ export class StimmabgabePage extends React.Component<Props> {
                                 <span>Key must be 64 characters long (currently {this.state.voterKey.length})</span>
                             )}
                         </Form.Control.Feedback>
+                        <Form.Control.Feedback type={"valid"}>
+                            Welcome! Key recognized
+                        </Form.Control.Feedback>
                     </Form.Group>
                 </Form>
                 {(this.state.isKeyValid && this.state.ballotInfo) && (
