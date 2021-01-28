@@ -53,10 +53,27 @@ export class Ballot extends React.Component<Props> {
     }
 
     handleSubmit() {
-        this.props.onVoted(
-            this.state.selectedDirectCandidate,
-            this.state.selectedListCandidate,
+        let direct_confirm = this.state.selectedDirectCandidate ? (
+            "Sie haben " + this.state.selectedDirectCandidate.first_name + " " + this.state.selectedDirectCandidate.last_name + " " + this.state.selectedDirectCandidate.party_name + " als Direkt-Kandidat gewählt"
+        ) : (
+            "Sie haben kein Direkt-Kandidaten gewählt"
+        )
+        let list_confirm = this.state.selectedListCandidate ? (
+            "Sie haben " + this.state.selectedListCandidate.first_name + " " + this.state.selectedListCandidate.last_name + " " + this.state.selectedListCandidate.party_name + " als List-Kandidat gewählt"
+        ) : (
+            "Sie haben kein List-Kandidaten gewählt"
+        )
+
+        let is_confirmed = window.confirm(
+            direct_confirm + "\n" + list_confirm + "\n" + "Klicken Sie \"OK\" um ihre Stimme abzugeben, oder \"Cancel\" um mehr Änderungen zu machen. Sobald Sie abgeben, können Sie keine Änderungen mehr machen"
         );
+
+        if (is_confirmed) {
+            this.props.onVoted(
+                this.state.selectedDirectCandidate,
+                this.state.selectedListCandidate,
+            );
+        }
     }
 
     render() {
@@ -89,6 +106,13 @@ export class Ballot extends React.Component<Props> {
                                     filterText={this.state.directFilterText}
                                 />
                             </div>
+                            <h5>
+                                {this.state.selectedDirectCandidate ? (
+                                    <span>Direkt-Kandidat: {this.state.selectedDirectCandidate.first_name} {this.state.selectedDirectCandidate.last_name}, {this.state.selectedDirectCandidate.party_name}</span>
+                                ) : (
+                                    <span>Kein Direkt-Kandidat gewählt</span>
+                                )}
+                            </h5>
                         </Col>
                         <Col>
                             <h3>
@@ -114,13 +138,20 @@ export class Ballot extends React.Component<Props> {
                                     filterText={this.state.listFilterText}
                                 />
                             </div>
+                            <h5>
+                                {this.state.selectedListCandidate ? (
+                                    <span>List-Kandidat: {this.state.selectedListCandidate.first_name} {this.state.selectedListCandidate.last_name}, {this.state.selectedListCandidate.party_name}</span>
+                                ) : (
+                                    <span>Kein List-Kandidat gewählt</span>
+                                )}
+                            </h5>
                         </Col>
                     </Row>
                     <div className="buttonBar clearfix">
                         <Button
                             className="button float-right"
                             id="submit-button"
-                            variant="primary"
+                            variant="success"
                             onClick={() => this.handleSubmit()}
                         >
                             Submit
