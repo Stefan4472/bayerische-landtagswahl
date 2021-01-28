@@ -8,7 +8,7 @@ class WahlEndpoints {
     }
 
     async forceDataRefresh() {
-        await http.put('/api/results/force-update');
+        await http.put('/results/force-update');
     }
 }
 

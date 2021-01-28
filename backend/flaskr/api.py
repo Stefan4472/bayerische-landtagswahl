@@ -16,6 +16,16 @@ def get_wahljahre():
     return jsonify(db.get_wahl_jahre())
 
 
+@API_BLUEPRINT.route('/<int:year>/wahl-id')
+def get_wahlid(year: int):
+    db = db_context.get_db()
+    try:
+        wahl_id = db.get_wahl_id(year)
+        return jsonify(wahl_id)
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
+
+
 @API_BLUEPRINT.route('/<int:year>/stimmkreise')
 def get_stimmkreise(year: int):
     db = db_context.get_db()
@@ -31,6 +41,7 @@ def force_update():
     """Force update of materialized views"""
     # TODO: DON'T HARDCODE THIS
     # TODO: IS THERE A WAY TO ONLY REFRESH FOR A GIVEN YEAR?
+    # TODO: FIND A WAY TO DO THIS ASYNCHRONOUSLY
     db = db_context.get_db()
     db.run_script(
         '''

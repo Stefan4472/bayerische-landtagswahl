@@ -70,7 +70,7 @@ export const App: React.FC = () => {
                                 <Nav.Link href="#stimmabgabe">Stimmabgabe</Nav.Link>
                             </Nav>
                             <Nav className={"ml-auto"}>
-                                <Form inline>
+                                <Form inline className={"mr-2"}>
                                     <Form.Label><Navbar.Text>Wahljahr Auswahl</Navbar.Text></Form.Label>
                                     <Form.Control
                                         as="select"
@@ -99,12 +99,13 @@ export const App: React.FC = () => {
                                     }
                                 >
                                    <Button
-                                       className={"pr-0"}
+                                       className={"p-0"}
                                        variant={"link"}
                                        style={{"color": "gray"}}
                                        onClick={() => {
-                                           WahlEndpoints.forceDataRefresh();
-                                           alert('Data updated. Please reload');
+                                           WahlEndpoints.forceDataRefresh().then(() => {
+                                               alert('Data updated. Please reload');
+                                           });
                                        }}
                                    >
                                        <RefreshIcon/>

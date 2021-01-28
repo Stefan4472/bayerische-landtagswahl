@@ -1,21 +1,54 @@
+import click
+import typing
 import requests
 import string
 import random
 
 
 def generate_key() -> str:
-    """https://stackoverflow.com/a/2257449"""
+    """Generates a random, 64-character string of uppercase letters and digits.
+
+    https://stackoverflow.com/a/2257449
+    """
     return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(64))
 
 
-key = generate_key()
-print(key)
-result = requests.post(
-    'http://127.0.0.1:5000/api/voting/',
-    json={
-        'key': key,
-        'wahl_id': 1,
-        'stimmkreis_nr': 105,
-    }
-)
-print(result)
+@click.command()
+@click.argument('year', type=int)
+@click.argument('stimmkreis_nr', type=int)
+@click.option('-n', '--num_keys', type=int, default=1)
+@click.option('-a', '--address', type=str, default='http://127.0.0.1:5000')
+def run(
+        year: int,
+        stimmkreis_nr: int,
+        num_keys: int,
+        address: str,
+):
+    """Create and register voter keys with the website.
+
+    Example usage: generate and register 10 voter keys for the
+    2018 election in Stimmkreis #105:
+    `python voter_setup.py 2018 105 -n 10`
+    """
+    # Lookup election and stimmkreis IDs
+    wahl_id = int(requests.get(address + '/api/{}/wahl-id'.format(year)).json())
+
+    # Generate and register keys
+    for _ in range(num_keys):
+        key = generate_key()
+        result = requests.post(
+            address + '/api/voting/',
+            json={
+                'key': key,
+                'wahl_id': wahl_id,
+                'stimmkreis_nr': stimmkreis_nr,
+            }
+        )
+        if result.status_code == 200:
+            print(key)
+        else:
+            print('Error')
+
+
+if __name__ == '__main__':
+    run()
