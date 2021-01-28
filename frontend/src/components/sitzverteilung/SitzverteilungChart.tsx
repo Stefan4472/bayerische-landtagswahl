@@ -1,6 +1,7 @@
 import React from "react";
 import { ResponsivePie } from '@nivo/pie'
 import {SitzVerteilung} from "../../rest_client/SitzverteilungEndpoints";
+import {MAIN_PARTY_COLORS} from "../../PartyDisplay";
 
 
 interface Props {
@@ -17,6 +18,22 @@ export class SitzverteilungChart extends React.Component<Props> {
         });
     }
 
+    // Returns color for a specific party name.
+    // This is pretty hacky but that's kind of Javascript's fault.
+    getColor(id: string|number) : string {
+        if (typeof(id) === 'string') {
+            if (MAIN_PARTY_COLORS.has(id)) {
+                let color = MAIN_PARTY_COLORS.get(id);
+                if (color) {
+                    return color;
+                }
+            }
+        }
+        // Any case where we can't unambiguously resolve the color:
+        // return gray
+        return '#b0bec5';
+    }
+
     render() {
         // TODO: TOOLTIP SHOULD SHOW WELL-FORMATTED NUMBER AND PERCENT
         // A link that helped me to figure out custom coloring: https://github.com/plouc/nivo/issues/581
@@ -27,6 +44,7 @@ export class SitzverteilungChart extends React.Component<Props> {
                     innerRadius={0.5}
                     enableRadialLabels={false}
                     sliceLabel={'id'}
+                    colors={d => this.getColor(d.id)}
                     startAngle={-90}
                     endAngle={90}
                     padAngle={0.5}

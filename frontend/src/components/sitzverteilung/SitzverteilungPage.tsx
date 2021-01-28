@@ -35,6 +35,8 @@ export class SitzverteilungPage extends React.Component<Props> {
 
     fetchDataAndSetState(year: number) {
         SitzverteilungEndpoints.getAll(year).then(data => {
+            // Sort by number of seats, decreasing
+            data.sort((a, b) => (a.num_seats > b.num_seats) ? -1 : 1);
             this.setState({
                 sitzVerteilung: data,
             })

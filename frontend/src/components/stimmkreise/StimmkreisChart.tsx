@@ -66,7 +66,6 @@ export class StimmkreisChart extends React.Component<Props> {
     // Returns color for a specific party name.
     // This is pretty hacky but that's kind of Javascript's fault.
     getColor(id: string|number) : string {
-        // if (id instanceof string) {
         if (typeof(id) === 'string') {
             if (MAIN_PARTY_COLORS.has(id)) {
                 let color = MAIN_PARTY_COLORS.get(id);
@@ -83,7 +82,6 @@ export class StimmkreisChart extends React.Component<Props> {
     render() {
         // TODO: TOOLTIP SHOULD SHOW WELL-FORMATTED NUMBER AND PERCENT
         // A link that helped me to figure out custom coloring: https://github.com/plouc/nivo/issues/581
-        // if (this.props.stimmkreis) {
         return (
             <div style={{"height": "400px"}}>
                 <ResponsivePie
@@ -91,7 +89,6 @@ export class StimmkreisChart extends React.Component<Props> {
                     innerRadius={0.43}
                     enableRadialLabels={false}
                     sliceLabel={'id'}
-                    // colors={{"scheme": "pastel1"}}
                     colors={d => this.getColor(d.id)}
                     legends={[
                         {
