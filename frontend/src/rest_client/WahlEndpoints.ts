@@ -6,6 +6,10 @@ class WahlEndpoints {
         const result = await http.get(`/wahl-jahre`);
         return result.data as number[];
     }
+
+    async forceDataRefresh() {
+        await http.put('/api/results/force-update');
+    }
 }
 
 export default new WahlEndpoints();

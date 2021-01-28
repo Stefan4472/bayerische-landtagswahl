@@ -26,7 +26,7 @@ def get_stimmkreise(year: int):
         raise NotFound(description=e.args[0])
 
 
-@API_BLUEPRINT.route('/results/force-update')
+@API_BLUEPRINT.route('/results/force-update', methods=['PUT'])
 def force_update():
     """Force update of materialized views"""
     # TODO: DON'T HARDCODE THIS

@@ -89,16 +89,26 @@ export const App: React.FC = () => {
                                     </Form.Control>
                                 </Form>
                                 {/*Refresh button*/}
-                                {/*TODO: MOVE THIS INTO THE SITE FOOTER? "RESULTS LAST UPDATE --:--:-- --/--. CLICK HERE TO RECALCULATE*/}
+                                {/*TODO: MOVE THIS INTO THE SITE FOOTER? "RESULTS LAST UPDATED --:--:-- --/--. CLICK HERE TO RECALCULATE"*/}
                                 <OverlayTrigger
                                     placement={'bottom'}
                                     overlay={
                                         <Tooltip id={`tooltip-refresh`}>
-                                            Click here to recalculate results across the site. This process can take up to 30 seconds.
+                                            Click here to recalculate results across the site. This process can take up to one minute.
                                         </Tooltip>
                                     }
                                 >
-                                   <Button className={"pr-0"} variant={"link"} style={{"color": "gray"}}><RefreshIcon/></Button>
+                                   <Button
+                                       className={"pr-0"}
+                                       variant={"link"}
+                                       style={{"color": "gray"}}
+                                       onClick={() => {
+                                           WahlEndpoints.forceDataRefresh();
+                                           alert('Data updated. Please reload');
+                                       }}
+                                   >
+                                       <RefreshIcon/>
+                                   </Button>
                                 </OverlayTrigger>
                             </Nav>
                         </Navbar.Collapse>
