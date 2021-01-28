@@ -26,6 +26,39 @@ def get_stimmkreise(year: int):
         raise NotFound(description=e.args[0])
 
 
+@API_BLUEPRINT.route('/results/force-update')
+def force_update():
+    """Force update of materialized views"""
+    # TODO: DON'T HARDCODE THIS
+    # TODO: IS THERE A WAY TO ONLY REFRESH FOR A GIVEN YEAR?
+    db = db_context.get_db()
+    db.run_script(
+        '''
+        REFRESH MATERIALIZED VIEW Erststimme_Kandidat;
+        REFRESH MATERIALIZED VIEW Anzhal_Zweitstimme_Kandidat;
+        REFRESH MATERIALIZED VIEW Gesamtstimmen_Partei_Stimmkreis;
+        REFRESH MATERIALIZED VIEW Gesamtstimmen_Partei_Wahl;
+        REFRESH MATERIALIZED VIEW Gesamtstimmen_Partei_Wahl;
+        REFRESH MATERIALIZED VIEW Erststimme_Gewinner_Pro_Stimmkreis;
+        REFRESH MATERIALIZED VIEW Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis;
+        REFRESH MATERIALIZED VIEW Mitglieder_des_Landtages;
+        REFRESH MATERIALIZED VIEW Sitzverteilung;
+        REFRESH MATERIALIZED VIEW Mitglieder_des_LandtagesUI;
+        REFRESH MATERIALIZED VIEW WahlbeteiligungUI;
+        REFRESH MATERIALIZED VIEW Gesamtstimmen_Partei_StimmkreisUI;
+        REFRESH MATERIALIZED VIEW DirektkandidatenUI;
+        REFRESH MATERIALIZED VIEW StimmkreissiegerUI;
+        REFRESH MATERIALIZED VIEW UeberhangmandateUI;
+        REFRESH MATERIALIZED VIEW Knappste_Sieger_Verlierer;
+        REFRESH MATERIALIZED VIEW KnappsteSiegerUI;
+        REFRESH MATERIALIZED VIEW KnappsteVerliererUI;
+        REFRESH MATERIALIZED VIEW Durchschnitt_Stimmen_Pro_VornameUI;
+        REFRESH MATERIALIZED VIEW Beste_Stimmkreise_ParteiUI;
+        '''
+    )
+    return 'Success'
+
+
 @API_BLUEPRINT.route('/results/<int:year>/stimmkreis/<int:stimmkreis_nr>')
 def get_stimmkreis_overview(year: int, stimmkreis_nr: int):
     db = db_context.get_db()
