@@ -29,7 +29,6 @@ export class StimmabgabePage extends React.Component<Props> {
     validateKey(key: string) {
         if (key.length === 64) {
             StimmabgabeEndpoints.getWahlInfo(key).then((ballotInfo) => {
-                // if (ballotInfo.ha)
                 this.setState({
                     voterKey: key,
                     isKeyValid: true,

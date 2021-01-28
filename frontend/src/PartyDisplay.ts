@@ -47,9 +47,6 @@ export function orderParties(partyList: {party_name: string}[]) : any[] {
     main_parties.sort((a, b) => (MAIN_PARTY_ORDER.get(a.party_name) > MAIN_PARTY_ORDER.get(b.party_name) ? 1 : -1));
     // Sort minor parties alphabetically
     minor_parties.sort((a, b) => (a.party_name > b.party_name) ? 1 : -1);
-
-    let result = main_parties.concat(minor_parties);
-    console.log(partyList, ' transformed to ', result);
-
-    return result;
+    return main_parties.concat(minor_parties);
 }
+

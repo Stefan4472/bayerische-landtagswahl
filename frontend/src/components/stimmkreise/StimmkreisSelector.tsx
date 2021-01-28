@@ -45,6 +45,7 @@ export class StimmkreisSelector extends React.Component<Props> {
             }
         })
     }
+
     performFilter(stimmkreise: StimmkreisInfo[], filterTerm: string|undefined) : StimmkreisInfo[] {
         if (filterTerm === '' || !filterTerm) {
             return stimmkreise;
@@ -68,15 +69,18 @@ export class StimmkreisSelector extends React.Component<Props> {
         return (
             // List of Stimmkreis buttons
             <ListGroup>
-                {this.performFilter(this.state.stimmkreisInfo, this.props.filterText).map((info) => {
-                    // Set the currently-selected stimmkreis to "active"
-                    if (info.id === this.state.currSelectedID) {
-                        return <ListGroup.Item active action onClick={() => this.setSelection(info)} key={info.number}>({info.number}) {info.name}</ListGroup.Item>
-                    }
-                    else {
-                        return <ListGroup.Item action onClick={() => this.setSelection(info)} key={info.number}>({info.number}) {info.name}</ListGroup.Item>
-                    }
-                })}
+                {this.performFilter(this.state.stimmkreisInfo, this.props.filterText).map((info) =>
+                    <ListGroup.Item
+                        action
+                        active={info.id === this.state.currSelectedID}
+                        onClick={() => {
+                            this.setSelection(info)
+                        }}
+                        key={info.number}
+                    >
+                        ({info.number}) {info.name}
+                    </ListGroup.Item>
+                )}
             </ListGroup>
         )
     }
