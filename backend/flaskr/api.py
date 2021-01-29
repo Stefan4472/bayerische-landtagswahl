@@ -16,16 +16,6 @@ def get_wahljahre():
     return jsonify(db.get_wahl_jahre())
 
 
-@API_BLUEPRINT.route('/<int:year>/wahl-id')
-def get_wahlid(year: int):
-    db = db_context.get_db()
-    try:
-        wahl_id = db.get_wahl_id(year)
-        return jsonify(wahl_id)
-    except ValueError as e:
-        raise NotFound(description=e.args[0])
-
-
 @API_BLUEPRINT.route('/<int:year>/stimmkreise')
 def get_stimmkreise(year: int):
     db = db_context.get_db()
@@ -75,11 +65,15 @@ def get_stimmkreis_overview(year: int, stimmkreis_nr: int):
     db = db_context.get_db()
     try:
         wahl_id = db.get_wahl_id(year)
-        # Look up StimmkreisID
-        stimmkreis_id = db.get_stimmkreis_id(wahl_id, stimmkreis_nr)
-        db.get_stimmkreis_winner(wahl_id, stimmkreis_id)
-        # Perform queries
-        turnout_pct = db.get_stimmkreis_turnout(wahl_id, stimmkreis_id)
+        stimmkreis_id = db.get_stimmkreis_id(
+            wahl_id,
+            stimmkreis_nr,
+        )
+
+        turnout_pct = db.get_stimmkreis_turnout(
+            wahl_id,
+            stimmkreis_id,
+        )
         erst_by_party = {
             rec.party_name: rec for rec in db.get_stimmkreis_erststimmen(wahl_id, stimmkreis_id)
         }
@@ -156,10 +150,12 @@ def get_knappste_sieger(year: int):
 
 @API_BLUEPRINT.route('/voting/', methods=['POST'])
 def add_voter_key():
-    db = db_context.get_db()
     voter_key = request.json['key']
-    wahl_id = request.json['wahl_id']
+    wahl_year = request.json['wahl_year']
     stimmkreis_nr = request.json['stimmkreis_nr']
+
+    db = db_context.get_db()
+    wahl_id = db.get_wahl_id(wahl_year)
     stimmkreis_id = db.get_stimmkreis_id(
         wahl_id,
         stimmkreis_nr,
@@ -177,7 +173,6 @@ def add_voter_key():
 
 @API_BLUEPRINT.route('/voting/<string:voterkey>')
 def get_wahl_info(voterkey: str):
-    # TODO: EFFICIENCY IMPROVEMENTS (EVERYWHERE). MINIMIZE THE NUMBER OF DATABASE CALLS REQUIRED
     db = db_context.get_db()
     try:
         voter_info = db.get_voter_info(
@@ -214,8 +209,10 @@ def get_wahl_info(voterkey: str):
 @API_BLUEPRINT.route('/voting/<string:voterkey>', methods=['POST'])
 def submit_vote(voterkey: str):
     db = db_context.get_db()
-    dcandidate_id = request.json['directID'] if 'directID' in request.json else None
-    lcandidate_id = request.json['listID'] if 'listID' in request.json else None
+    dcandidate_id = \
+        request.json['directID'] if 'directID' in request.json else None
+    lcandidate_id = \
+        request.json['listID'] if 'listID' in request.json else None
     try:
         db.submit_vote(
             voterkey,

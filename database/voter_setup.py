@@ -29,9 +29,6 @@ def run(
     2018 election in Stimmkreis #105:
     `python voter_setup.py 2018 105 -n 10`
     """
-    # Lookup election and stimmkreis IDs
-    wahl_id = int(requests.get(address + '/api/{}/wahl-id'.format(year)).json())
-
     # Generate and register keys
     for _ in range(num_keys):
         key = generate_key()
@@ -39,7 +36,7 @@ def run(
             address + '/api/voting/',
             json={
                 'key': key,
-                'wahl_id': wahl_id,
+                'wahl_year': year,
                 'stimmkreis_nr': stimmkreis_nr,
             }
         )
