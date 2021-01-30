@@ -21,6 +21,7 @@ DROP MATERIALIZED VIEW IF EXISTS Knappste_Sieger_Verlierer CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteSiegerUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteVerliererUI CASCADE;
 DROP VIEW IF EXISTS Wahlbeteiligung_EinzelstimmenUI CASCADE;
+DROP VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis_EinzelstimmenUI CASCADE;
 DROP VIEW IF EXISTS Direktkandidaten_EinzelstimmenUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Beste_Stimmkreise_ParteiUI CASCADE;
 
@@ -518,6 +519,24 @@ FROM stimmkreis s
          INNER JOIN Anzhal_Stimmen_Stimmkreis as es ON es.stimmkreis = s.id
          INNER JOIN wahl w on w.id = es.wahl
          INNER JOIN wahlkreis wk on wk.id = s.wahlkreis;
+
+-- Die prozentuale und absolute Anzahl an Stimmen fuer jede Partei.
+CREATE VIEW Gesamtstimmen_Partei_Stimmkreis_EinzelstimmenUI AS
+SELECT w.jahr,
+       wk.name    as Wahlkreis,
+       s.name     as Stimmkreis,
+       s.nummer   as StimmkreisNr,
+       p.parteiname,
+       gps.gesamt as gesamtstimmen,
+       gps.proz   as prozent,
+       gps.erst   as Erststimmen,
+       gps.zweit  as Zweitstimmen
+FROM Gesamtstimmen_Partei_Stimmkreis() gps
+         INNER JOIN stimmkreis s ON gps.stimmkreisID = s.id
+         INNER JOIN wahlkreis wk ON wk.id = s.wahlkreis
+         INNER JOIN wahl w ON gps.wahlID = w.id
+         INNER JOIN partei p ON p.id = gps.parteiID
+ORDER BY jahr, StimmkreisNr, prozent DESC;
 
 -- Gewaehlte Direktkandidaten
 CREATE VIEW Direktkandidaten_EinzelstimmenUI AS

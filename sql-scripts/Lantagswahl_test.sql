@@ -35,6 +35,9 @@ SELECT * FROM knappsteverliererui;
 -- Wahlbeteiligung
 SELECT * FROM Wahlbeteiligung_EinzelstimmenUI;
 
+-- Die prozentuale und absolute Anzahl an Stimmen fuer jede Partei.
+SELECT * FROM Gesamtstimmen_Partei_Stimmkreis_EinzelstimmenUI;
+
 --Gewaehlten Direktkandidaten
 SELECT * FROM direktkandidaten_einzelstimmenui;
 
