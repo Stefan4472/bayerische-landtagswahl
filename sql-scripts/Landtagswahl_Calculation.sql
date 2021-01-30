@@ -1,6 +1,7 @@
 -- @Vlad: I kept getting errors that these views already existed. Let me know if this is incorrect
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Anzhal_Zweitstimme_Kandidat CASCADE;
+DROP FUNCTION IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
@@ -41,62 +42,6 @@ ORDER BY Wahl, Wahlkreis, Partei, Anzahl DESC;
 
 
 -- Die prozentuale und absolute Anzahl an Stimmen fuer jede Partei.
-CREATE MATERIALIZED VIEW Gesamtstimmen_Partei_Stimmkreis AS
-WITH Erststimmen_Partei_Stimmkreis AS
-         (SELECT wahl, wahlkreis, stimmkreis, partei, sum(anzahl) as Anzahl
-          FROM Erststimme_Kandidat
-          GROUP BY wahl, wahlkreis, stimmkreis, partei),
-     Zweitstimmen_Partei_Stimmkreis AS (
-         SELECT Wahl, Wahlkreis, Stimmkreis, Partei, sum(anzahl) as Anzahl
-         FROM (SELECT Wahl, Wahlkreis, Stimmkreis, Partei, count(StimmeID) as anzahl
-               FROM zweitstimme s
-                        INNER JOIN Kandidat k ON k.ID = s.Kandidat
-               WHERE isValid = 1
-               GROUP BY Wahl, Wahlkreis, Stimmkreis, Partei
-               UNION ALL
-               -- Anzahl an Zweitstimme nur für Partei
-               SELECT Wahl, Wahlkreis, Stimmkreis, Partei, count(StimmeID) as Anzahl
-               FROM zweitstimmepartei zp
-                        INNER JOIN Stimmkreis s ON s.ID = zp.Stimmkreis
-               GROUP BY Wahl, Wahlkreis, Stimmkreis, Partei) as skzs
-         GROUP BY Wahl, Wahlkreis, Stimmkreis, Partei),
-     Gesamtstimmen_Partei_Stimmkreis AS (
-         SELECT Wahl, Wahlkreis, Stimmkreis, Partei, sum(Anzahl) as Gesamtstimmen
-         FROM (SELECT *
-               FROM Erststimmen_Partei_Stimmkreis
-               UNION ALL
-               SELECT *
-               FROM Zweitstimmen_Partei_Stimmkreis) as "EPS*ZPS*"
-         GROUP BY Wahl, Wahlkreis, Stimmkreis, Partei),
--- Absolute Anzahl an Stimmen in Stimmkreis
-     Gesamtstimmen_Stimmkreis AS (
-         SELECT Wahl, Wahlkreis, Stimmkreis, sum(Gesamtstimmen) as Gesamtstimmen
-         FROM Gesamtstimmen_Partei_Stimmkreis gps
-         GROUP BY Wahl, Wahlkreis, Stimmkreis
-     )
-SELECT Wahl,
-       Wahlkreis,
-       Stimmkreis,
-       Partei,
-       Gesamtstimmen,
-       100 * Gesamtstimmen:: decimal / (SELECT gspAll.Gesamtstimmen
-                                        FROM Gesamtstimmen_Stimmkreis gspAll
-                                        WHERE gspAll.Wahl = gps.Wahl
-                                          AND gps.Stimmkreis = gspAll.Stimmkreis) as prozent,
-       COALESCE((SELECT eps.Anzahl
-        FROM Erststimmen_Partei_Stimmkreis eps
-        WHERE eps.Wahl = gps.Wahl
-          AND eps.Stimmkreis = gps.stimmkreis
-          AND eps.Partei = gps.Partei), 0) as Erststimmen,
-       COALESCE((SELECT zps.anzahl
-        FROM Zweitstimmen_Partei_Stimmkreis zps
-        WHERE zps.Wahl = gps.Wahl
-          AND zps.Stimmkreis = gps.stimmkreis
-          AND zps.Partei = gps.Partei), 0) as Zweitstimmen
-FROM Gesamtstimmen_Partei_Stimmkreis gps
-ORDER BY Wahl, Stimmkreis, Gesamtstimmen DESC;
-
-
 CREATE OR REPLACE FUNCTION Gesamtstimmen_Partei_Stimmkreis()
     returns TABLE
             (
@@ -176,7 +121,17 @@ BEGIN
 END
 $func$ LANGUAGE plpgsql;
 
-SELECT * FROM Gesamtstimmen_Partei_Stimmkreis();
+CREATE MATERIALIZED VIEW Gesamtstimmen_Partei_Stimmkreis AS
+SELECT g.wahlID       as Wahl,
+       s.wahlkreis    as Wahlkreis,
+       g.stimmkreisID as stimmkreis,
+       g.parteiID     as partei,
+       gesamt         as Gesamtstimmen,
+       proz           as Prozent,
+       erst           as Erststimmen,
+       zweit          as Zweitstimmen
+FROM Gesamtstimmen_Partei_Stimmkreis() g
+         INNER JOIN stimmkreis s ON s.id = g.stimmkreisID;
 
 
 -- Gesamtstimmen aller Parteien pro Wahlkreis
