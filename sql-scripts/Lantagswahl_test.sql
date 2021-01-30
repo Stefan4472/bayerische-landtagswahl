@@ -31,6 +31,11 @@ SELECT * FROM knappstesiegerui;
 SELECT * FROM knappsteverliererui;
 
 
+-- Q7 Stimmkreisübersicht (Einzelstimmen)
+-- Wahlbeteiligung
+SELECT * FROM Wahlbeteiligung_EinzelstimmenUI;
+
+
 -- Wahlzettel
 SELECT * FROM erststimmewahlzettel(2018, 95);
 

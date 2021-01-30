@@ -18,6 +18,7 @@ DROP MATERIALIZED VIEW IF EXISTS ErststimmenKandidatStimmkreisUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Knappste_Sieger_Verlierer CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteSiegerUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteVerliererUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Wahlbeteiligung_EinzelstimmenUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Beste_Stimmkreise_ParteiUI CASCADE;
 
 -- Anzahl Erststimme für jeden Kandidat
@@ -431,6 +432,24 @@ SELECT ek.Wahl as WahlID, ek.stimmkreis, k.vorname, k.nachname, ek.anzahl, p.Par
 FROM Erststimme_Kandidat ek
     INNER JOIN Kandidat k ON k.ID = ek.kandidat
     INNER JOIN Partei p ON p.ID = ek.partei;
+
+
+-- Q7 Stimmkreisübersicht (Einzelstimmen)
+CREATE MATERIALIZED VIEW Wahlbeteiligung_EinzelstimmenUI AS
+WITH Anzhal_Stimmen_Stimmkreis AS (
+    SELECT e.wahl, e.stimmkreis, count(e.stimmeID) as anzahlstimmen
+    FROM erststimme e
+    GROUP BY e.wahl, e.stimmkreis
+)
+SELECT w.jahr,
+       wk.name                                             as Wahlkreis,
+       s.id                                                as StimmkreisID,
+       s.name                                              as Stimmkreis,
+       100 * es.anzahlstimmen::decimal / s.numberechtigter as wahlbeteiligung
+FROM stimmkreis s
+         INNER JOIN Anzhal_Stimmen_Stimmkreis as es ON es.stimmkreis = s.id
+         INNER JOIN wahl w on w.id = es.wahl
+         INNER JOIN wahlkreis wk on wk.id = s.wahlkreis;
 
 
 -- Wahlzettel
