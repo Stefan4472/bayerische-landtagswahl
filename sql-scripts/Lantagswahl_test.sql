@@ -35,6 +35,9 @@ SELECT * FROM knappsteverliererui;
 -- Wahlbeteiligung
 SELECT * FROM Wahlbeteiligung_EinzelstimmenUI;
 
+--Gewaehlten Direktkandidaten
+SELECT * FROM direktkandidaten_einzelstimmenui;
+
 
 -- Wahlzettel
 SELECT * FROM erststimmewahlzettel(2018, 95);

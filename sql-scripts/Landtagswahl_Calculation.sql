@@ -21,6 +21,7 @@ DROP MATERIALIZED VIEW IF EXISTS Knappste_Sieger_Verlierer CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteSiegerUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteVerliererUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Wahlbeteiligung_EinzelstimmenUI CASCADE;
+DROP VIEW IF EXISTS Direktkandidaten_EinzelstimmenUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Beste_Stimmkreise_ParteiUI CASCADE;
 
 -- Anzahl Erststimme für jeden Kandidat
@@ -519,6 +520,50 @@ FROM stimmkreis s
          INNER JOIN wahlkreis wk on wk.id = s.wahlkreis;
 
 -- Gewaehlte Direktkandidaten
+CREATE VIEW Direktkandidaten_EinzelstimmenUI AS
+WITH erststimme_kandidat as
+             (SELECT * FROM erststimme_kandidat() ek),
+     Gesamtstimmen_Partei_Wahlkreis AS
+         (SELECT WahlID                                                           as Wahl,
+                 (SELECT s.wahlkreis FROM stimmkreis s WHERE s.id = stimmkreisID) as wahlkreis,
+                 ParteiID                                                         as Partei,
+                 sum(gesamt)                                                      as Gesamtstimmen
+          FROM Gesamtstimmen_Partei_Stimmkreis() gps
+          GROUP BY Wahl, Wahlkreis, Partei),
+     Gesamtstimmen_Wahl as (
+         SELECT wahl, sum(Gesamtstimmen) as Gesamtstimmen
+         FROM Gesamtstimmen_Partei_Wahlkreis
+         GROUP BY wahl
+     ),
+     Partei_Result AS
+         (SELECT Wahl,
+                 Partei,
+                 sum(Gesamtstimmen)                                       as Gesamtstimmen,
+                 (sum(Gesamtstimmen) / (SELECT gw.Gesamtstimmen
+                                        FROM Gesamtstimmen_Wahl gw
+                                        WHERE gw.Wahl = gps2.Wahl)) * 100 as Prozent
+          FROM Gesamtstimmen_Partei_Wahlkreis gps2
+          GROUP BY Wahl, Partei),
+     Kandidat_res AS
+         (SELECT row_number() over (PARTITION BY wahlID, stimmkreisID ORDER BY wahlID, stimmkreisID, anzahl DESC) as rk,
+                 e.*
+          FROM erststimme_kandidat e
+          WHERE e.parteiID IN (SELECT parteiID FROM Partei_Result p WHERE e.wahlID = p.Wahl AND Prozent >= 5))
+SELECT w.jahr,
+       wk.name   as Wahlkreis,
+       s.id      as StimmkreisID,
+       s.name    as Stimmkreis,
+       k.vorname,
+       k.nachname,
+       p.parteiname,
+       kr.anzahl as erststimmen
+FROM Kandidat_res kr
+         INNER JOIN wahl w ON w.id = kr.wahlID
+         INNER JOIN wahlkreis wk ON wk.id = kr.wahlkreisID
+         INNER JOIN stimmkreis s ON s.id = kr.stimmkreisID
+         INNER JOIN kandidat k ON k.id = kr.kandidatID
+         INNER JOIN partei p ON p.id = kr.parteiID
+WHERE kr.rk = 1;
 
 
 -- Wahlzettel
