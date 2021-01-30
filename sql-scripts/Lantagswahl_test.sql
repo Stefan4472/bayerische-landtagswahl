@@ -16,6 +16,9 @@ SELECT * FROM DirektkandidatenUI;
 -- die prozentuale und absolute Anzahl an Stimmen fuer jede Partei
 SELECT * FROM Gesamtstimmen_Partei_StimmkreisUI;
 
+-- die Entwicklung der Stimmen in 2018 im Vergleich zum 2013
+SELECT * FROM Entwicklung_Stimmen_2018_zum_2013UI;
+
 
 -- Q4 Stimmkreissieger
 SELECT * FROM StimmkreisSiegerUi;
@@ -31,14 +34,27 @@ SELECT * FROM knappstesiegerui;
 SELECT * FROM knappsteverliererui;
 
 
+-- Q7 Stimmkreisübersicht (Einzelstimmen)
+-- Wahlbeteiligung
+SELECT * FROM Wahlbeteiligung_EinzelstimmenUI;
+
+-- Die prozentuale und absolute Anzahl an Stimmen fuer jede Partei.
+SELECT * FROM Gesamtstimmen_Partei_Stimmkreis_EinzelstimmenUI;
+
+--Gewaehlten Direktkandidaten
+SELECT * FROM direktkandidaten_einzelstimmenui;
+
+-- die Entwicklung der Stimmen in 2018 im Vergleich zum 2013
+SELECT * FROM Entwicklung_Stimmen_2018_zum_2013_EinzelstimmenUI;
+
+
 -- Wahlzettel
 SELECT * FROM erststimmewahlzettel(2018, 95);
 
 SELECT * FROM zweitstimmeWahlzettel(2018, 94);
 
 
--- Durchschnittliche Anzahl an Stimmen pro Vorname.
-SELECT * FROM Durchschnitt_Stimmen_Pro_VornameUI;
+--Aufgabe2 Ausgedachte Analysen
 
 -- 10 beste Stimmkreise für alle Parteien, wo sie größte prozentuale Anzahl an Stimmen haben.
 SELECT * FROM beste_stimmkreise_parteiui;

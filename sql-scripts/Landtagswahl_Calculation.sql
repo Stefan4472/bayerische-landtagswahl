@@ -1,4 +1,6 @@
 -- @Vlad: I kept getting errors that these views already existed. Let me know if this is incorrect
+DROP FUNCTION IF EXISTS Erststimme_Kandidat CASCADE;
+DROP FUNCTION IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Anzhal_Zweitstimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
@@ -12,22 +14,54 @@ DROP MATERIALIZED VIEW IF EXISTS Mitglieder_des_LandtagesUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS WahlbeteiligungUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_StimmkreisUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS DirektkandidatenUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Entwicklung_Stimmen_2018_zum_2013UI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS StimmkreissiegerUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS UeberhangmandateUI CASCADE;
-DROP MATERIALIZED VIEW IF EXISTS ErstimmenKandidatStimmkreisUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS ErststimmenKandidatStimmkreisUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Knappste_Sieger_Verlierer CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteSiegerUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteVerliererUI CASCADE;
-DROP MATERIALIZED VIEW IF EXISTS Durchschnitt_Stimmen_Pro_VornameUI CASCADE;
+DROP VIEW IF EXISTS Wahlbeteiligung_EinzelstimmenUI CASCADE;
+DROP VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis_EinzelstimmenUI CASCADE;
+DROP VIEW IF EXISTS Direktkandidaten_EinzelstimmenUI CASCADE;
+DROP VIEW IF EXISTS Entwicklung_Stimmen_2018_zum_2013_EinzelstimmenUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Beste_Stimmkreise_ParteiUI CASCADE;
 
 -- Anzahl Erststimme für jeden Kandidat
+CREATE OR REPLACE FUNCTION Erststimme_Kandidat()
+    returns TABLE
+            (
+                wahlID       integer,
+                wahlkreisID  integer,
+                stimmkreisID integer,
+                kandidatID   integer,
+                parteiID     integer,
+                anzahl       numeric
+            )
+as
+$func$
+BEGIN
+    RETURN QUERY
+        WITH erststimme_kand AS
+                 (SELECT Wahl, Stimmkreis, Kandidat, count(StimmeID)::numeric as Anzahl
+                  FROM erststimme s
+                  WHERE IsValid = 1
+                  GROUP BY Wahl, Kandidat, Stimmkreis)
+        SELECT es.wahl, k.wahlkreis, es.stimmkreis, es.kandidat, k.partei, es.Anzahl
+        FROM erststimme_kand as es
+                 INNER JOIN Kandidat k ON k.ID = es.Kandidat;
+END
+$func$ LANGUAGE plpgsql;
+
+
 CREATE MATERIALIZED VIEW Erststimme_Kandidat AS
-SELECT Wahl, Wahlkreis, Stimmkreis, Partei, Kandidat, count(StimmeID) as Anzahl
-FROM erststimme s
-         INNER JOIN Kandidat k ON k.ID = s.Kandidat
-WHERE IsValid = 1
-GROUP BY Wahl, Wahlkreis, Kandidat, Partei, Stimmkreis;
+SELECT wahlID       as Wahl,
+       wahlkreisID  as wahlkreis,
+       stimmkreisID as stimmkreis,
+       parteiID     as partei,
+       kandidatID   as kandidat,
+       anzahl
+FROM Erststimme_Kandidat();
 
 
 -- Anzahl an Zweitstimme für jeden Kandidat in Wahlkreis
@@ -41,60 +75,96 @@ ORDER BY Wahl, Wahlkreis, Partei, Anzahl DESC;
 
 
 -- Die prozentuale und absolute Anzahl an Stimmen fuer jede Partei.
+CREATE OR REPLACE FUNCTION Gesamtstimmen_Partei_Stimmkreis()
+    returns TABLE
+            (
+                wahlID       integer,
+                stimmkreisID integer,
+                parteiID     integer,
+                gesamt       numeric,
+                proz         decimal,
+                erst         numeric,
+                zweit        numeric
+            )
+as
+$func$
+BEGIN
+    RETURN QUERY
+        WITH Kandidat_Erststimme AS
+                 (SELECT s.Wahl, s.Stimmkreis, s.Kandidat, count(s.StimmeID) as Anzahlstimmen
+                  FROM erststimme s
+                  WHERE s.IsValid = 1
+                  GROUP BY s.Wahl, s.Stimmkreis, s.Kandidat),
+             Partei_Erststimme AS
+                 (SELECT ke.wahl, ke.stimmkreis, k.partei, sum(Anzahlstimmen) as Anzahlstimmen
+                  FROM Kandidat_Erststimme ke
+                           INNER JOIN kandidat k ON k.id = ke.kandidat
+                  GROUP BY ke.Wahl, ke.Stimmkreis, k.partei),
+             Kandidat_Zweitstimme AS
+                 (SELECT z.*, k.partei
+                  FROM (SELECT Wahl, Stimmkreis, Kandidat, count(StimmeID) as Anzahlstimmen
+                        FROM zweitstimme s
+                        WHERE isValid = 1
+                        GROUP BY Wahl, Stimmkreis, kandidat) z
+                           INNER JOIN kandidat k ON k.id = z.kandidat),
+             Kandidat_Partei_Zweitstimme AS
+                 (SELECT wahl, stimmkreis, partei, sum(Anzahlstimmen) as Anzahlstimmen
+                  FROM Kandidat_Zweitstimme kz
+                  GROUP BY wahl, stimmkreis, partei),
+             Partei_Zweitstimme AS
+                 (SELECT Wahl, Stimmkreis, Partei, count(stimmeid) as Anzahlstimmen
+                  FROM zweitstimmepartei
+                  GROUP BY Wahl, Stimmkreis, Partei),
+             Gesamtstimmen_Partei_Stimmkreis AS (
+                 SELECT data.wahl, data.stimmkreis, data.partei, sum(data.Anzahlstimmen) as Gesamtstimmen
+                 FROM (SELECT *
+                       FROM Partei_Erststimme
+                       UNION ALL
+                       SELECT *
+                       FROM Kandidat_Partei_Zweitstimme
+                       UNION ALL
+                       SELECT *
+                       FROM Partei_Zweitstimme) as data
+                 GROUP BY data.wahl, data.stimmkreis, data.partei),
+             Gesamtstimmen_Stimmkreis AS (
+                 SELECT gps.Wahl, gps.Stimmkreis, sum(Gesamtstimmen) as Gesamtstimmen
+                 FROM Gesamtstimmen_Partei_Stimmkreis gps
+                 GROUP BY gps.Wahl, gps.Stimmkreis
+             )
+        SELECT gps.Wahl,
+               gps.Stimmkreis,
+               gps.Partei,
+               gps.Gesamtstimmen,
+               100 * Gesamtstimmen:: decimal / (SELECT gspAll.Gesamtstimmen
+                                                FROM Gesamtstimmen_Stimmkreis gspAll
+                                                WHERE gspAll.Wahl = gps.Wahl
+                                                  AND gps.Stimmkreis = gspAll.Stimmkreis) as prozent,
+               COALESCE((SELECT eps.Anzahlstimmen
+                         FROM Partei_Erststimme eps
+                         WHERE eps.Wahl = gps.Wahl
+                           AND eps.Stimmkreis = gps.stimmkreis
+                           AND eps.Partei = gps.Partei), 0)                               as Erststimmen,
+               Gesamtstimmen - COALESCE((SELECT eps.Anzahlstimmen
+                                         FROM Partei_Erststimme eps
+                                         WHERE eps.Wahl = gps.Wahl
+                                           AND eps.Stimmkreis = gps.stimmkreis
+                                           AND eps.Partei = gps.Partei), 0)               as Zweitstimmen
+        FROM Gesamtstimmen_Partei_Stimmkreis gps
+        ORDER BY gps.Wahl, gps.Stimmkreis, Gesamtstimmen DESC;
+END
+$func$ LANGUAGE plpgsql;
+
 CREATE MATERIALIZED VIEW Gesamtstimmen_Partei_Stimmkreis AS
-WITH Erststimmen_Partei_Stimmkreis AS
-         (SELECT wahl, wahlkreis, stimmkreis, partei, sum(anzahl) as Anzahl
-          FROM Erststimme_Kandidat
-          GROUP BY wahl, wahlkreis, stimmkreis, partei),
-     Zweitstimmen_Partei_Stimmkreis AS (
-         SELECT Wahl, Wahlkreis, Stimmkreis, Partei, sum(anzahl) as Anzahl
-         FROM (SELECT Wahl, Wahlkreis, Stimmkreis, Partei, count(StimmeID) as anzahl
-               FROM zweitstimme s
-                        INNER JOIN Kandidat k ON k.ID = s.Kandidat
-               WHERE isValid = 1
-               GROUP BY Wahl, Wahlkreis, Stimmkreis, Partei
-               UNION ALL
-               -- Anzahl an Zweitstimme nur für Partei
-               SELECT Wahl, Wahlkreis, Stimmkreis, Partei, count(StimmeID) as Anzahl
-               FROM zweitstimmepartei zp
-                        INNER JOIN Stimmkreis s ON s.ID = zp.Stimmkreis
-               GROUP BY Wahl, Wahlkreis, Stimmkreis, Partei) as skzs
-         GROUP BY Wahl, Wahlkreis, Stimmkreis, Partei),
-     Gesamtstimmen_Partei_Stimmkreis AS (
-         SELECT Wahl, Wahlkreis, Stimmkreis, Partei, sum(Anzahl) as Gesamtstimmen
-         FROM (SELECT *
-               FROM Erststimmen_Partei_Stimmkreis
-               UNION ALL
-               SELECT *
-               FROM Zweitstimmen_Partei_Stimmkreis) as "EPS*ZPS*"
-         GROUP BY Wahl, Wahlkreis, Stimmkreis, Partei),
--- Absolute Anzahl an Stimmen in Stimmkreis
-     Gesamtstimmen_Stimmkreis AS (
-         SELECT Wahl, Wahlkreis, Stimmkreis, sum(Gesamtstimmen) as Gesamtstimmen
-         FROM Gesamtstimmen_Partei_Stimmkreis gps
-         GROUP BY Wahl, Wahlkreis, Stimmkreis
-     )
-SELECT Wahl,
-       Wahlkreis,
-       Stimmkreis,
-       Partei,
-       Gesamtstimmen,
-       100 * Gesamtstimmen:: decimal / (SELECT gspAll.Gesamtstimmen
-                                        FROM Gesamtstimmen_Stimmkreis gspAll
-                                        WHERE gspAll.Wahl = gps.Wahl
-                                          AND gps.Stimmkreis = gspAll.Stimmkreis) as prozent,
-       COALESCE((SELECT eps.Anzahl
-        FROM Erststimmen_Partei_Stimmkreis eps
-        WHERE eps.Wahl = gps.Wahl
-          AND eps.Stimmkreis = gps.stimmkreis
-          AND eps.Partei = gps.Partei), 0) as Erststimmen,
-       COALESCE((SELECT zps.anzahl
-        FROM Zweitstimmen_Partei_Stimmkreis zps
-        WHERE zps.Wahl = gps.Wahl
-          AND zps.Stimmkreis = gps.stimmkreis
-          AND zps.Partei = gps.Partei), 0) as Zweitstimmen
-FROM Gesamtstimmen_Partei_Stimmkreis gps
-ORDER BY Wahl, Stimmkreis, Gesamtstimmen DESC;
+SELECT g.wahlID       as Wahl,
+       s.wahlkreis    as Wahlkreis,
+       g.stimmkreisID as stimmkreis,
+       g.parteiID     as partei,
+       gesamt         as Gesamtstimmen,
+       proz           as Prozent,
+       erst           as Erststimmen,
+       zweit          as Zweitstimmen
+FROM Gesamtstimmen_Partei_Stimmkreis() g
+         INNER JOIN stimmkreis s ON s.id = g.stimmkreisID;
 
 
 -- Gesamtstimmen aller Parteien pro Wahlkreis
@@ -351,6 +421,23 @@ FROM Erststimme_Gewinner_Pro_Stimmkreis eg
          INNER JOIN partei p ON p.id = eg.partei
 ORDER BY w.jahr, s.id;
 
+-- die Entwicklung der Stimmen in 2018 im Vergleich zum 2013
+CREATE MATERIALIZED VIEW Entwicklung_Stimmen_2018_zum_2013UI AS
+SELECT g1.jahr,
+       g1.wahlkreis,
+       g1.stimmkreisnr,
+       g1.stimmkreis,
+       g1.parteiname,
+       g1.gesamtstimmen,
+       g1.prozent,
+       g1.prozent - g2.prozent as Diferenz
+FROM Gesamtstimmen_Partei_StimmkreisUI g1
+         LEFT JOIN Gesamtstimmen_Partei_StimmkreisUI g2
+                   ON g1.stimmkreisnr = g2.stimmkreisnr AND g1.parteiname = g2.parteiname
+WHERE g2.jahr = '2013'
+  AND g1.jahr = '2018'
+ORDER BY  stimmkreisnr, g1.prozent DESC;
+
 -- Q4 Stimmkreissieger
 CREATE MATERIALIZED VIEW StimmkreissiegerUI AS
 WITH summary AS (
@@ -434,6 +521,107 @@ FROM Erststimme_Kandidat ek
     INNER JOIN Partei p ON p.ID = ek.partei;
 
 
+-- Q7 Stimmkreisübersicht (Einzelstimmen)
+-- Wahlbeteiligung
+CREATE VIEW Wahlbeteiligung_EinzelstimmenUI AS
+WITH Anzhal_Stimmen_Stimmkreis AS (
+    SELECT e.wahl, e.stimmkreis, count(e.stimmeID) as anzahlstimmen
+    FROM erststimme e
+    GROUP BY e.wahl, e.stimmkreis
+)
+SELECT w.jahr,
+       wk.name                                             as Wahlkreis,
+       s.id                                                as StimmkreisID,
+       s.name                                              as Stimmkreis,
+       100 * es.anzahlstimmen::decimal / s.numberechtigter as wahlbeteiligung
+FROM stimmkreis s
+         INNER JOIN Anzhal_Stimmen_Stimmkreis as es ON es.stimmkreis = s.id
+         INNER JOIN wahl w on w.id = es.wahl
+         INNER JOIN wahlkreis wk on wk.id = s.wahlkreis;
+
+-- Die prozentuale und absolute Anzahl an Stimmen fuer jede Partei.
+CREATE VIEW Gesamtstimmen_Partei_Stimmkreis_EinzelstimmenUI AS
+SELECT w.jahr,
+       wk.name    as Wahlkreis,
+       s.name     as Stimmkreis,
+       s.nummer   as StimmkreisNr,
+       p.parteiname,
+       gps.gesamt as gesamtstimmen,
+       gps.proz   as prozent,
+       gps.erst   as Erststimmen,
+       gps.zweit  as Zweitstimmen
+FROM Gesamtstimmen_Partei_Stimmkreis() gps
+         INNER JOIN stimmkreis s ON gps.stimmkreisID = s.id
+         INNER JOIN wahlkreis wk ON wk.id = s.wahlkreis
+         INNER JOIN wahl w ON gps.wahlID = w.id
+         INNER JOIN partei p ON p.id = gps.parteiID
+ORDER BY jahr, StimmkreisNr, prozent DESC;
+
+-- Gewaehlte Direktkandidaten
+CREATE VIEW Direktkandidaten_EinzelstimmenUI AS
+WITH erststimme_kandidat as
+             (SELECT * FROM erststimme_kandidat() ek),
+     Partei_Wahlkreis AS
+         (SELECT WahlID                                                           as Wahl,
+                 (SELECT s.wahlkreis FROM stimmkreis s WHERE s.id = stimmkreisID) as wahlkreis,
+                 ParteiID                                                         as Partei,
+                 sum(gesamt)                                                      as Gesamtstimmen
+          FROM Gesamtstimmen_Partei_Stimmkreis() gps
+          GROUP BY Wahl, Wahlkreis, Partei),
+     Gesamtstimmen_Wahl as (
+         SELECT wahl, sum(Gesamtstimmen) as Gesamtstimmen
+         FROM Partei_Wahlkreis
+         GROUP BY wahl),
+     Partei_Result AS
+         (SELECT Wahl,
+                 Partei,
+                 sum(Gesamtstimmen)                                       as Gesamtstimmen,
+                 (sum(Gesamtstimmen) / (SELECT gw.Gesamtstimmen
+                                        FROM Gesamtstimmen_Wahl gw
+                                        WHERE gw.Wahl = gps2.Wahl)) * 100 as Prozent
+          FROM Partei_Wahlkreis gps2
+          GROUP BY Wahl, Partei),
+     Kandidat_res AS
+         (SELECT row_number() over (PARTITION BY wahlID, stimmkreisID ORDER BY wahlID, stimmkreisID, anzahl DESC) as rk,
+                 e.*
+          FROM erststimme_kandidat e
+          WHERE e.parteiID IN (SELECT parteiID FROM Partei_Result p WHERE e.wahlID = p.Wahl AND Prozent >= 5))
+SELECT w.jahr,
+       wk.name   as Wahlkreis,
+       s.id      as StimmkreisID,
+       s.name    as Stimmkreis,
+       k.vorname,
+       k.nachname,
+       p.parteiname,
+       kr.anzahl as erststimmen
+FROM Kandidat_res kr
+         INNER JOIN wahl w ON w.id = kr.wahlID
+         INNER JOIN wahlkreis wk ON wk.id = kr.wahlkreisID
+         INNER JOIN stimmkreis s ON s.id = kr.stimmkreisID
+         INNER JOIN kandidat k ON k.id = kr.kandidatID
+         INNER JOIN partei p ON p.id = kr.parteiID
+WHERE kr.rk = 1;
+
+
+-- die Entwicklung der Stimmen in 2018 im Vergleich zum 2013
+CREATE VIEW Entwicklung_Stimmen_2018_zum_2013_EinzelstimmenUI AS
+WITH data AS (SELECT * FROM Gesamtstimmen_Partei_Stimmkreis_EinzelstimmenUI)
+SELECT g1.jahr,
+       g1.wahlkreis,
+       g1.stimmkreisnr,
+       g1.stimmkreis,
+       g1.parteiname,
+       g1.gesamtstimmen,
+       g1.prozent,
+       g1.prozent - g2.prozent as Diferenz
+FROM data g1
+         LEFT JOIN data g2
+                   ON g1.stimmkreisnr = g2.stimmkreisnr AND g1.parteiname = g2.parteiname
+WHERE g2.jahr = '2013'
+  AND g1.jahr = '2018'
+ORDER BY stimmkreisnr, g1.prozent DESC;
+
+
 -- Wahlzettel
 CREATE OR REPLACE FUNCTION erststimmeWahlzettel(jahrParam integer, stimmkreisParam integer)
     returns TABLE
@@ -493,30 +681,6 @@ $func$ LANGUAGE plpgsql;
 
 
 --Aufgabe2 Ausgedachte Analysen
-
--- Durchschnittliche Anzahl an Stimmen pro Vorname. Es enthält nur Vornamen, die mindestens 2 mal vorkommen.
-CREATE MATERIALIZED VIEW Durchschnitt_Stimmen_Pro_VornameUI AS
-WITH Kandidat_Gesamtstimmen AS (
-    SELECT w.jahr,
-           k.vorname,
-           k.nachname,
-           azk.anzahl + COALESCE((SELECT ek.anzahl
-                                  FROM erststimme_kandidat ek
-                                  WHERE ek.wahl = azk.wahl
-                                    AND ek.kandidat = azk.kandidat), 0) as Gesamtstimmen
-    FROM anzhal_zweitstimme_kandidat azk
-             INNER JOIN Kandidat k ON k.ID = azk.kandidat
-             INNER JOIN wahl w ON w.id = azk.wahl)
-SELECT jahr,
-       vorname,
-       count(nachname) as Personenanzahl,
-       sum(Gesamtstimmen),
-       avg(Gesamtstimmen) DurchschnittStimmen
-FROM Kandidat_Gesamtstimmen
-GROUP BY jahr, vorname
-HAVING count(nachname) > 1
-ORDER BY jahr DESC, DurchschnittStimmen DESC;
-
 
 -- 10 beste Stimmkreise für alle Parteien, wo sie größte prozentuale Anzahl an Stimmen haben.
 CREATE MATERIALIZED VIEW Beste_Stimmkreise_ParteiUI AS
