@@ -1,10 +1,10 @@
 import random
+import time
 from locust import HttpUser, task
 
 '''
 Locustfile for Homework #7. This exercises most of the API.
 '''
-
 
 # List of all Stimmkreis numbers in 2018
 STIMMKREISE_2018 = [
@@ -18,26 +18,42 @@ STIMMKREISE_2018 = [
 ]
 
 
+# Average time to wait between requests by a user
+WAIT_TIME_SEC = 1.0
+
+
+def randwait(avg_time: float) -> float:
+    return random.uniform(0.8 * avg_time, 1.2 * avg_time)
+
+
 class APIUser(HttpUser):
     @task(25)
     def stimmkreis(self):
+        time.sleep(randwait(WAIT_TIME_SEC))
         stimmkreis_nr = random.choice(STIMMKREISE_2018)
-        self.client.get('/api/results/2018/stimmkreis/{}'.format(stimmkreis_nr), name='/api/results/2018/stimmkreis')
+        self.client.get(
+            '/api/results/2018/stimmkreis/{}'.format(stimmkreis_nr),
+            name='/api/results/2018/stimmkreis',
+        )
 
     @task(10)
     def sitzverteilung(self):
+        time.sleep(randwait(WAIT_TIME_SEC))
         self.client.get('/api/results/2018/sitzverteilung')
 
     @task(25)
     def mitglieder(self):
+        time.sleep(randwait(WAIT_TIME_SEC))
         self.client.get('/api/results/2018/mitglieder')
 
     @task(10)
     def ueberhangmandate(self):
+        time.sleep(randwait(WAIT_TIME_SEC))
         self.client.get('/api/results/2018/ueberhangmandate')
 
     @task(10)
     def stimmkreis_sieger(self):
+        time.sleep(randwait(WAIT_TIME_SEC))
         self.client.get('/api/results/2018/stimmkreis-sieger')
 
     # TODO: Q6

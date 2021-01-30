@@ -8,13 +8,14 @@ def get_db():
     """Get this request's database connection."""
     # If the request doesn't have a database connection, then create one
     if 'db' not in g:
-        g.db = db.Database(
-            current_app.config['DB_HOST'],
-            current_app.config['DB_USER'],
-            current_app.config['DB_PASSWORD'],
-            current_app.config['DB_NAME'],
-            current_app.config['SECRET_KEY'],
-        )
+        # g.db = db.Database(
+        #     current_app.config['DB_HOST'],
+        #     current_app.config['DB_USER'],
+        #     current_app.config['DB_PASSWORD'],
+        #     current_app.config['DB_NAME'],
+        #     current_app.config['SECRET_KEY'],
+        # )
+        g.db = current_app.config['DB_POOL'].open_conn()
     return g.db
 
 
@@ -23,4 +24,5 @@ def close_db(e=None):
     database = g.pop('db', None)
     # Close database connection
     if database is not None:
-        database.close()
+        # database.close()
+        current_app.config['DB_POOL'].close_conn(database)

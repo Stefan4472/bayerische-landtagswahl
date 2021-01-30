@@ -1,6 +1,7 @@
 import pathlib
 import json
 from flask import Flask, send_from_directory
+from landtagswahldb.database import PooledDatabaseConnection
 from . import db_context
 from . import api
 
@@ -30,6 +31,13 @@ def create_app():
         DB_USER=db_config['user'],
         DB_PASSWORD=db_config['password'],
         DB_NAME=db_config['database_name'],
+        DB_POOL=PooledDatabaseConnection(
+            db_config['host'],
+            db_config['user'],
+            db_config['password'],
+            db_config['database_name'],
+            'dev',
+        ),
         SECRET_KEY='dev',
     )
 

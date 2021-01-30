@@ -113,6 +113,15 @@ cd frontend
 npm start
 ```
 
+# Voting
+
+To simulate submitting a vote, use the voterkey-generation tool (`database/voter_setup.py`). This tool generates random voter keys and registers them with the server. These keys can then be copy-and-pasted into the "Voter Key" box on the `Stimmabgabe` page.
+
+Example usage: Generate 10 voter keys for the 2018 election in Stimmkreis #105:
+```
+python voter_setup.py 2018 105 -n 10
+```
+
 # Load Testing
 
 We originally wrote our own program to perform load testing (in the `benchmarker` directory). However, we later learned about [Locust](https://locust.io/), a Python load-testing framework, and have adopted it for use. You will find our load-test definitions in the `loadtesting` directory. Please follow the instructions in the `Readme` there.

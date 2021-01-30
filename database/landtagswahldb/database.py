@@ -1,4 +1,5 @@
 import psycopg2
+import psycopg2.pool
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import typing
 import hashlib
@@ -14,18 +15,22 @@ class Database:
             password: str,
             database_name: str,
             secret_key: str,
+            conn=None,
     ):
         """Postgres database utility class.
 
         Note: automatically hashes voter keys, using the provided secret_key
         for "encryption".
         """
-        self._conn = psycopg2.connect(
-            host=host,
-            user=user,
-            password=password,
-            database=database_name,
-        )
+        if conn:
+            self._conn = conn
+        else:
+            self._conn = psycopg2.connect(
+                host=host,
+                user=user,
+                password=password,
+                database=database_name,
+            )
         self._secret_key = secret_key
         self._cursor = self._conn.cursor()
 
@@ -669,3 +674,63 @@ class Database:
                     for rec in result]
         else:
             raise ValueError()
+
+
+# class SimpleDatabaseConnection:
+#     def __init__(
+#             self,
+#             host: str,
+#             user: str,
+#             password: str,
+#             database_name: str,
+#             secret_key: str,
+#     ):
+#         self._conn = psycopg2.connect(
+#             host=host,
+#             user=user,
+#             password=password,
+#             database=database_name,
+#         )
+#
+#     def open_conn(self):
+#         return Database(self._conn)
+#
+#     def close_conn(self, db: Database):
+#         db.close()
+
+
+class PooledDatabaseConnection:
+    def __init__(
+            self,
+            host: str,
+            user: str,
+            password: str,
+            database_name: str,
+            secret_key: str,
+    ):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.db_name = database_name
+        self.secret_key = secret_key
+        self._pool = psycopg2.pool.SimpleConnectionPool(
+            1,
+            100,
+            host=host,
+            user=user,
+            password=password,
+            database=database_name,
+        )
+
+    def open_conn(self) -> Database:
+        return Database(
+            self.host,
+            self.user,
+            self.password,
+            self.db_name,
+            self.secret_key,
+            conn=self._pool.getconn(),
+        )
+
+    def close_conn(self, db: Database):
+        self._pool.putconn(db._conn)
