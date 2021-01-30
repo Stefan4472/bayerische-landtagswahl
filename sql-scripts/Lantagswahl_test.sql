@@ -44,6 +44,9 @@ SELECT * FROM Gesamtstimmen_Partei_Stimmkreis_EinzelstimmenUI;
 --Gewaehlten Direktkandidaten
 SELECT * FROM direktkandidaten_einzelstimmenui;
 
+-- die Entwicklung der Stimmen in 2018 im Vergleich zum 2013
+SELECT * FROM Entwicklung_Stimmen_2018_zum_2013_EinzelstimmenUI;
+
 
 -- Wahlzettel
 SELECT * FROM erststimmewahlzettel(2018, 95);

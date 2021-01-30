@@ -24,6 +24,7 @@ DROP MATERIALIZED VIEW IF EXISTS KnappsteVerliererUI CASCADE;
 DROP VIEW IF EXISTS Wahlbeteiligung_EinzelstimmenUI CASCADE;
 DROP VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis_EinzelstimmenUI CASCADE;
 DROP VIEW IF EXISTS Direktkandidaten_EinzelstimmenUI CASCADE;
+DROP VIEW IF EXISTS Entwicklung_Stimmen_2018_zum_2013_EinzelstimmenUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Beste_Stimmkreise_ParteiUI CASCADE;
 
 -- Anzahl Erststimme für jeden Kandidat
@@ -600,6 +601,25 @@ FROM Kandidat_res kr
          INNER JOIN kandidat k ON k.id = kr.kandidatID
          INNER JOIN partei p ON p.id = kr.parteiID
 WHERE kr.rk = 1;
+
+
+-- die Entwicklung der Stimmen in 2018 im Vergleich zum 2013
+CREATE VIEW Entwicklung_Stimmen_2018_zum_2013_EinzelstimmenUI AS
+WITH data AS (SELECT * FROM Gesamtstimmen_Partei_Stimmkreis_EinzelstimmenUI)
+SELECT g1.jahr,
+       g1.wahlkreis,
+       g1.stimmkreisnr,
+       g1.stimmkreis,
+       g1.parteiname,
+       g1.gesamtstimmen,
+       g1.prozent,
+       g1.prozent - g2.prozent as Diferenz
+FROM data g1
+         LEFT JOIN data g2
+                   ON g1.stimmkreisnr = g2.stimmkreisnr AND g1.parteiname = g2.parteiname
+WHERE g2.jahr = '2013'
+  AND g1.jahr = '2018'
+ORDER BY stimmkreisnr, g1.prozent DESC;
 
 
 -- Wahlzettel
