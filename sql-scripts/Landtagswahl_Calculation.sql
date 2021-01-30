@@ -14,6 +14,7 @@ DROP MATERIALIZED VIEW IF EXISTS Mitglieder_des_LandtagesUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS WahlbeteiligungUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_StimmkreisUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS DirektkandidatenUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Entwicklung_Stimmen_2018_zum_2013UI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS StimmkreissiegerUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS UeberhangmandateUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS ErststimmenKandidatStimmkreisUI CASCADE;
@@ -418,6 +419,23 @@ FROM Erststimme_Gewinner_Pro_Stimmkreis eg
          INNER JOIN kandidat k ON k.id = eg.kandidat
          INNER JOIN partei p ON p.id = eg.partei
 ORDER BY w.jahr, s.id;
+
+-- die Entwicklung der Stimmen in 2018 im Vergleich zum 2013
+CREATE MATERIALIZED VIEW Entwicklung_Stimmen_2018_zum_2013UI AS
+SELECT g1.jahr,
+       g1.wahlkreis,
+       g1.stimmkreisnr,
+       g1.stimmkreis,
+       g1.parteiname,
+       g1.gesamtstimmen,
+       g1.prozent,
+       g1.prozent - g2.prozent as Diferenz
+FROM Gesamtstimmen_Partei_StimmkreisUI g1
+         LEFT JOIN Gesamtstimmen_Partei_StimmkreisUI g2
+                   ON g1.stimmkreisnr = g2.stimmkreisnr AND g1.parteiname = g2.parteiname
+WHERE g2.jahr = '2013'
+  AND g1.jahr = '2018'
+ORDER BY  stimmkreisnr, g1.prozent DESC;
 
 -- Q4 Stimmkreissieger
 CREATE MATERIALIZED VIEW StimmkreissiegerUI AS

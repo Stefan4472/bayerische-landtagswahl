@@ -16,6 +16,9 @@ SELECT * FROM DirektkandidatenUI;
 -- die prozentuale und absolute Anzahl an Stimmen fuer jede Partei
 SELECT * FROM Gesamtstimmen_Partei_StimmkreisUI;
 
+-- die Entwicklung der Stimmen in 2018 im Vergleich zum 2013
+SELECT * FROM Entwicklung_Stimmen_2018_zum_2013UI;
+
 
 -- Q4 Stimmkreissieger
 SELECT * FROM StimmkreisSiegerUi;
