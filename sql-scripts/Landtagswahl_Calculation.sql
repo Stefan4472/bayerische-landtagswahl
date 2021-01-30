@@ -1,7 +1,8 @@
 -- @Vlad: I kept getting errors that these views already existed. Let me know if this is incorrect
+DROP FUNCTION IF EXISTS Erststimme_Kandidat CASCADE;
+DROP FUNCTION IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Anzhal_Zweitstimme_Kandidat CASCADE;
-DROP FUNCTION IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
@@ -23,12 +24,40 @@ DROP MATERIALIZED VIEW IF EXISTS Wahlbeteiligung_EinzelstimmenUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Beste_Stimmkreise_ParteiUI CASCADE;
 
 -- Anzahl Erststimme für jeden Kandidat
+CREATE OR REPLACE FUNCTION Erststimme_Kandidat()
+    returns TABLE
+            (
+                wahlID       integer,
+                wahlkreisID  integer,
+                stimmkreisID integer,
+                kandidatID   integer,
+                parteiID     integer,
+                anzahl       numeric
+            )
+as
+$func$
+BEGIN
+    RETURN QUERY
+        WITH erststimme_kand AS
+                 (SELECT Wahl, Stimmkreis, Kandidat, count(StimmeID)::numeric as Anzahl
+                  FROM erststimme s
+                  WHERE IsValid = 1
+                  GROUP BY Wahl, Kandidat, Stimmkreis)
+        SELECT es.wahl, k.wahlkreis, es.stimmkreis, es.kandidat, k.partei, es.Anzahl
+        FROM erststimme_kand as es
+                 INNER JOIN Kandidat k ON k.ID = es.Kandidat;
+END
+$func$ LANGUAGE plpgsql;
+
+
 CREATE MATERIALIZED VIEW Erststimme_Kandidat AS
-SELECT Wahl, Wahlkreis, Stimmkreis, Partei, Kandidat, count(StimmeID) as Anzahl
-FROM erststimme s
-         INNER JOIN Kandidat k ON k.ID = s.Kandidat
-WHERE IsValid = 1
-GROUP BY Wahl, Wahlkreis, Kandidat, Partei, Stimmkreis;
+SELECT wahlID       as Wahl,
+       wahlkreisID  as wahlkreis,
+       stimmkreisID as stimmkreis,
+       parteiID     as partei,
+       kandidatID   as kandidat,
+       anzahl
+FROM Erststimme_Kandidat();
 
 
 -- Anzahl an Zweitstimme für jeden Kandidat in Wahlkreis
