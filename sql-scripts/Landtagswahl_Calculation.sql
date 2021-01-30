@@ -542,7 +542,7 @@ ORDER BY jahr, StimmkreisNr, prozent DESC;
 CREATE VIEW Direktkandidaten_EinzelstimmenUI AS
 WITH erststimme_kandidat as
              (SELECT * FROM erststimme_kandidat() ek),
-     Gesamtstimmen_Partei_Wahlkreis AS
+     Partei_Wahlkreis AS
          (SELECT WahlID                                                           as Wahl,
                  (SELECT s.wahlkreis FROM stimmkreis s WHERE s.id = stimmkreisID) as wahlkreis,
                  ParteiID                                                         as Partei,
@@ -551,9 +551,8 @@ WITH erststimme_kandidat as
           GROUP BY Wahl, Wahlkreis, Partei),
      Gesamtstimmen_Wahl as (
          SELECT wahl, sum(Gesamtstimmen) as Gesamtstimmen
-         FROM Gesamtstimmen_Partei_Wahlkreis
-         GROUP BY wahl
-     ),
+         FROM Partei_Wahlkreis
+         GROUP BY wahl),
      Partei_Result AS
          (SELECT Wahl,
                  Partei,
@@ -561,7 +560,7 @@ WITH erststimme_kandidat as
                  (sum(Gesamtstimmen) / (SELECT gw.Gesamtstimmen
                                         FROM Gesamtstimmen_Wahl gw
                                         WHERE gw.Wahl = gps2.Wahl)) * 100 as Prozent
-          FROM Gesamtstimmen_Partei_Wahlkreis gps2
+          FROM Partei_Wahlkreis gps2
           GROUP BY Wahl, Partei),
      Kandidat_res AS
          (SELECT row_number() over (PARTITION BY wahlID, stimmkreisID ORDER BY wahlID, stimmkreisID, anzahl DESC) as rk,
