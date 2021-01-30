@@ -20,7 +20,7 @@ DROP MATERIALIZED VIEW IF EXISTS ErststimmenKandidatStimmkreisUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Knappste_Sieger_Verlierer CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteSiegerUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteVerliererUI CASCADE;
-DROP MATERIALIZED VIEW IF EXISTS Wahlbeteiligung_EinzelstimmenUI CASCADE;
+DROP VIEW IF EXISTS Wahlbeteiligung_EinzelstimmenUI CASCADE;
 DROP VIEW IF EXISTS Direktkandidaten_EinzelstimmenUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Beste_Stimmkreise_ParteiUI CASCADE;
 
@@ -503,7 +503,7 @@ FROM Erststimme_Kandidat ek
 
 -- Q7 Stimmkreisübersicht (Einzelstimmen)
 -- Wahlbeteiligung
-CREATE MATERIALIZED VIEW Wahlbeteiligung_EinzelstimmenUI AS
+CREATE VIEW Wahlbeteiligung_EinzelstimmenUI AS
 WITH Anzhal_Stimmen_Stimmkreis AS (
     SELECT e.wahl, e.stimmkreis, count(e.stimmeID) as anzahlstimmen
     FROM erststimme e
