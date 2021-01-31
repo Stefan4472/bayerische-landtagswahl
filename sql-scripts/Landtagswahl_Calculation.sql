@@ -195,17 +195,16 @@ GROUP BY Wahl, Partei;
 
 -- Erststimme Gewinner für jeden Stimmkreis (Kandidat mit meisten Anzahl an Erststimmen, dessen Partei mindestens 5 % der Gesamtstimmen in Bayern erreicht hat)
 CREATE MATERIALIZED VIEW Erststimme_Gewinner_Pro_Stimmkreis AS
-SELECT kse.Wahl, kse.Wahlkreis, kse.Stimmkreis, kse.Kandidat, kse.Partei, kse.Anzahl as Erststimme
-FROM Erststimme_Kandidat kse
-         INNER JOIN (SELECT k.Wahl, k.Stimmkreis, MAX(Anzahl) as Anzahl
-                     FROM Erststimme_Kandidat k
-                              INNER JOIN Gesamtstimmen_Partei_Wahl gpw ON gpw.Partei = k.Partei
-                          -- mindestens 5 % der Gesamtstimmen in Bayern
-                     WHERE gpw.Prozent >= 5
-                     GROUP BY k.Wahl, k.Stimmkreis) kse_grouped
-                    ON kse.Wahl = kse_grouped.Wahl AND kse.Anzahl = kse_grouped.Anzahl AND
-                       kse.Stimmkreis = kse_grouped.Stimmkreis
-ORDER BY kse.Wahl, kse.Stimmkreis;
+WITH Kandidat_Mit_Partei_Ueber_5Proz AS
+         (SELECT kse.*, rank() over (PARTITION BY Wahl, stimmkreis ORDER BY anzahl DESC)
+          FROM Erststimme_Kandidat kse
+          WHERE (SELECT gwp.Prozent
+                 FROM Gesamtstimmen_Partei_Wahl gwp
+                 WHERE gwp.wahl = kse.wahl
+                   AND gwp.partei = kse.partei) >= 5)
+SELECT Wahl, wahlkreis, stimmkreis, kandidat, partei, anzahl as Erststimme
+FROM Kandidat_Mit_Partei_Ueber_5Proz k
+WHERE k.rank = 1;
 
 
 -- Anzahl an Stimmen und Sitze der Partei (über 5 % in Bayern) pro Wahlkreis
