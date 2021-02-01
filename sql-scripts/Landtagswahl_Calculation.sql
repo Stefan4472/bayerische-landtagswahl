@@ -1,6 +1,7 @@
 -- @Vlad: I kept getting errors that these views already existed. Let me know if this is incorrect
 DROP FUNCTION IF EXISTS Erststimme_Kandidat CASCADE;
 DROP FUNCTION IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
+DROP FUNCTION IF EXISTS Sitze_Partei_Wahlkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Anzhal_Zweitstimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
@@ -286,25 +287,19 @@ $func$ LANGUAGE plpgsql;
 
 
 -- Anzahl an Stimmen und Sitze der Partei (über 5 % in Bayern) pro Wahlkreis
-CREATE MATERIALIZED VIEW Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis AS
-WITH Gesamtstimmen_Partei_5Prozent AS
--- Parteien die mehr als 5 % der Gesamtstimmen in Bayern haben
-		(SELECT t1.Wahl, t1.Wahlkreis, t1.Partei, t1.Gesamtstimmen as Stimmenzahl FROM Gesamtstimmen_Partei_Wahlkreis t1
-		-- mindestens 5 % der Gesamtstimmen in Bayern
-		INNER JOIN (SELECT * FROM Gesamtstimmen_Partei_Wahl WHERE Prozent >= 5) partei_mit_5proz
-		ON partei_mit_5proz.Partei = t1.Partei AND partei_mit_5proz.Wahl = t1.Wahl),
--- Absolute Stimmenzahl einer Partei wird durch die Gesamtzahl der Stimmen aller Parteien dividiert
-	Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis AS
-		(SELECT Wahl, Wahlkreis, Partei, Stimmenzahl, Stimmenzahl / (SELECT sum(Stimmenzahl) FROM Gesamtstimmen_Partei_5Prozent t2
-		WHERE t2.Wahlkreis = t3.Wahlkreis AND t2.Wahl = t3.Wahl GROUP BY Wahl, Wahlkreis) as Prozent_In_Wahlkreis
-		FROM Gesamtstimmen_Partei_5Prozent t3),
+CREATE MATERIALIZED VIEW Gesamtstimmen_und_Sitze_Partei AS
+WITH Gesamtstimmen_und_Sitze_Partei AS
 -- Berechnen Anzhal an Sitze pro Partei in Wahlkreis
-	Gesamtstimmen_und_Sitze_Partei AS
-		(SELECT agp.Wahl, agp.Wahlkreis, agp.Partei, agp.Stimmenzahl, agp.Prozent_In_Wahlkreis * 100 as Prozent, floor(agp.Prozent_In_Wahlkreis * (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE agp.Wahlkreis = w.ID)) as Sitze
-		FROM Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis agp),
+         (SELECT wahlID      as wahl,
+                 wahlkreisID as wahlkreis,
+                 parteiID    as partei,
+                 stim        as Stimmenzahl,
+                 proz        as prozent,
+                 anz_sitze   as sitze
+          FROM Sitze_Partei_Wahlkreis()),
 -- Berechnen Anzahl Direktmandate und Listmandate
-	Mandate_Partei AS
-		(SELECT agz.Wahl, agz.Wahlkreis, agz.Partei, agz.Stimmenzahl, agz.Prozent, agz.Sitze,
+     Mandate_Partei AS
+         (SELECT agz.*,
 				COALESCE(Erststimme_Gewinner_Pro_Partei.Anzahl_Gewinner, 0) as Direktmandate,
 				agz.Sitze - COALESCE(Erststimme_Gewinner_Pro_Partei.Anzahl_Gewinner, 0) as Listmandate
 		FROM Gesamtstimmen_und_Sitze_Partei agz
@@ -341,7 +336,7 @@ WITH Listkandidaten AS (
           FROM Anzhal_Zweitstimme_Kandidat azk
           WHERE azk.Kandidat NOT IN (SELECT Kandidat FROM Erststimme_Gewinner_Pro_Stimmkreis)) AS azk
     WHERE Nr <= (SELECT Listmandate
-                 FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
+                 FROM Gesamtstimmen_und_Sitze_Partei gsp
                  WHERE gsp.Wahl = azk.Wahl
                    AND gsp.Wahlkreis = azk.Wahlkreis
                    AND gsp.Partei = azk.Partei)
@@ -540,7 +535,7 @@ WHERE s.rk = 1;
 -- Q5 Ueberhangmandate
 CREATE MATERIALIZED VIEW UeberhangmandateUI AS
 SELECT w.id as WahlID, w.jahr, wk.id as wahlkreisID, wk.name as wahlkreis, p.parteiname, Ueberhangsmandate
-FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
+FROM Gesamtstimmen_und_Sitze_Partei gsp
          INNER JOIN wahl w ON w.id = gsp.wahl
          INNER JOIN wahlkreis wk ON wk.id = gsp.wahlkreis
          INNER JOIN partei p ON p.id = gsp.partei;
