@@ -212,12 +212,13 @@ WHERE k.rank = 1;
 CREATE OR REPLACE FUNCTION Sitze_Partei_Wahlkreis()
     returns TABLE
             (
-                wahlID      integer,
-                wahlkreisID integer,
-                parteiID    integer,
-                stim        numeric,
-                proz        decimal,
-                anz_sitze   numeric
+                wahlID       integer,
+                wahlkreisID  integer,
+                parteiID     integer,
+                stim         numeric,
+                proz         decimal,
+                anz_sitze    numeric,
+                direct_sitze numeric
             )
 as
 $func$
@@ -267,47 +268,51 @@ BEGIN
                         (SELECT rsw.rest_sitze
                          FROM rest_sitze_wahlkreis rsw
                          WHERE gasp.wahl = rsw.wahl
-                           AND gasp.wahlkreis = rsw.wahlkreis))
-        SELECT gasp.wahl,
-               gasp.wahlkreis,
-               gasp.partei,
-               gasp.Stimmenzahl,
-               gasp.Prozent,
-               gasp.Sitze + (case
-                                 when partei in (SELECT pms.partei
-                                                 FROM Partei_mitrest_sitze pms
-                                                 WHERE pms.wahl = gasp.wahl
-                                                   AND pms.wahlkreis = gasp.wahlkreis)
-                                     then 1
-                                 else 0 end) as anzahlsitze
-        FROM Ganzzahligen_anteil_sitze_partei gasp
-        ORDER BY gasp.wahl DESC, gasp.wahlkreis, gasp.Prozent DESC;
+                           AND gasp.wahlkreis = rsw.wahlkreis)),
+             Anzahl_Gewinner_Partei AS
+                 (SELECT Wahl, Wahlkreis, Partei, count(Kandidat) as Anzahl_Gewinner
+                  FROM Erststimme_Gewinner_Pro_Stimmkreis
+                  GROUP BY Wahl, Wahlkreis, Partei),
+             Partei_Sitze AS
+                 (SELECT gasp.wahl,
+                         gasp.wahlkreis,
+                         gasp.partei,
+                         gasp.Stimmenzahl,
+                         gasp.Prozent,
+                         gasp.Sitze + (case
+                                           when partei in (SELECT pms.partei
+                                                           FROM Partei_mitrest_sitze pms
+                                                           WHERE pms.wahl = gasp.wahl
+                                                             AND pms.wahlkreis = gasp.wahlkreis)
+                                               then 1
+                                           else 0 end) as anzahlsitze
+                  FROM Ganzzahligen_anteil_sitze_partei gasp)
+        SELECT ps.*, COALESCE(agp.Anzahl_Gewinner, 0)::numeric as Direktmandate
+        FROM Partei_Sitze ps
+                 LEFT JOIN Anzahl_Gewinner_Partei agp
+                           ON agp.Wahl = ps.Wahl
+                               AND agp.Wahlkreis = ps.Wahlkreis
+                               AND agp.Partei = ps.Partei;
 END
 $func$ LANGUAGE plpgsql;
 
+--CREATE TABLE IF NOT EXISTS sitze_wahlkreise AS
+--	SELECT w.id as wahl, wk.id as wahlkreis, wk.mandate
+--	FROM wahlkreis wk, wahl w;
 
 -- Anzahl an Stimmen und Sitze der Partei (über 5 % in Bayern) pro Wahlkreis
 CREATE MATERIALIZED VIEW Gesamtstimmen_und_Sitze_Partei AS
-WITH Gesamtstimmen_und_Sitze_Partei AS
--- Berechnen Anzhal an Sitze pro Partei in Wahlkreis
+WITH Mandate_Partei AS
+-- Berechnen Anzahl Direktmandate und Listmandate
          (SELECT wahlID      as wahl,
                  wahlkreisID as wahlkreis,
                  parteiID    as partei,
                  stim        as Stimmenzahl,
                  proz        as prozent,
-                 anz_sitze   as sitze
+                 anz_sitze   as sitze,
+                 direct_sitze as Direktmandate,
+                 anz_sitze - direct_sitze as Listmandate
           FROM Sitze_Partei_Wahlkreis()),
--- Berechnen Anzahl Direktmandate und Listmandate
-     Mandate_Partei AS
-         (SELECT agz.*,
-				COALESCE(Erststimme_Gewinner_Pro_Partei.Anzahl_Gewinner, 0) as Direktmandate,
-				agz.Sitze - COALESCE(Erststimme_Gewinner_Pro_Partei.Anzahl_Gewinner, 0) as Listmandate
-		FROM Gesamtstimmen_und_Sitze_Partei agz
-		LEFT JOIN (SELECT Wahl, Wahlkreis, Partei, count(Kandidat) as Anzahl_Gewinner FROM Erststimme_Gewinner_Pro_Stimmkreis
-					GROUP BY Wahl, Wahlkreis, Partei) Erststimme_Gewinner_Pro_Partei
-		ON Erststimme_Gewinner_Pro_Partei.Wahl = agz.Wahl
-			AND Erststimme_Gewinner_Pro_Partei.Wahlkreis = agz.Wahlkreis
-			AND Erststimme_Gewinner_Pro_Partei.Partei = agz.Partei),
 -- Berechnen Überhangmandaten Ratio für alle Wahlkreise.
 	Ueberhangsmandate_Verhaeltnis AS
 		(SELECT Wahl, Wahlkreis, MAX(Direktmandate / Sitze) as Ueberhangsmandate_Verhaeltnis FROM Mandate_Partei mp
