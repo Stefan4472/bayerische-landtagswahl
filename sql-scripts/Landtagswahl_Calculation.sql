@@ -2,6 +2,7 @@
 DROP FUNCTION IF EXISTS Erststimme_Kandidat CASCADE;
 DROP FUNCTION IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP FUNCTION IF EXISTS Sitze_Partei_Wahlkreis CASCADE;
+DROP TABLE IF EXISTS Sitze_Wahlkreise CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Anzhal_Zweitstimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
@@ -208,6 +209,10 @@ FROM Kandidat_Mit_Partei_Ueber_5Proz k
 WHERE k.rank = 1;
 
 
+CREATE TABLE IF NOT EXISTS sitze_wahlkreise AS
+SELECT w.id as wahl, wk.id as wahlkreis, wk.mandate
+FROM wahlkreis wk, wahl w;
+
 -- sitze pro partei in wahlkreis
 CREATE OR REPLACE FUNCTION Sitze_Partei_Wahlkreis()
     returns TABLE
@@ -246,18 +251,22 @@ BEGIN
                  (SELECT pgpw.*,
                          floor(pgpw.Prozent::decimal / 100 *
                                (SELECT w.mandate
-                                FROM Wahlkreis w
-                                WHERE pgpw.Wahlkreis = w.ID))                       as Sitze,
+                                FROM sitze_wahlkreise w
+                                WHERE pgpw.Wahlkreis = w.wahlkreis
+                                  AND pgpw.Wahl = w.wahl)) as Sitze,
                          rank() over (PARTITION BY wahl, wahlkreis ORDER BY (pgpw.Prozent::decimal / 100 *
                                                                              (SELECT w.mandate
-                                                                              FROM Wahlkreis w
-                                                                              WHERE pgpw.Wahlkreis = w.ID)) %
+                                                                              FROM sitze_wahlkreise w
+                                                                              WHERE pgpw.Wahlkreis = w.wahlkreis
+                                                                                AND pgpw.Wahl = w.wahl)) %
                                                                             1 DESC) as Nachkommazahlen_rank
                   FROM Prozent_Gesamtstimmen_Partei_Wahlkreis pgpw),
              rest_sitze_wahlkreis as
                  (SELECT wahl,
                          wahlkreis,
-                         (SELECT w.mandate FROM Wahlkreis w WHERE gasp.Wahlkreis = w.ID) -
+                         (SELECT w.mandate
+                          FROM sitze_wahlkreise w
+                          WHERE gasp.Wahlkreis = w.wahlkreis AND gasp.Wahl = w.wahl) -
                          sum(Sitze) as rest_sitze
                   FROM Ganzzahligen_anteil_sitze_partei gasp
                   GROUP BY wahl, wahlkreis),
@@ -296,9 +305,31 @@ BEGIN
 END
 $func$ LANGUAGE plpgsql;
 
---CREATE TABLE IF NOT EXISTS sitze_wahlkreise AS
---	SELECT w.id as wahl, wk.id as wahlkreis, wk.mandate
---	FROM wahlkreis wk, wahl w;
+-- berechnen Überhang- und ggf. Ausgleichsmandat
+do
+$$
+    declare
+        counter integer := 0;
+    begin
+        PERFORM spw.wahlkreisID
+                FROM Sitze_Partei_Wahlkreis() spw
+                WHERE spw.anz_sitze < spw.direct_sitze;
+
+        while FOUND
+            loop
+                UPDATE sitze_wahlkreise
+                SET mandate = mandate + 1
+                WHERE wahlkreis IN (SELECT distinct spw.wahlkreisID
+                                    FROM Sitze_Partei_Wahlkreis() spw
+                                    WHERE spw.anz_sitze < spw.direct_sitze
+                                      and spw.wahlID = wahl);
+
+                PERFORM spw.wahlkreisID
+                FROM Sitze_Partei_Wahlkreis() spw
+                WHERE spw.anz_sitze < spw.direct_sitze;
+            end loop;
+    end
+$$;
 
 -- Anzahl an Stimmen und Sitze der Partei (über 5 % in Bayern) pro Wahlkreis
 CREATE MATERIALIZED VIEW Gesamtstimmen_und_Sitze_Partei AS
