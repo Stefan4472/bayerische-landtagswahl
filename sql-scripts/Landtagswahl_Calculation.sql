@@ -333,33 +333,15 @@ $$;
 
 -- Anzahl an Stimmen und Sitze der Partei (über 5 % in Bayern) pro Wahlkreis
 CREATE MATERIALIZED VIEW Gesamtstimmen_und_Sitze_Partei AS
-WITH Mandate_Partei AS
--- Berechnen Anzahl Direktmandate und Listmandate
-         (SELECT wahlID      as wahl,
-                 wahlkreisID as wahlkreis,
-                 parteiID    as partei,
-                 stim        as Stimmenzahl,
-                 proz        as prozent,
-                 anz_sitze   as sitze,
-                 direct_sitze as Direktmandate,
-                 anz_sitze - direct_sitze as Listmandate
-          FROM Sitze_Partei_Wahlkreis()),
--- Berechnen Überhangmandaten Ratio für alle Wahlkreise.
-	Ueberhangsmandate_Verhaeltnis AS
-		(SELECT Wahl, Wahlkreis, MAX(Direktmandate / Sitze) as Ueberhangsmandate_Verhaeltnis FROM Mandate_Partei mp
-		WHERE Sitze > 0
-		GROUP BY Wahl, Wahlkreis
-		HAVING MAX(Direktmandate / Sitze) > 1)
--- Berechnen Sitze für alle Parteien wenn es zu Überhangmandaten kommt.
-SELECT distinct mp.Wahl, mp.Wahlkreis, mp.Partei, mp.Stimmenzahl, mp.Prozent, mp.Sitze,
-		ROUND(mp.Sitze * COALESCE(uv.Ueberhangsmandate_Verhaeltnis, 1)) as Ueberhangsmandate_Sitze,
-        ROUND(mp.Sitze * COALESCE(uv.Ueberhangsmandate_Verhaeltnis, 1))  - mp.Sitze as Ueberhangsmandate,
-        mp.Direktmandate,
-		ROUND(mp.Sitze * COALESCE(uv.Ueberhangsmandate_Verhaeltnis, 1)) - mp.Direktmandate as Listmandate
-FROM Mandate_Partei mp
-LEFT JOIN Ueberhangsmandate_Verhaeltnis uv
-ON mp.Wahl = uv.Wahl AND mp.Wahlkreis = uv.Wahlkreis
-ORDER BY Wahl, Wahlkreis, Prozent DESC;
+SELECT wahlID                   as wahl,
+       wahlkreisID              as wahlkreis,
+       parteiID                 as partei,
+       stim                     as Stimmenzahl,
+       proz                     as prozent,
+       anz_sitze                as sitze,
+       direct_sitze             as Direktmandate,
+       anz_sitze - direct_sitze as Listmandate
+FROM Sitze_Partei_Wahlkreis();
 
 
 -- Alle Gewählte.
@@ -570,7 +552,7 @@ WHERE s.rk = 1;
 
 -- Q5 Ueberhangmandate
 CREATE MATERIALIZED VIEW UeberhangmandateUI AS
-SELECT w.id as WahlID, w.jahr, wk.id as wahlkreisID, wk.name as wahlkreis, p.parteiname, Ueberhangsmandate
+SELECT w.id as WahlID, w.jahr, wk.id as wahlkreisID, wk.name as wahlkreis, p.parteiname, 0 as Ueberhangsmandate
 FROM Gesamtstimmen_und_Sitze_Partei gsp
          INNER JOIN wahl w ON w.id = gsp.wahl
          INNER JOIN wahlkreis wk ON wk.id = gsp.wahlkreis
