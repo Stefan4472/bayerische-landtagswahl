@@ -208,64 +208,81 @@ WHERE k.rank = 1;
 
 
 -- sitze pro partei in wahlkreis
-WITH Gesamtstimmen_Partei_5Prozent AS
+CREATE OR REPLACE FUNCTION Sitze_Partei_Wahlkreis()
+    returns TABLE
+            (
+                wahlID      integer,
+                wahlkreisID integer,
+                parteiID    integer,
+                stim        numeric,
+                proz        decimal,
+                anz_sitze   numeric
+            )
+as
+$func$
+BEGIN
+    RETURN QUERY
+        WITH Gesamtstimmen_Partei_5Prozent AS
 -- Parteien die mehr als 5 % der Gesamtstimmen in Bayern haben
-         (SELECT Wahl, Wahlkreis, Partei, Gesamtstimmen as Stimmenzahl
-          FROM Gesamtstimmen_Partei_Wahlkreis gpw
-          WHERE gpw.partei IN
-                (SELECT gpw2.partei
-                 FROM Gesamtstimmen_Partei_Wahl gpw2
-                 WHERE gpw.wahl = gpw2.wahl
-                   AND gpw2.prozent >= 5)),
+                 (SELECT Wahl, Wahlkreis, Partei, Gesamtstimmen as Stimmenzahl
+                  FROM Gesamtstimmen_Partei_Wahlkreis gpw
+                  WHERE gpw.partei IN
+                        (SELECT gpw2.partei
+                         FROM Gesamtstimmen_Partei_Wahl gpw2
+                         WHERE gpw.wahl = gpw2.wahl
+                           AND gpw2.prozent >= 5)),
 -- Absolute Stimmenzahl einer Partei wird durch die Gesamtzahl der Stimmen aller Parteien dividiert
-     Prozent_Gesamtstimmen_Partei_Wahlkreis as
-         (SELECT gpp.*,
-                 100 * Stimmenzahl / (SELECT sum(Stimmenzahl)
-                                      FROM Gesamtstimmen_Partei_5Prozent gpp2
-                                      WHERE gpp.Wahlkreis = gpp2.Wahlkreis
-                                        AND gpp.Wahl = gpp2.Wahl
-                                      GROUP BY Wahl, Wahlkreis) as Prozent
-          FROM Gesamtstimmen_Partei_5Prozent gpp),
-     Ganzzahligen_anteil_sitze_partei AS
-         (SELECT pgpw.*,
-                 floor(pgpw.Prozent::decimal / 100 *
-                       (SELECT w.Direktmandate + w.Listenmandate
-                        FROM Wahlkreis w
-                        WHERE pgpw.Wahlkreis = w.ID)) as Sitze,
-                 rank() over (PARTITION BY wahl, wahlkreis ORDER BY (pgpw.Prozent::decimal / 100 *
-                  (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE pgpw.Wahlkreis = w.ID)) % 1 DESC) as Nachkommazahlen_rank
-          FROM Prozent_Gesamtstimmen_Partei_Wahlkreis pgpw),
-     rest_sitze_wahlkreis as
-         (SELECT wahl,
-                 wahlkreis,
-                 (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE gasp.Wahlkreis = w.ID) -
-                 sum(Sitze) as rest_sitze
-          FROM Ganzzahligen_anteil_sitze_partei gasp
-          GROUP BY wahl, wahlkreis),
-     Partei_mitrest_sitze AS
-         (SELECT gasp.wahl, gasp.wahlkreis, gasp.partei
-          FROM Ganzzahligen_anteil_sitze_partei gasp
-          WHERE gasp.Nachkommazahlen_rank <=
-                (SELECT rsw.rest_sitze
-                 FROM rest_sitze_wahlkreis rsw
-                 WHERE gasp.wahl = rsw.wahl
-                   AND gasp.wahlkreis = rsw.wahlkreis))
-SELECT wahl,
-       wahlkreis,
-       partei,
-       Stimmenzahl,
-       Prozent,
-       Sitze + (case
-                    when partei in (SELECT pms.partei
-                                    FROM Partei_mitrest_sitze pms
-                                    WHERE pms.wahl = gasp.wahl
-                                      AND pms.wahlkreis = gasp.wahlkreis)
-                        then 1
-                    else 0 end) as anzahlsitze
-FROM Ganzzahligen_anteil_sitze_partei gasp
-ORDER BY wahl DESC, wahlkreis, Prozent DESC;
-
-
+             Prozent_Gesamtstimmen_Partei_Wahlkreis as
+                 (SELECT gpp.*,
+                         100 * Stimmenzahl / (SELECT sum(Stimmenzahl)
+                                              FROM Gesamtstimmen_Partei_5Prozent gpp2
+                                              WHERE gpp.Wahlkreis = gpp2.Wahlkreis
+                                                AND gpp.Wahl = gpp2.Wahl
+                                              GROUP BY Wahl, Wahlkreis) as Prozent
+                  FROM Gesamtstimmen_Partei_5Prozent gpp),
+             Ganzzahligen_anteil_sitze_partei AS
+                 (SELECT pgpw.*,
+                         floor(pgpw.Prozent::decimal / 100 *
+                               (SELECT w.Direktmandate + w.Listenmandate
+                                FROM Wahlkreis w
+                                WHERE pgpw.Wahlkreis = w.ID))                       as Sitze,
+                         rank() over (PARTITION BY wahl, wahlkreis ORDER BY (pgpw.Prozent::decimal / 100 *
+                                                                             (SELECT w.Direktmandate + w.Listenmandate
+                                                                              FROM Wahlkreis w
+                                                                              WHERE pgpw.Wahlkreis = w.ID)) %
+                                                                            1 DESC) as Nachkommazahlen_rank
+                  FROM Prozent_Gesamtstimmen_Partei_Wahlkreis pgpw),
+             rest_sitze_wahlkreis as
+                 (SELECT wahl,
+                         wahlkreis,
+                         (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE gasp.Wahlkreis = w.ID) -
+                         sum(Sitze) as rest_sitze
+                  FROM Ganzzahligen_anteil_sitze_partei gasp
+                  GROUP BY wahl, wahlkreis),
+             Partei_mitrest_sitze AS
+                 (SELECT gasp.wahl, gasp.wahlkreis, gasp.partei
+                  FROM Ganzzahligen_anteil_sitze_partei gasp
+                  WHERE gasp.Nachkommazahlen_rank <=
+                        (SELECT rsw.rest_sitze
+                         FROM rest_sitze_wahlkreis rsw
+                         WHERE gasp.wahl = rsw.wahl
+                           AND gasp.wahlkreis = rsw.wahlkreis))
+        SELECT gasp.wahl,
+               gasp.wahlkreis,
+               gasp.partei,
+               gasp.Stimmenzahl,
+               gasp.Prozent,
+               gasp.Sitze + (case
+                                 when partei in (SELECT pms.partei
+                                                 FROM Partei_mitrest_sitze pms
+                                                 WHERE pms.wahl = gasp.wahl
+                                                   AND pms.wahlkreis = gasp.wahlkreis)
+                                     then 1
+                                 else 0 end) as anzahlsitze
+        FROM Ganzzahligen_anteil_sitze_partei gasp
+        ORDER BY gasp.wahl DESC, gasp.wahlkreis, gasp.Prozent DESC;
+END
+$func$ LANGUAGE plpgsql;
 
 
 -- Anzahl an Stimmen und Sitze der Partei (über 5 % in Bayern) pro Wahlkreis
