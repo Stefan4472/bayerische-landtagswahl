@@ -207,6 +207,67 @@ FROM Kandidat_Mit_Partei_Ueber_5Proz k
 WHERE k.rank = 1;
 
 
+-- sitze pro partei in wahlkreis
+WITH Gesamtstimmen_Partei_5Prozent AS
+-- Parteien die mehr als 5 % der Gesamtstimmen in Bayern haben
+         (SELECT Wahl, Wahlkreis, Partei, Gesamtstimmen as Stimmenzahl
+          FROM Gesamtstimmen_Partei_Wahlkreis gpw
+          WHERE gpw.partei IN
+                (SELECT gpw2.partei
+                 FROM Gesamtstimmen_Partei_Wahl gpw2
+                 WHERE gpw.wahl = gpw2.wahl
+                   AND gpw2.prozent >= 5)),
+-- Absolute Stimmenzahl einer Partei wird durch die Gesamtzahl der Stimmen aller Parteien dividiert
+     Prozent_Gesamtstimmen_Partei_Wahlkreis as
+         (SELECT gpp.*,
+                 100 * Stimmenzahl / (SELECT sum(Stimmenzahl)
+                                      FROM Gesamtstimmen_Partei_5Prozent gpp2
+                                      WHERE gpp.Wahlkreis = gpp2.Wahlkreis
+                                        AND gpp.Wahl = gpp2.Wahl
+                                      GROUP BY Wahl, Wahlkreis) as Prozent
+          FROM Gesamtstimmen_Partei_5Prozent gpp),
+     Ganzzahligen_anteil_sitze_partei AS
+         (SELECT pgpw.*,
+                 floor(pgpw.Prozent::decimal / 100 *
+                       (SELECT w.Direktmandate + w.Listenmandate
+                        FROM Wahlkreis w
+                        WHERE pgpw.Wahlkreis = w.ID)) as Sitze,
+                 rank() over (PARTITION BY wahl, wahlkreis ORDER BY (pgpw.Prozent::decimal / 100 *
+                  (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE pgpw.Wahlkreis = w.ID)) % 1 DESC) as Nachkommazahlen_rank
+          FROM Prozent_Gesamtstimmen_Partei_Wahlkreis pgpw),
+     rest_sitze_wahlkreis as
+         (SELECT wahl,
+                 wahlkreis,
+                 (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE gasp.Wahlkreis = w.ID) -
+                 sum(Sitze) as rest_sitze
+          FROM Ganzzahligen_anteil_sitze_partei gasp
+          GROUP BY wahl, wahlkreis),
+     Partei_mitrest_sitze AS
+         (SELECT gasp.wahl, gasp.wahlkreis, gasp.partei
+          FROM Ganzzahligen_anteil_sitze_partei gasp
+          WHERE gasp.Nachkommazahlen_rank <=
+                (SELECT rsw.rest_sitze
+                 FROM rest_sitze_wahlkreis rsw
+                 WHERE gasp.wahl = rsw.wahl
+                   AND gasp.wahlkreis = rsw.wahlkreis))
+SELECT wahl,
+       wahlkreis,
+       partei,
+       Stimmenzahl,
+       Prozent,
+       Sitze + (case
+                    when partei in (SELECT pms.partei
+                                    FROM Partei_mitrest_sitze pms
+                                    WHERE pms.wahl = gasp.wahl
+                                      AND pms.wahlkreis = gasp.wahlkreis)
+                        then 1
+                    else 0 end) as anzahlsitze
+FROM Ganzzahligen_anteil_sitze_partei gasp
+ORDER BY wahl DESC, wahlkreis, Prozent DESC;
+
+
+
+
 -- Anzahl an Stimmen und Sitze der Partei (über 5 % in Bayern) pro Wahlkreis
 CREATE MATERIALIZED VIEW Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis AS
 WITH Gesamtstimmen_Partei_5Prozent AS
@@ -222,7 +283,7 @@ WITH Gesamtstimmen_Partei_5Prozent AS
 		FROM Gesamtstimmen_Partei_5Prozent t3),
 -- Berechnen Anzhal an Sitze pro Partei in Wahlkreis
 	Gesamtstimmen_und_Sitze_Partei AS
-		(SELECT agp.Wahl, agp.Wahlkreis, agp.Partei, agp.Stimmenzahl, agp.Prozent_In_Wahlkreis * 100 as Prozent, ROUND(agp.Prozent_In_Wahlkreis * (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE agp.Wahlkreis = w.ID)) as Sitze
+		(SELECT agp.Wahl, agp.Wahlkreis, agp.Partei, agp.Stimmenzahl, agp.Prozent_In_Wahlkreis * 100 as Prozent, floor(agp.Prozent_In_Wahlkreis * (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE agp.Wahlkreis = w.ID)) as Sitze
 		FROM Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis agp),
 -- Berechnen Anzahl Direktmandate und Listmandate
 	Mandate_Partei AS
@@ -238,6 +299,7 @@ WITH Gesamtstimmen_Partei_5Prozent AS
 -- Berechnen Überhangmandaten Ratio für alle Wahlkreise.
 	Ueberhangsmandate_Verhaeltnis AS
 		(SELECT Wahl, Wahlkreis, MAX(Direktmandate / Sitze) as Ueberhangsmandate_Verhaeltnis FROM Mandate_Partei mp
+		WHERE Sitze > 0
 		GROUP BY Wahl, Wahlkreis
 		HAVING MAX(Direktmandate / Sitze) > 1)
 -- Berechnen Sitze für alle Parteien wenn es zu Überhangmandaten kommt.
