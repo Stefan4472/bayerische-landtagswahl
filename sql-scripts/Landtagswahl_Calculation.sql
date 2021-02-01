@@ -244,11 +244,11 @@ BEGIN
              Ganzzahligen_anteil_sitze_partei AS
                  (SELECT pgpw.*,
                          floor(pgpw.Prozent::decimal / 100 *
-                               (SELECT w.Direktmandate + w.Listenmandate
+                               (SELECT w.mandate
                                 FROM Wahlkreis w
                                 WHERE pgpw.Wahlkreis = w.ID))                       as Sitze,
                          rank() over (PARTITION BY wahl, wahlkreis ORDER BY (pgpw.Prozent::decimal / 100 *
-                                                                             (SELECT w.Direktmandate + w.Listenmandate
+                                                                             (SELECT w.mandate
                                                                               FROM Wahlkreis w
                                                                               WHERE pgpw.Wahlkreis = w.ID)) %
                                                                             1 DESC) as Nachkommazahlen_rank
@@ -256,7 +256,7 @@ BEGIN
              rest_sitze_wahlkreis as
                  (SELECT wahl,
                          wahlkreis,
-                         (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE gasp.Wahlkreis = w.ID) -
+                         (SELECT w.mandate FROM Wahlkreis w WHERE gasp.Wahlkreis = w.ID) -
                          sum(Sitze) as rest_sitze
                   FROM Ganzzahligen_anteil_sitze_partei gasp
                   GROUP BY wahl, wahlkreis),

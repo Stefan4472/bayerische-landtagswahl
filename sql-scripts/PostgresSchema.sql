@@ -7,8 +7,7 @@ CREATE TABLE Wahl (
 CREATE TABLE Wahlkreis (
 	ID int NOT NULL UNIQUE,
     Name varchar(255) NOT NULL UNIQUE,
-    Direktmandate int NOT NULL,
-    Listenmandate int NOT NULL,
+    Mandate int NOT NULL,
     PRIMARY KEY (ID)
 );
 
@@ -119,11 +118,11 @@ CREATE TABLE VoteRecords (
     FOREIGN KEY (Wahl) REFERENCES Wahl(ID) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-INSERT INTO Wahlkreis(ID, Name, Direktmandate, Listenmandate) VALUES
-    (1, 'Oberbayern', 31, 30),
-    (2, 'Niederbayern', 9, 9),
-    (3, 'Oberpfalz', 8, 8),
-    (4, 'Oberfranken', 8, 8),
-    (5, 'Mittelfranken', 12, 12),
-    (6, 'Unterfranken', 10, 9),
-    (7, 'Schwaben', 13, 13);
+INSERT INTO Wahlkreis(ID, Name, Mandate) VALUES
+    (1, 'Oberbayern', 61),
+    (2, 'Niederbayern', 18),
+    (3, 'Oberpfalz', 16),
+    (4, 'Oberfranken', 16),
+    (5, 'Mittelfranken', 24),
+    (6, 'Unterfranken', 19),
+    (7, 'Schwaben', 26);
