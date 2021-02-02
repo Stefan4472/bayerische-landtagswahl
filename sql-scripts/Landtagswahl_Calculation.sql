@@ -1,11 +1,14 @@
--- @Vlad: I kept getting errors that these views already existed. Let me know if this is incorrect
 DROP FUNCTION IF EXISTS Erststimme_Kandidat CASCADE;
 DROP FUNCTION IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
+DROP FUNCTION IF EXISTS Sitze_Partei_Wahlkreis CASCADE;
+DROP FUNCTION IF EXISTS erststimmeWahlzettel CASCADE;
+DROP FUNCTION IF EXISTS zweitstimmeWahlzettel CASCADE;
+DROP TABLE IF EXISTS Sitze_Wahlkreise CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Kandidat CASCADE;
-DROP MATERIALIZED VIEW IF EXISTS Anzhal_Zweitstimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahlkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
-DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Sitze_Partei_Vor_Ausgleich CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Gewinner_Pro_Stimmkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Mitglieder_des_Landtages CASCADE;
@@ -62,16 +65,6 @@ SELECT wahlID       as Wahl,
        kandidatID   as kandidat,
        anzahl
 FROM Erststimme_Kandidat();
-
-
--- Anzahl an Zweitstimme für jeden Kandidat in Wahlkreis
-CREATE MATERIALIZED VIEW Anzhal_Zweitstimme_Kandidat AS
-SELECT Wahl, Wahlkreis, Partei, Kandidat, count(StimmeID) as Anzahl
-FROM zweitstimme s
-         INNER JOIN Kandidat k ON k.ID = s.Kandidat
-WHERE isValid = 1
-GROUP BY Wahl, Wahlkreis, Partei, Kandidat
-ORDER BY Wahl, Wahlkreis, Partei, Anzahl DESC;
 
 
 -- Die prozentuale und absolute Anzahl an Stimmen fuer jede Partei.
@@ -179,13 +172,13 @@ GROUP BY Wahl, Wahlkreis, Partei;
 
 -- Die Zahl der Gesamtstimmen der Partei mit Prozent in Bayern
 CREATE MATERIALIZED VIEW Gesamtstimmen_Partei_Wahl AS
-with Gesamtstimmen_Wahl as (
-    SELECT wahl, sum(Gesamtstimmen) as Gesamtstimmen FROM Gesamtstimmen_Partei_Wahlkreis
-    GROUP BY wahl
-)
+with Gesamtstimmen_Wahl as
+         (SELECT wahl, sum(Gesamtstimmen) as Gesamtstimmen
+          FROM Gesamtstimmen_Partei_Wahlkreis
+          GROUP BY wahl)
 SELECT Wahl,
        Partei,
-       sum(Gesamtstimmen) as Gesamtstimmen,
+       sum(Gesamtstimmen)                                       as Gesamtstimmen,
        (sum(Gesamtstimmen) / (SELECT gw.Gesamtstimmen
                               FROM Gesamtstimmen_Wahl gw
                               WHERE gw.Wahl = gps2.Wahl)) * 100 as Prozent
@@ -195,141 +188,256 @@ GROUP BY Wahl, Partei;
 
 -- Erststimme Gewinner für jeden Stimmkreis (Kandidat mit meisten Anzahl an Erststimmen, dessen Partei mindestens 5 % der Gesamtstimmen in Bayern erreicht hat)
 CREATE MATERIALIZED VIEW Erststimme_Gewinner_Pro_Stimmkreis AS
-SELECT kse.Wahl, kse.Wahlkreis, kse.Stimmkreis, kse.Kandidat, kse.Partei, kse.Anzahl as Erststimme
-FROM Erststimme_Kandidat kse
-         INNER JOIN (SELECT k.Wahl, k.Stimmkreis, MAX(Anzahl) as Anzahl
-                     FROM Erststimme_Kandidat k
-                              INNER JOIN Gesamtstimmen_Partei_Wahl gpw ON gpw.Partei = k.Partei
-                          -- mindestens 5 % der Gesamtstimmen in Bayern
-                     WHERE gpw.Prozent >= 5
-                     GROUP BY k.Wahl, k.Stimmkreis) kse_grouped
-                    ON kse.Wahl = kse_grouped.Wahl AND kse.Anzahl = kse_grouped.Anzahl AND
-                       kse.Stimmkreis = kse_grouped.Stimmkreis
-ORDER BY kse.Wahl, kse.Stimmkreis;
+WITH Kandidat_Mit_Partei_Ueber_5Proz AS
+         (SELECT kse.*, rank() over (PARTITION BY Wahl, stimmkreis ORDER BY anzahl DESC)
+          FROM Erststimme_Kandidat kse
+          WHERE (SELECT gwp.Prozent
+                 FROM Gesamtstimmen_Partei_Wahl gwp
+                 WHERE gwp.wahl = kse.wahl
+                   AND gwp.partei = kse.partei) >= 5)
+SELECT Wahl, wahlkreis, stimmkreis, kandidat, partei, anzahl as Erststimme
+FROM Kandidat_Mit_Partei_Ueber_5Proz k
+WHERE k.rank = 1;
 
+
+CREATE TABLE IF NOT EXISTS sitze_wahlkreise AS
+SELECT w.id as wahl, wk.id as wahlkreis, wk.mandate
+FROM wahlkreis wk,
+     wahl w;
+
+-- sitze pro partei in wahlkreis
+CREATE OR REPLACE FUNCTION Sitze_Partei_Wahlkreis()
+    returns TABLE
+            (
+                wahlID       integer,
+                wahlkreisID  integer,
+                parteiID     integer,
+                stim         numeric,
+                proz         decimal,
+                anz_sitze    numeric,
+                direct_sitze numeric
+            )
+as
+$func$
+BEGIN
+    RETURN QUERY
+        WITH Gesamtstimmen_Partei_5Prozent AS
+-- Parteien die mehr als 5 % der Gesamtstimmen in Bayern haben
+                 (SELECT Wahl, Wahlkreis, Partei, Gesamtstimmen as Stimmenzahl
+                  FROM Gesamtstimmen_Partei_Wahlkreis gpw
+                  WHERE gpw.partei IN
+                        (SELECT gpw2.partei
+                         FROM Gesamtstimmen_Partei_Wahl gpw2
+                         WHERE gpw.wahl = gpw2.wahl
+                           AND gpw2.prozent >= 5)),
+-- Absolute Stimmenzahl einer Partei wird durch die Gesamtzahl der Stimmen aller Parteien dividiert
+             Prozent_Gesamtstimmen_Partei_Wahlkreis as
+                 (SELECT gpp.*,
+                         100 * Stimmenzahl / (SELECT sum(Stimmenzahl)
+                                              FROM Gesamtstimmen_Partei_5Prozent gpp2
+                                              WHERE gpp.Wahlkreis = gpp2.Wahlkreis
+                                                AND gpp.Wahl = gpp2.Wahl
+                                              GROUP BY Wahl, Wahlkreis) as Prozent
+                  FROM Gesamtstimmen_Partei_5Prozent gpp),
+             Ganzzahligen_anteil_sitze_partei AS
+                 (SELECT pgpw.*,
+                         floor(pgpw.Prozent::decimal / 100 *
+                               (SELECT w.mandate
+                                FROM sitze_wahlkreise w
+                                WHERE pgpw.Wahlkreis = w.wahlkreis
+                                  AND pgpw.Wahl = w.wahl))                          as Sitze,
+                         rank() over (PARTITION BY wahl, wahlkreis ORDER BY (pgpw.Prozent::decimal / 100 *
+                                                                             (SELECT w.mandate
+                                                                              FROM sitze_wahlkreise w
+                                                                              WHERE pgpw.Wahlkreis = w.wahlkreis
+                                                                                AND pgpw.Wahl = w.wahl)) %
+                                                                            1 DESC) as Nachkommazahlen_rank
+                  FROM Prozent_Gesamtstimmen_Partei_Wahlkreis pgpw),
+             rest_sitze_wahlkreis as
+                 (SELECT wahl,
+                         wahlkreis,
+                         (SELECT w.mandate
+                          FROM sitze_wahlkreise w
+                          WHERE gasp.Wahlkreis = w.wahlkreis
+                            AND gasp.Wahl = w.wahl) -
+                         sum(Sitze) as rest_sitze
+                  FROM Ganzzahligen_anteil_sitze_partei gasp
+                  GROUP BY wahl, wahlkreis),
+             Partei_mitrest_sitze AS
+                 (SELECT gasp.wahl, gasp.wahlkreis, gasp.partei
+                  FROM Ganzzahligen_anteil_sitze_partei gasp
+                  WHERE gasp.Nachkommazahlen_rank <=
+                        (SELECT rsw.rest_sitze
+                         FROM rest_sitze_wahlkreis rsw
+                         WHERE gasp.wahl = rsw.wahl
+                           AND gasp.wahlkreis = rsw.wahlkreis)),
+             Anzahl_Gewinner_Partei AS
+                 (SELECT Wahl, Wahlkreis, Partei, count(Kandidat) as Anzahl_Gewinner
+                  FROM Erststimme_Gewinner_Pro_Stimmkreis
+                  GROUP BY Wahl, Wahlkreis, Partei),
+             Partei_Sitze AS
+                 (SELECT gasp.wahl,
+                         gasp.wahlkreis,
+                         gasp.partei,
+                         gasp.Stimmenzahl,
+                         gasp.Prozent,
+                         gasp.Sitze + (case
+                                           when partei in (SELECT pms.partei
+                                                           FROM Partei_mitrest_sitze pms
+                                                           WHERE pms.wahl = gasp.wahl
+                                                             AND pms.wahlkreis = gasp.wahlkreis)
+                                               then 1
+                                           else 0 end) as anzahlsitze
+                  FROM Ganzzahligen_anteil_sitze_partei gasp)
+        SELECT ps.*, COALESCE(agp.Anzahl_Gewinner, 0)::numeric as Direktmandate
+        FROM Partei_Sitze ps
+                 LEFT JOIN Anzahl_Gewinner_Partei agp
+                           ON agp.Wahl = ps.Wahl
+                               AND agp.Wahlkreis = ps.Wahlkreis
+                               AND agp.Partei = ps.Partei;
+END
+$func$ LANGUAGE plpgsql;
+
+
+-- Anzahl an Stimmen und Sitze der Partei vor der Berechnung der Überhang- und ggf. Ausgleichsmandaten
+CREATE MATERIALIZED VIEW Sitze_Partei_Vor_Ausgleich AS
+SELECT wahlID                                                                            as wahl,
+       wahlkreisID                                                                       as wahlkreis,
+       parteiID                                                                          as partei,
+       anz_sitze                                                                         as sitze,
+       direct_sitze                                                                      as Direktmandate,
+       case when (direct_sitze - anz_sitze > 0) then direct_sitze - anz_sitze else 0 end as Ueberhangmandate
+FROM Sitze_Partei_Wahlkreis();
+
+
+-- berechnen Überhang- und ggf. Ausgleichsmandat
+do
+$$
+    begin
+        PERFORM spw.wahlkreisID
+        FROM Sitze_Partei_Wahlkreis() spw
+        WHERE spw.anz_sitze < spw.direct_sitze;
+
+        while FOUND
+            loop
+                UPDATE sitze_wahlkreise
+                SET mandate = mandate + 1
+                WHERE wahlkreis IN (SELECT distinct spw.wahlkreisID
+                                    FROM Sitze_Partei_Wahlkreis() spw
+                                    WHERE spw.anz_sitze < spw.direct_sitze
+                                      and spw.wahlID = wahl);
+
+                PERFORM spw.wahlkreisID
+                FROM Sitze_Partei_Wahlkreis() spw
+                WHERE spw.anz_sitze < spw.direct_sitze;
+            end loop;
+    end
+$$;
 
 -- Anzahl an Stimmen und Sitze der Partei (über 5 % in Bayern) pro Wahlkreis
-CREATE MATERIALIZED VIEW Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis AS
-WITH Gesamtstimmen_Partei_5Prozent AS
--- Parteien die mehr als 5 % der Gesamtstimmen in Bayern haben
-		(SELECT t1.Wahl, t1.Wahlkreis, t1.Partei, t1.Gesamtstimmen as Stimmenzahl FROM Gesamtstimmen_Partei_Wahlkreis t1
-		-- mindestens 5 % der Gesamtstimmen in Bayern
-		INNER JOIN (SELECT * FROM Gesamtstimmen_Partei_Wahl WHERE Prozent >= 5) partei_mit_5proz
-		ON partei_mit_5proz.Partei = t1.Partei AND partei_mit_5proz.Wahl = t1.Wahl),
--- Absolute Stimmenzahl einer Partei wird durch die Gesamtzahl der Stimmen aller Parteien dividiert
-	Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis AS
-		(SELECT Wahl, Wahlkreis, Partei, Stimmenzahl, Stimmenzahl / (SELECT sum(Stimmenzahl) FROM Gesamtstimmen_Partei_5Prozent t2
-		WHERE t2.Wahlkreis = t3.Wahlkreis AND t2.Wahl = t3.Wahl GROUP BY Wahl, Wahlkreis) as Prozent_In_Wahlkreis
-		FROM Gesamtstimmen_Partei_5Prozent t3),
--- Berechnen Anzhal an Sitze pro Partei in Wahlkreis
-	Gesamtstimmen_und_Sitze_Partei AS
-		(SELECT agp.Wahl, agp.Wahlkreis, agp.Partei, agp.Stimmenzahl, agp.Prozent_In_Wahlkreis * 100 as Prozent, ROUND(agp.Prozent_In_Wahlkreis * (SELECT w.Direktmandate + w.Listenmandate FROM Wahlkreis w WHERE agp.Wahlkreis = w.ID)) as Sitze
-		FROM Anzhal_Gesamtstimmen_Partei_5Prozent_Wahlkreis agp),
--- Berechnen Anzahl Direktmandate und Listmandate
-	Mandate_Partei AS
-		(SELECT agz.Wahl, agz.Wahlkreis, agz.Partei, agz.Stimmenzahl, agz.Prozent, agz.Sitze,
-				COALESCE(Erststimme_Gewinner_Pro_Partei.Anzahl_Gewinner, 0) as Direktmandate,
-				agz.Sitze - COALESCE(Erststimme_Gewinner_Pro_Partei.Anzahl_Gewinner, 0) as Listmandate
-		FROM Gesamtstimmen_und_Sitze_Partei agz
-		LEFT JOIN (SELECT Wahl, Wahlkreis, Partei, count(Kandidat) as Anzahl_Gewinner FROM Erststimme_Gewinner_Pro_Stimmkreis
-					GROUP BY Wahl, Wahlkreis, Partei) Erststimme_Gewinner_Pro_Partei
-		ON Erststimme_Gewinner_Pro_Partei.Wahl = agz.Wahl
-			AND Erststimme_Gewinner_Pro_Partei.Wahlkreis = agz.Wahlkreis
-			AND Erststimme_Gewinner_Pro_Partei.Partei = agz.Partei),
--- Berechnen Überhangmandaten Ratio für alle Wahlkreise.
-	Ueberhangsmandate_Verhaeltnis AS
-		(SELECT Wahl, Wahlkreis, MAX(Direktmandate / Sitze) as Ueberhangsmandate_Verhaeltnis FROM Mandate_Partei mp
-		GROUP BY Wahl, Wahlkreis
-		HAVING MAX(Direktmandate / Sitze) > 1)
--- Berechnen Sitze für alle Parteien wenn es zu Überhangmandaten kommt.
-SELECT distinct mp.Wahl, mp.Wahlkreis, mp.Partei, mp.Stimmenzahl, mp.Prozent, mp.Sitze,
-		ROUND(mp.Sitze * COALESCE(uv.Ueberhangsmandate_Verhaeltnis, 1)) as Ueberhangsmandate_Sitze,
-        ROUND(mp.Sitze * COALESCE(uv.Ueberhangsmandate_Verhaeltnis, 1))  - mp.Sitze as Ueberhangsmandate,
-        mp.Direktmandate,
-		ROUND(mp.Sitze * COALESCE(uv.Ueberhangsmandate_Verhaeltnis, 1)) - mp.Direktmandate as Listmandate
-FROM Mandate_Partei mp
-LEFT JOIN Ueberhangsmandate_Verhaeltnis uv
-ON mp.Wahl = uv.Wahl AND mp.Wahlkreis = uv.Wahlkreis
-ORDER BY Wahl, Wahlkreis, Prozent DESC;
+CREATE MATERIALIZED VIEW Gesamtstimmen_und_Sitze_Partei AS
+SELECT spw.wahlID                                         as wahl,
+       spw.wahlkreisID                                    as wahlkreis,
+       spw.parteiID                                       as partei,
+       spw.stim                                           as Stimmenzahl,
+       spw.proz                                           as prozent,
+       spw.anz_sitze                                      as sitze,
+       spw.direct_sitze                                   as Direktmandate,
+       spw.anz_sitze - direct_sitze                       as Listmandate,
+       spva.Ueberhangmandate                              as Ueberhangmandate,
+       spw.anz_sitze - spva.sitze - spva.Ueberhangmandate as Ausgleichsmandate
+FROM Sitze_Partei_Wahlkreis() spw
+         INNER JOIN Sitze_Partei_Vor_Ausgleich spva
+                    ON spw.wahlID = spva.wahl AND spw.wahlkreisID = spva.wahlkreis AND spw.parteiID = spva.partei;
 
 
--- Alle Gewählte.
+-- Mitglieder_des_Landtages.
 CREATE MATERIALIZED VIEW Mitglieder_des_Landtages AS
--- Alle gewählte Listkandidaten.
-WITH Listkandidaten AS (
-    SELECT *
-    FROM (SELECT *,
-                 RANK() OVER (PARTITION BY Wahl, Wahlkreis, Partei ORDER BY Wahl, Wahlkreis, Partei, Anzahl DESC) AS Nr
-          FROM Anzhal_Zweitstimme_Kandidat azk
-          WHERE azk.Kandidat NOT IN (SELECT Kandidat FROM Erststimme_Gewinner_Pro_Stimmkreis)) AS azk
-    WHERE Nr <= (SELECT Listmandate
-                 FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
-                 WHERE gsp.Wahl = azk.Wahl
-                   AND gsp.Wahlkreis = azk.Wahlkreis
-                   AND gsp.Partei = azk.Partei)
-)
+-- Anzahl an Zweitstimme für jeden Kandidat in Wahlkreis
+WITH Zweitstimme_Kandidat AS
+         (SELECT Wahl, Kandidat, count(StimmeID) as Anzahl
+          FROM zweitstimme s
+          WHERE isValid = 1
+          GROUP BY Wahl, Kandidat),
+     List_kand AS
+         (SELECT zw.*,
+                 k.wahlkreis,
+                 k.partei,
+                 RANK()
+                 OVER (PARTITION BY zw.Wahl, k.Wahlkreis, k.Partei ORDER BY zw.Wahl, k.Wahlkreis, k.Partei, COALESCE(zw.Anzahl, 0) + COALESCE(ek.anzahl, 0) DESC) AS Nr
+          FROM Zweitstimme_Kandidat zw
+                   LEFT JOIN Erststimme_Kandidat ek ON ek.wahl = zw.wahl AND ek.kandidat = zw.kandidat
+                   INNER JOIN kandidat k ON zw.kandidat = k.id
+          WHERE zw.kandidat NOT IN (SELECT e.Kandidat FROM Erststimme_Gewinner_Pro_Stimmkreis e WHERE e.wahl = zw.wahl))
+-- Alle Gewaelte.
 SELECT eg.Kandidat, eg.Partei, eg.Wahlkreis, eg.Stimmkreis, eg.Wahl, true as Direktkandidat
 FROM Erststimme_Gewinner_Pro_Stimmkreis eg
 UNION
 SELECT lk.Kandidat, lk.Partei, lk.Wahlkreis, null, lk.Wahl, false as Direktkandidat
-FROM Listkandidaten lk;
+FROM List_kand lk
+WHERE Nr <= (SELECT Listmandate
+             FROM Gesamtstimmen_und_Sitze_Partei gsp
+             WHERE gsp.Wahl = lk.Wahl
+               AND gsp.Wahlkreis = lk.Wahlkreis
+               AND gsp.Partei = lk.Partei);
 
 
 -- Q6 Knappste Sieger
 CREATE MATERIALIZED VIEW Knappste_Sieger_Verlierer AS
-WITH erststimmen_stimmkreis AS (
-    SELECT *,
-           ROW_NUMBER() OVER (PARTITION BY wahl, wahlkreis, stimmkreis
-               ORDER BY es2.anzahl DESC)                  as rk,
-           es2.Anzahl - (SELECT MAX(anzahl)
-                         FROM erststimme_kandidat es
-                         WHERE es.Wahl = es2.Wahl
-                           AND es.Stimmkreis = es2.Stimmkreis
-                         GROUP BY es.Wahl, es.Stimmkreis) as rueckstand
-    FROM erststimme_kandidat es2
-    ORDER BY wahl, wahlkreis, stimmkreis, anzahl DESC),
-     gewinner_vorsprung as (SELECT wahl,
-                                   wahlkreis,
-                                   stimmkreis,
-                                   partei,
-                                   kandidat,
-                                   anzahl,
-                                   erst.anzahl - (SELECT e.anzahl
-                                                  FROM erststimmen_stimmkreis e
-                                                  WHERE e.rk = 2
-                                                    AND e.wahl = erst.wahl
-                                                    AND e.stimmkreis = erst.stimmkreis) as vorsprung
-                            FROM erststimmen_stimmkreis erst
-                            WHERE erst.rk = 1),
-     sieger_partei AS (
-         SELECT *,
-                ROW_NUMBER() OVER (PARTITION BY wahl, partei
-                    ORDER BY vorsprung) as rk
-         FROM gewinner_vorsprung gv
-         ORDER BY wahl, partei, rk),
-     zehn_knappsten_sieger_partei as (
-         SELECT *
-         FROM sieger_partei
-         WHERE rk <= 10),
-     partein_ohne_gewinner AS (
-         SELECT wahlid, partei
-         FROM parteizuwahl pzw
-         WHERE partei not in (
-             SELECT distinct partei
-             FROM sieger_partei sp
-             WHERE pzw.wahlid = sp.wahl)),
-     am_knappsten_verloren AS (
-         SELECT es.Wahl,
-                Wahlkreis,
-                Stimmkreis,
-                es.Partei,
-                Kandidat,
-                Anzahl as Erststimmen,
-                es.rueckstand,
-                ROW_NUMBER() OVER (PARTITION BY es.wahl, es.partei
-                    ORDER BY rueckstand DESC) as rk
-         FROM erststimmen_stimmkreis es
-                  INNER JOIN partein_ohne_gewinner pog ON es.Wahl = pog.wahlid AND pog.partei = es.Partei)
+WITH erststimmen_stimmkreis AS
+         (SELECT *,
+                 ROW_NUMBER() OVER (PARTITION BY wahl, wahlkreis, stimmkreis
+                     ORDER BY es2.anzahl DESC)                  as rk,
+                 es2.Anzahl - (SELECT MAX(anzahl)
+                               FROM erststimme_kandidat es
+                               WHERE es.Wahl = es2.Wahl
+                                 AND es.Stimmkreis = es2.Stimmkreis
+                               GROUP BY es.Wahl, es.Stimmkreis) as rueckstand
+          FROM erststimme_kandidat es2
+          ORDER BY wahl, wahlkreis, stimmkreis, anzahl DESC),
+     gewinner_vorsprung as
+         (SELECT wahl,
+                 wahlkreis,
+                 stimmkreis,
+                 partei,
+                 kandidat,
+                 anzahl,
+                 erst.anzahl - (SELECT e.anzahl
+                                FROM erststimmen_stimmkreis e
+                                WHERE e.rk = 2
+                                  AND e.wahl = erst.wahl
+                                  AND e.stimmkreis = erst.stimmkreis) as vorsprung
+          FROM erststimmen_stimmkreis erst
+          WHERE erst.rk = 1),
+     sieger_partei AS
+         (SELECT *,
+                 ROW_NUMBER() OVER (PARTITION BY wahl, partei
+                     ORDER BY vorsprung) as rk
+          FROM gewinner_vorsprung gv
+          ORDER BY wahl, partei, rk),
+     zehn_knappsten_sieger_partei as
+         (SELECT *
+          FROM sieger_partei
+          WHERE rk <= 10),
+     partein_ohne_gewinner AS
+         (SELECT wahlid, partei
+          FROM parteizuwahl pzw
+          WHERE partei not in (
+              SELECT distinct partei
+              FROM sieger_partei sp
+              WHERE pzw.wahlid = sp.wahl)),
+     am_knappsten_verloren AS
+         (SELECT es.Wahl,
+                 Wahlkreis,
+                 Stimmkreis,
+                 es.Partei,
+                 Kandidat,
+                 Anzahl                        as Erststimmen,
+                 es.rueckstand,
+                 ROW_NUMBER() OVER (PARTITION BY es.wahl, es.partei
+                     ORDER BY rueckstand DESC) as rk
+          FROM erststimmen_stimmkreis es
+                   INNER JOIN partein_ohne_gewinner pog ON es.Wahl = pog.wahlid AND pog.partei = es.Partei)
 SELECT *
 FROM am_knappsten_verloren akv
 WHERE rk <= 10
@@ -341,9 +449,10 @@ ORDER BY Wahl, partei, rueckstand DESC;
 
 -- Q1 Sitzverteilung
 CREATE MATERIALIZED VIEW Sitzverteilung AS
-SELECT w.id as WahlID, w.jahr, p.parteiname, count(Kandidat) as Anzahl_der_Sitze FROM Mitglieder_des_Landtages mds
-INNER JOIN Wahl w ON w.ID = mds.wahl
-INNER JOIN Partei p ON p.ID = mds.partei
+SELECT w.id as WahlID, w.jahr, p.parteiname, count(Kandidat) as Anzahl_der_Sitze
+FROM Mitglieder_des_Landtages mds
+         INNER JOIN Wahl w ON w.ID = mds.wahl
+         INNER JOIN Partei p ON p.ID = mds.partei
 GROUP BY w.id, w.jahr, p.parteiname;
 
 
@@ -385,11 +494,11 @@ ORDER BY s.id;
 
 -- Die prozentuale und absolute Anzahl an Stimmen fuer jede Partei.
 CREATE MATERIALIZED VIEW Gesamtstimmen_Partei_StimmkreisUI AS
-SELECT w.id as WahlID,
+SELECT w.id     as WahlID,
        w.jahr,
-       wk.name as Wahlkreis,
-       s.id    as StimmkreisID,
-       s.name  as Stimmkreis,
+       wk.name  as Wahlkreis,
+       s.id     as StimmkreisID,
+       s.name   as Stimmkreis,
        s.nummer as StimmkreisNr,
        p.parteiname,
        gps.gesamtstimmen,
@@ -404,7 +513,7 @@ FROM Gesamtstimmen_Partei_Stimmkreis gps
 
 -- Direktkandidaten
 CREATE MATERIALIZED VIEW DirektkandidatenUI AS
-SELECT w.id as WahlID,
+SELECT w.id    as WahlID,
        w.jahr,
        wk.name as Wahlkreis,
        s.id    as StimmkreisID,
@@ -436,15 +545,15 @@ FROM Gesamtstimmen_Partei_StimmkreisUI g1
                    ON g1.stimmkreisnr = g2.stimmkreisnr AND g1.parteiname = g2.parteiname
 WHERE g2.jahr = '2013'
   AND g1.jahr = '2018'
-ORDER BY  stimmkreisnr, g1.prozent DESC;
+ORDER BY stimmkreisnr, g1.prozent DESC;
 
 -- Q4 Stimmkreissieger
 CREATE MATERIALIZED VIEW StimmkreissiegerUI AS
-WITH summary AS (
-    SELECT gps.*,
-           ROW_NUMBER() OVER (PARTITION BY gps.jahr, gps.stimmkreisID
-               ORDER BY gps.gesamtstimmen DESC) AS rk
-    FROM Gesamtstimmen_Partei_StimmkreisUI gps)
+WITH summary AS
+         (SELECT gps.*,
+                 ROW_NUMBER() OVER (PARTITION BY gps.jahr, gps.stimmkreisID
+                     ORDER BY gps.gesamtstimmen DESC) AS rk
+          FROM Gesamtstimmen_Partei_StimmkreisUI gps)
 SELECT s.WahlID,
        s.jahr,
        s.wahlkreis,
@@ -461,8 +570,15 @@ WHERE s.rk = 1;
 
 -- Q5 Ueberhangmandate
 CREATE MATERIALIZED VIEW UeberhangmandateUI AS
-SELECT w.id as WahlID, w.jahr, wk.id as wahlkreisID, wk.name as wahlkreis, p.parteiname, Ueberhangsmandate
-FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
+SELECT w.id    as WahlID,
+       w.jahr,
+       wk.id   as wahlkreisID,
+       wk.name as wahlkreis,
+       p.parteiname,
+       gsp.sitze,
+       gsp.Ueberhangmandate,
+       gsp.Ausgleichsmandate
+FROM Gesamtstimmen_und_Sitze_Partei gsp
          INNER JOIN wahl w ON w.id = gsp.wahl
          INNER JOIN wahlkreis wk ON wk.id = gsp.wahlkreis
          INNER JOIN partei p ON p.id = gsp.partei;
@@ -470,7 +586,7 @@ FROM Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis gsp
 
 -- Q6 Knappste Sieger
 CREATE MATERIALIZED VIEW KnappsteSiegerUI AS
-SELECT w.id as WahlID,
+SELECT w.id           as WahlID,
        w.jahr,
        p.parteiname,
        rk             as Nr,
@@ -517,18 +633,18 @@ ORDER BY ksv.wahl DESC, ksv.partei, rk;
 CREATE MATERIALIZED VIEW ErststimmenKandidatStimmkreisUI AS
 SELECT ek.Wahl as WahlID, ek.stimmkreis, k.vorname, k.nachname, ek.anzahl, p.ParteiName
 FROM Erststimme_Kandidat ek
-    INNER JOIN Kandidat k ON k.ID = ek.kandidat
-    INNER JOIN Partei p ON p.ID = ek.partei;
+         INNER JOIN Kandidat k ON k.ID = ek.kandidat
+         INNER JOIN Partei p ON p.ID = ek.partei;
 
 
 -- Q7 Stimmkreisübersicht (Einzelstimmen)
 -- Wahlbeteiligung
 CREATE VIEW Wahlbeteiligung_EinzelstimmenUI AS
-WITH Anzhal_Stimmen_Stimmkreis AS (
-    SELECT e.wahl, e.stimmkreis, count(e.stimmeID) as anzahlstimmen
-    FROM erststimme e
-    GROUP BY e.wahl, e.stimmkreis
-)
+WITH Anzhal_Stimmen_Stimmkreis AS
+         (SELECT e.wahl, e.stimmkreis, count(e.stimmeID) as anzahlstimmen
+          FROM erststimme e
+          GROUP BY e.wahl, e.stimmkreis
+         )
 SELECT w.jahr,
        wk.name                                             as Wahlkreis,
        s.id                                                as StimmkreisID,
@@ -568,10 +684,10 @@ WITH erststimme_kandidat as
                  sum(gesamt)                                                      as Gesamtstimmen
           FROM Gesamtstimmen_Partei_Stimmkreis() gps
           GROUP BY Wahl, Wahlkreis, Partei),
-     Gesamtstimmen_Wahl as (
-         SELECT wahl, sum(Gesamtstimmen) as Gesamtstimmen
-         FROM Partei_Wahlkreis
-         GROUP BY wahl),
+     Gesamtstimmen_Wahl as
+         (SELECT wahl, sum(Gesamtstimmen) as Gesamtstimmen
+          FROM Partei_Wahlkreis
+          GROUP BY wahl),
      Partei_Result AS
          (SELECT Wahl,
                  Partei,
@@ -628,7 +744,7 @@ CREATE OR REPLACE FUNCTION erststimmeWahlzettel(jahrParam integer, stimmkreisPar
             (
                 jahr       integer,
                 wahlkreis  varchar(255),
-                stimmkreis  varchar(255),
+                stimmkreis varchar(255),
                 KandidatID integer,
                 vorname    varchar(255),
                 nachname   varchar(255),
@@ -638,14 +754,15 @@ as
 $func$
 BEGIN
     RETURN QUERY
-        SELECT w.jahr, wk.name,s.name as Stimmkreis, k.id as KandidatID, k.vorname, k.nachname, p.parteiname
+        SELECT w.jahr, wk.name, s.name as Stimmkreis, k.id as KandidatID, k.vorname, k.nachname, p.parteiname
         FROM dkandidatzustimmkreis ks
                  INNER JOIN Kandidat k ON k.ID = ks.kandidat
                  INNER JOIN wahl w ON w.id = k.wahlid
                  INNER JOIN stimmkreis s ON s.id = ks.stimmkreis
                  INNER JOIN wahlkreis wk ON wk.id = s.wahlkreis
                  INNER JOIN Partei p ON p.ID = k.partei
-        WHERE w.jahr = jahrParam AND s.id = stimmkreisParam
+        WHERE w.jahr = jahrParam
+          AND s.id = stimmkreisParam
         ORDER BY w.id DESC, s.id;
 END
 $func$ LANGUAGE plpgsql;
@@ -684,10 +801,10 @@ $func$ LANGUAGE plpgsql;
 
 -- 10 beste Stimmkreise für alle Parteien, wo sie größte prozentuale Anzahl an Stimmen haben.
 CREATE MATERIALIZED VIEW Beste_Stimmkreise_ParteiUI AS
-WITH Gesamtstimmen_Partei_Rank AS (
-    SELECT rank() OVER (PARTITION BY gps.Wahl, gps.Partei ORDER BY gps.prozent DESC) as nr, gps.*
-    FROM Gesamtstimmen_Partei_Stimmkreis gps
-    ORDER BY gps.Wahl DESC)
+WITH Gesamtstimmen_Partei_Rank AS
+         (SELECT rank() OVER (PARTITION BY gps.Wahl, gps.Partei ORDER BY gps.prozent DESC) as nr, gps.*
+          FROM Gesamtstimmen_Partei_Stimmkreis gps
+          ORDER BY gps.Wahl DESC)
 SELECT nr,
        w.jahr,
        p.parteiname,
