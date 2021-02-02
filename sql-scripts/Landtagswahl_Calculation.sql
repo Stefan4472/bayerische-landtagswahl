@@ -7,6 +7,7 @@ DROP MATERIALIZED VIEW IF EXISTS Erststimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Sitze_Partei_Vor_Ausgleich CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Gewinner_Pro_Stimmkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Mitglieder_des_Landtages CASCADE;
@@ -294,11 +295,21 @@ BEGIN
 END
 $func$ LANGUAGE plpgsql;
 
+
+-- Anzahl an Stimmen und Sitze der Partei vor der Berechnung der Überhang- und ggf. Ausgleichsmandaten
+CREATE MATERIALIZED VIEW Sitze_Partei_Vor_Ausgleich AS
+SELECT wahlID                                                                            as wahl,
+       wahlkreisID                                                                       as wahlkreis,
+       parteiID                                                                          as partei,
+       anz_sitze                                                                         as sitze,
+       direct_sitze                                                                      as Direktmandate,
+       case when (direct_sitze - anz_sitze > 0) then direct_sitze - anz_sitze else 0 end as Ueberhangmandate
+FROM Sitze_Partei_Wahlkreis();
+
+
 -- berechnen Überhang- und ggf. Ausgleichsmandat
 do
 $$
-    declare
-        counter integer := 0;
     begin
         PERFORM spw.wahlkreisID
                 FROM Sitze_Partei_Wahlkreis() spw
@@ -322,15 +333,19 @@ $$;
 
 -- Anzahl an Stimmen und Sitze der Partei (über 5 % in Bayern) pro Wahlkreis
 CREATE MATERIALIZED VIEW Gesamtstimmen_und_Sitze_Partei AS
-SELECT wahlID                   as wahl,
-       wahlkreisID              as wahlkreis,
-       parteiID                 as partei,
-       stim                     as Stimmenzahl,
-       proz                     as prozent,
-       anz_sitze                as sitze,
-       direct_sitze             as Direktmandate,
-       anz_sitze - direct_sitze as Listmandate
-FROM Sitze_Partei_Wahlkreis();
+SELECT spw.wahlID                                         as wahl,
+       spw.wahlkreisID                                    as wahlkreis,
+       spw.parteiID                                       as partei,
+       spw.stim                                           as Stimmenzahl,
+       spw.proz                                           as prozent,
+       spw.anz_sitze                                      as sitze,
+       spw.direct_sitze                                   as Direktmandate,
+       spw.anz_sitze - direct_sitze                       as Listmandate,
+       spva.Ueberhangmandate                              as Ueberhangmandate,
+       spw.anz_sitze - spva.sitze - spva.Ueberhangmandate as Ausgleichsmandate
+FROM Sitze_Partei_Wahlkreis() spw
+         INNER JOIN Sitze_Partei_Vor_Ausgleich spva
+                    ON spw.wahlID = spva.wahl AND spw.wahlkreisID = spva.wahlkreis AND spw.parteiID = spva.partei;
 
 
 -- Mitglieder_des_Landtages.
@@ -550,7 +565,14 @@ WHERE s.rk = 1;
 
 -- Q5 Ueberhangmandate
 CREATE MATERIALIZED VIEW UeberhangmandateUI AS
-SELECT w.id as WahlID, w.jahr, wk.id as wahlkreisID, wk.name as wahlkreis, p.parteiname, 0 as Ueberhangsmandate
+SELECT w.id    as WahlID,
+       w.jahr,
+       wk.id   as wahlkreisID,
+       wk.name as wahlkreis,
+       p.parteiname,
+       gsp.sitze,
+       gsp.Ueberhangmandate,
+       gsp.Ausgleichsmandate
 FROM Gesamtstimmen_und_Sitze_Partei gsp
          INNER JOIN wahl w ON w.id = gsp.wahl
          INNER JOIN wahlkreis wk ON wk.id = gsp.wahlkreis
