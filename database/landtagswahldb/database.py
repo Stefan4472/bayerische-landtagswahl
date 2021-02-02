@@ -522,15 +522,16 @@ class Database:
             self,
             wahl_id: int,
     ) -> list[dto.StimmkreisSieger]:
-        query = 'SELECT Stimmkreis, StimmkreisNr, ParteiName, Erststimmen, Zweitstimmen ' \
+        query = 'SELECT Wahlkreis, Stimmkreis, StimmkreisNr, ParteiName, Erststimmen, Zweitstimmen, Prozent ' \
                 'FROM StimmkreissiegerUI ' \
-                'WHERE WahlID = %s'
+                'WHERE WahlID = %s' \
+                'ORDER BY StimmkreisNr'
         vals = (wahl_id,)
         self._cursor.execute(query, vals)
         # print([d[0] for d in self._cursor.description])
         result = self._cursor.fetchall()
         if result:
-            return [dto.StimmkreisSieger(rec[0], int(rec[1]), rec[2], int(rec[3]), int(rec[4]))
+            return [dto.StimmkreisSieger(rec[0], rec[1], int(rec[2]), rec[3], int(rec[4]), int(rec[5]), float(round(rec[6], 1)))
                     for rec in result]
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
