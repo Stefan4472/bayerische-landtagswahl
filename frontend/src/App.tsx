@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Jumbotron, Container, Navbar, Nav, Form, NavDropdown, Button, OverlayTrigger, Tooltip} from "react-bootstrap";
-import {Switch, Route, HashRouter, useParams, useHistory} from "react-router-dom"
+import {Switch, Route, HashRouter} from "react-router-dom"
 import RefreshIcon from '@material-ui/icons/Refresh';
 import {StimmkreisPage} from "./components/stimmkreise/StimmkreisPage";
 import {MitgliederPage} from "./components/mitglieder/MitgliederPage";
@@ -13,31 +13,45 @@ import {StimmabgabePage} from "./components/stimmabgabe/StimmabgabePage";
 
 
 export const App: React.FC = () => {
-    const [selectedYear, setSelectedYear] = useState<number>(2018);
-    const [possibleYears, setPossibleYears] = useState<number[]>([2018,]);
-    const history = useHistory();
+    const [selectedYear, _setSelectedYear] = useState<number>();
+    const [possibleYears, setPossibleYears] = useState<number[]>([]);
 
-    // Fetch the list of supported election years
+    // Sets `selectedYear` and saves to local storage.
+    // Use this, rather than `_setSelectedYear`!
+    function setSelectedYear(year: number) {
+        saveSelectedYear(year);
+        _setSelectedYear(year);
+    }
+
+    // Save year to storage
+    function saveSelectedYear(year: number) {
+        localStorage.setItem('SELECTED_YEAR', year.toString());
+        console.log("Saved selected year to storage ", year);
+    }
+
+    // Restore year from storage
+    function restoreSelectedYear() : number|undefined {
+        let saved = localStorage.getItem('SELECTED_YEAR');
+        console.log("Restored selected year ", saved);
+        return saved === undefined ? undefined : Number(saved);
+    }
+
     useEffect(() => {
-        // console.log(urlYear);
-
+        // Retrieve all years
         WahlEndpoints.getAllYears().then(data => {
             setPossibleYears(data)
+
+            // Get selected year from storage
+            let saved_year = restoreSelectedYear();
+            if (saved_year === undefined) {
+                // No year saved: set to the max possible year
+                setSelectedYear(Math.max(...data));
+            }
+            else {
+                setSelectedYear(saved_year);
+            }
         })
-    }, [])
-
-    // Handle user changing the year they want to view data from
-    function onYearChanged(newYear: number) {
-        setSelectedYear(newYear);
-    }
-
-    const reportYear = (year: number) => {
-        console.log('Got year ', year);
-        // if (year === undefined) {
-        //     history.push('/2018')
-        // }
-        setSelectedYear(year);
-    }
+    })
 
     return (
         <HashRouter>
@@ -72,11 +86,12 @@ export const App: React.FC = () => {
                             <Nav className={"ml-auto"}>
                                 <Form inline className={"mr-2"}>
                                     <Form.Label><Navbar.Text>Wahljahr Auswahl</Navbar.Text></Form.Label>
+                                    {/*Provide selector with all supported election years*/}
                                     <Form.Control
                                         as="select"
                                         custom
                                         className={"ml-2"}
-                                        onChange={(event: { target: { value: any; }; }) => {onYearChanged(event.target.value)}}
+                                        onChange={(event: { target: { value: any; }; }) => {setSelectedYear(event.target.value)}}
                                     >
                                         {possibleYears.map(year => {
                                             if (year === selectedYear) {
@@ -119,58 +134,25 @@ export const App: React.FC = () => {
                 {/*Content*/}
                 <Switch>
                     <Route exact path={"/mitglieder"}>
-                        <MitgliederPage selectedYear={selectedYear}/>
+                        {selectedYear && <MitgliederPage selectedYear={selectedYear}/>}
                     </Route>
                     <Route exact path={"/stimmkreise"}>
-                        <StimmkreisPage selectedYear={selectedYear}/>
+                        {selectedYear && <StimmkreisPage selectedYear={selectedYear}/>}
                     </Route>
                     <Route exact path={"/ueberhangmandate"}>
-                        <UeberhangMandatePage selectedYear={selectedYear}/>
+                        {selectedYear && <UeberhangMandatePage selectedYear={selectedYear}/>}
                     </Route>
                     <Route exact path={"/stimmabgabe"}>
-                        <StimmabgabePage/>
+                        {selectedYear && <StimmabgabePage/>}
                     </Route>
                     <Route exact path={"/sieger"}>
-                        <SiegerPage selectedYear={selectedYear}/>
+                        {selectedYear && <SiegerPage selectedYear={selectedYear}/>}
                     </Route>
                     <Route path={"/:year?"}>
-                        <Child reportYear={(year: number) => reportYear(year)}/>
-                        {/*<SitzverteilungPage selectedYear={selectedYear}/>*/}
+                        {selectedYear && <SitzverteilungPage selectedYear={selectedYear}/>}
                     </Route>
                 </Switch>
             </div>
         </HashRouter>
     )
-}
-
-interface ChildProps {
-    reportYear: (year: number) => void
-}
-
-const Child : React.FC<ChildProps> = (props: ChildProps) => {
-    let urlParams: {year?: string|undefined} = useParams();
-    const history = useHistory();
-
-    useEffect(() => {
-        console.log(urlParams);
-        // No year set: redirect to the latest year in the database
-        if (urlParams.year === undefined) {
-            WahlEndpoints.getAllYears().then((years) => {
-                history.push('/' + years[1])
-            })
-        }
-        else {
-            props.reportYear(Number(urlParams.year));
-        }
-    }, [urlParams])
-
-    return (
-        <div>
-            {urlParams.year ? (
-                <SitzverteilungPage selectedYear={Number(urlParams.year)}/>
-            ) : (
-                <div/>
-            )}
-        </div>
-    );
 }

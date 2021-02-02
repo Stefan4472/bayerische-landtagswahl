@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React from "react";
 import {BallotCandidate} from "../../rest_client/StimmabgabeEndpoints";
 import {orderParties} from "../../PartyDisplay";
 import {ListGroup} from "react-bootstrap";

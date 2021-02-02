@@ -1,7 +1,6 @@
 import React from "react";
-import {Button, Card, Col, Container, Form, ListGroup, Row} from "react-bootstrap";
+import {Button, Card, Col, Form, Row} from "react-bootstrap";
 import {BallotCandidate, BallotInfo} from "../../rest_client/StimmabgabeEndpoints";
-import {MAIN_PARTIES, MAIN_PARTY_ORDER, orderParties} from "../../PartyDisplay";
 import {DirectCandidateSelector} from "./DirectCandidateSelector";
 import {ListCandidateSelector} from "./ListCandidateSelector";
 
@@ -65,7 +64,7 @@ export class Ballot extends React.Component<Props> {
         )
 
         let is_confirmed = window.confirm(
-            direct_confirm + "\n" + list_confirm + "\n" + "Klicken Sie \"OK\" um ihre Stimme abzugeben, oder \"Cancel\" um mehr Änderungen zu machen. Sobald Sie abgeben, können Sie keine Änderungen mehr machen"
+            direct_confirm + "\n" + list_confirm + "\nKlicken Sie \"OK\" um ihre Stimme abzugeben, oder \"Cancel\" um mehr Änderungen zu machen. Sobald Sie abgeben, können Sie keine Änderungen mehr machen"
         );
 
         if (is_confirmed) {

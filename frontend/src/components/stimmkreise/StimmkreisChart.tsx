@@ -3,11 +3,6 @@ import { ResponsivePie } from '@nivo/pie'
 import {Stimmkreis} from "../../rest_client/StimmkreisEndpoints";
 import {MAIN_PARTIES, MAIN_PARTY_COLORS} from "../../PartyDisplay";
 
-interface PartyInfo {
-    name: string;
-    color: string;
-}
-
 interface Props {
     stimmkreis?: Stimmkreis,
 }
@@ -15,12 +10,6 @@ interface Props {
 // TODO: PROVIDE OPTION TO DISPLAY ERSTSTIMMEN OR ZWEITSTIMMEN
 export class StimmkreisChart extends React.Component<Props> {
 
-    // party_name: string;
-    // candidate_fname: string;
-    // candidate_lname: string;
-    // erst_stimmen: number;
-    // gesamt_stimmen: number;
-    //
     // Formats data for this Stimmkreis into a format that
     // can be displayed in the chart.
     // NOTE: This is pretty hacky.
