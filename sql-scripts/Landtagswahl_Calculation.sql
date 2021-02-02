@@ -1,11 +1,12 @@
--- @Vlad: I kept getting errors that these views already existed. Let me know if this is incorrect
 DROP FUNCTION IF EXISTS Erststimme_Kandidat CASCADE;
 DROP FUNCTION IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP FUNCTION IF EXISTS Sitze_Partei_Wahlkreis CASCADE;
+DROP FUNCTION IF EXISTS erststimmeWahlzettel CASCADE;
+DROP FUNCTION IF EXISTS zweitstimmeWahlzettel CASCADE;
 DROP TABLE IF EXISTS Sitze_Wahlkreise CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
-DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahlkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Sitze_Partei_Vor_Ausgleich CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Gewinner_Pro_Stimmkreis CASCADE;
