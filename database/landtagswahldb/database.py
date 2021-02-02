@@ -488,7 +488,7 @@ class Database:
             self,
             wahl_id: int,
     ):
-        query = 'SELECT ParteiName, Wahlkreis, Ueberhangsmandate ' \
+        query = 'SELECT ParteiName, Wahlkreis, ueberhangmandate ' \
                 'FROM UeberhangmandateUI ' \
                 'WHERE WahlID = %s ' \
                 'ORDER BY ParteiName ASC'
