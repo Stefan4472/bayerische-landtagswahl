@@ -49,8 +49,8 @@ python manage_db.py reset ../sql-scripts/PostgresSchema.sql --db_name=bayerische
 
 Now import the XML election data and generate votes for the 2013 and 2018 elections (contained in `data/2018-info.xml` and `data/2018-results.xml`):
 ```
-python manage_db.py import_data ../../../data/2013-info.xml ../../../data/2013-results.xml --year=2013 --db_name=bayerische_landtagswahl
-python manage_db.py import_data ../../../data/2018-info.xml ../../../data/2018-results.xml --year=2018 --db_name=bayerische_landtagswahl
+python manage_db.py import_data ../data/2013-info.xml ../data/2013-results.xml --year=2013 --db_name=bayerische_landtagswahl
+python manage_db.py import_data ../data/2018-info.xml ../data/2018-results.xml --year=2018 --db_name=bayerische_landtagswahl
 ```
 
 Now run the script to create materialized views (`sql-scripts/Landtagswahl_Calculation.sql`):
@@ -125,3 +125,44 @@ python voter_setup.py 2018 105 -n 10
 # Load Testing
 
 We originally wrote our own program to perform load testing (in the `benchmarker` directory). However, we later learned about [Locust](https://locust.io/), a Python load-testing framework, and have adopted it for use. You will find our load-test definitions in the `loadtesting` directory. Please follow the instructions in the `Readme` there.
+
+# Production
+
+The simplest way (which is also cross-platform) to get started on a production server is to install [waitress](https://docs.pylonsproject.org/projects/waitress/en/stable/).
+
+```
+pip install waitress
+cd backend
+waitress-serve --port=5000 --call "flaskr:create_app"
+```
+
+You can change the number of worker threads used like so:
+
+```
+waitress-serve --port=5000 --threads=10 --call "flaskr:create_app"
+```
+
+## Performance Notes
+
+Unpooled:
+Avg: 47 ms / request (1 user)
+Max: 50 requests per second
+
+
+Pooled (100 connections):
+Avg: 1 ms / request (1 user)
+100-150 requests per second (200 users simulated) with response time 250 ms
+Max: 170 requests per second (300 users simulated) with response time 1200 ms, but performance greatly suffers
+
+
++ running on Waitress (default, 4 threads)
+Avg: 0 ms / request (10 users)
+200 users: 96 RPS, median response 15 ms
+BUT starts to fail hard with 300 users, can't get above 100 RPS
+
+Running on Waitress with 10 threads
+95 RPS, 15 ms
+Waitress: Greatly-improved response time, but max RPS is about 95, no matter what.
+It starts to simply drop requests
+Evidence that thread pooling works: without, task queue depth is high, RPS maxed at ~53, median response time 750 ms
+Adding more threads doesn't seem to improve performance

@@ -57,6 +57,9 @@ export class SitzverteilungPage extends React.Component<Props> {
                 <SitzverteilungTable
                     sitzVerteilung={this.state.sitzVerteilung}
                 />
+                <div className={"clearfix"}>
+                    <a className={"float-right"} href={"#mitglieder"}>Sehe alle Mitglieder {">"}</a>
+                </div>
             </Container>
         )
     }
