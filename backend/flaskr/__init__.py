@@ -1,6 +1,7 @@
 import pathlib
 import json
 from flask import Flask, send_from_directory
+from landtagswahldb.database import PooledDatabaseConnection
 from . import db_context
 from . import api
 
@@ -24,11 +25,20 @@ def create_app():
         # TODO: MAKE SURE ALL VALUES HAVE BEEN SET
 
     # Add database config to the app config
+    # TODO: ALLOW SPECIFYING SECRET_KEY IN A FILE?
     app.config.from_mapping(
         DB_HOST=db_config['host'],
         DB_USER=db_config['user'],
         DB_PASSWORD=db_config['password'],
         DB_NAME=db_config['database_name'],
+        DB_POOL=PooledDatabaseConnection(
+            db_config['host'],
+            db_config['user'],
+            db_config['password'],
+            db_config['database_name'],
+            'dev',
+        ),
+        SECRET_KEY='dev',
     )
 
     # Register the API blueprint

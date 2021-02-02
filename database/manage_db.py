@@ -34,7 +34,8 @@ def cmd_reset_database(
         host,
         user,
         password,
-        'postgres'
+        'postgres',
+        'dev',
     )
 
     # Drop and then create the desired database
@@ -50,6 +51,7 @@ def cmd_reset_database(
         user,
         password,
         db_name,
+        'dev',
     )
     database.run_script(schema_script)
     database.commit()
@@ -78,6 +80,7 @@ def cmd_reset_database(
         user,
         password,
         db_name,
+        'dev',
     )
 
     # Run script, commit, then close connection
@@ -118,7 +121,8 @@ def cmd_import_data(
         host,
         user,
         password,
-        database_name=db_name,
+        db_name,
+        'dev',
     )
 
     # TODO: WOULD BE SUPER COOL TO HAVE PROGRESS INDICATORS

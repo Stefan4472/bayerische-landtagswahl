@@ -1,6 +1,7 @@
 import React from "react";
 import { ResponsivePie } from '@nivo/pie'
 import {Stimmkreis} from "../../rest_client/StimmkreisEndpoints";
+import {MAIN_PARTIES, MAIN_PARTY_COLORS} from "../../PartyDisplay";
 
 interface PartyInfo {
     name: string;
@@ -11,44 +12,15 @@ interface Props {
     stimmkreis?: Stimmkreis,
 }
 
-interface State {
-    // Map party name to hex color string
-    partyColorInfo: Map<string, string>;
-    // Map index to party name
-    partyOrdering: string[];
-}
-
 // TODO: PROVIDE OPTION TO DISPLAY ERSTSTIMMEN OR ZWEITSTIMMEN
 export class StimmkreisChart extends React.Component<Props> {
-    state: State;
 
-    constructor(props: Props) {
-        super(props);
-        this.state = {
-            partyColorInfo: new Map(),
-            partyOrdering: [],
-        };
-    }
-
-    // Make call to get data on how to display parties
-    componentDidMount() {
-        fetch('/api/main-parties')
-            .then(response => response.json())
-            .then(data => {
-                // TODO: NEEDS TO BE IMPROVED
-                let party_color_info = new Map<string, string>();
-                let party_order_info: string[] = [];
-                data.forEach((party_info: PartyInfo) => {
-                    party_color_info.set(party_info.name, party_info.color);
-                    party_order_info.push(party_info.name);
-                })
-                this.setState({
-                    partyColorInfo: party_color_info,
-                    partyOrdering: party_order_info,
-                })
-            });
-    }
-
+    // party_name: string;
+    // candidate_fname: string;
+    // candidate_lname: string;
+    // erst_stimmen: number;
+    // gesamt_stimmen: number;
+    //
     // Formats data for this Stimmkreis into a format that
     // can be displayed in the chart.
     // NOTE: This is pretty hacky.
@@ -59,7 +31,7 @@ export class StimmkreisChart extends React.Component<Props> {
             // Create result objects for the main parties
             let num_other_votes = 0;
             for (const stimmkreis of this.props.stimmkreis.results) {
-                if (this.state.partyColorInfo.has(stimmkreis.party_name)) {
+                if (MAIN_PARTIES.has(stimmkreis.party_name)) {
                     results.set(stimmkreis.party_name, {
                         id: stimmkreis.party_name,
                         value: stimmkreis.erst_stimmen,
@@ -72,15 +44,11 @@ export class StimmkreisChart extends React.Component<Props> {
             }
             // Now order result objects into a list
             let results_list = [];
-            for (const party_name of this.state.partyOrdering) {
+            MAIN_PARTIES.forEach((party_name) => {
                 if (results.has(party_name)) {
                     results_list.push(results.get(party_name));
                 }
-                else {
-                    // SHOULD NEVER HAPPEN
-                    // assert(false);
-                }
-            }
+            });
             // Add the sum of all tiny parties
             if (num_other_votes) {
                 results_list.push({
@@ -98,10 +66,9 @@ export class StimmkreisChart extends React.Component<Props> {
     // Returns color for a specific party name.
     // This is pretty hacky but that's kind of Javascript's fault.
     getColor(id: string|number) : string {
-        // if (id instanceof string) {
         if (typeof(id) === 'string') {
-            if (this.state.partyColorInfo.has(id)) {
-                let color = this.state.partyColorInfo.get(id);
+            if (MAIN_PARTY_COLORS.has(id)) {
+                let color = MAIN_PARTY_COLORS.get(id);
                 if (color) {
                     return color;
                 }
@@ -109,13 +76,12 @@ export class StimmkreisChart extends React.Component<Props> {
         }
         // Any case where we can't unambiguously resolve the color:
         // return gray
-        return '#b0bec5 ';
+        return '#b0bec5';
     }
 
     render() {
         // TODO: TOOLTIP SHOULD SHOW WELL-FORMATTED NUMBER AND PERCENT
         // A link that helped me to figure out custom coloring: https://github.com/plouc/nivo/issues/581
-        // if (this.props.stimmkreis) {
         return (
             <div style={{"height": "400px"}}>
                 <ResponsivePie
@@ -123,7 +89,6 @@ export class StimmkreisChart extends React.Component<Props> {
                     innerRadius={0.43}
                     enableRadialLabels={false}
                     sliceLabel={'id'}
-                    // colors={{"scheme": "pastel1"}}
                     colors={d => this.getColor(d.id)}
                     legends={[
                         {

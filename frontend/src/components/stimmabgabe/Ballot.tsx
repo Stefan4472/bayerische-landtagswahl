@@ -1,6 +1,9 @@
 import React from "react";
-import {Button, Card, Col, Container, Form, Row} from "react-bootstrap";
+import {Button, Card, Col, Container, Form, ListGroup, Row} from "react-bootstrap";
 import {BallotCandidate, BallotInfo} from "../../rest_client/StimmabgabeEndpoints";
+import {MAIN_PARTIES, MAIN_PARTY_ORDER, orderParties} from "../../PartyDisplay";
+import {DirectCandidateSelector} from "./DirectCandidateSelector";
+import {ListCandidateSelector} from "./ListCandidateSelector";
 
 interface Props {
     ballotInfo: BallotInfo,
@@ -8,6 +11,8 @@ interface Props {
 }
 
 interface State {
+    directFilterText: string;
+    listFilterText: string;
     selectedDirectCandidate?: BallotCandidate,
     selectedListCandidate?: BallotCandidate,
 }
@@ -18,28 +23,57 @@ export class Ballot extends React.Component<Props> {
     constructor(props: Props) {
         super(props);
         this.state = {
+            directFilterText: "",
+            listFilterText: "",
         };
     }
 
     handleDirectCandidateSelected(candidate: BallotCandidate) {
-        console.log("Selected direct candidate ", candidate);
         this.setState({
             selectedDirectCandidate: candidate,
         })
     }
 
     handleListCandidateSelected(candidate: BallotCandidate) {
-        console.log("Selected list candidate ", candidate);
         this.setState({
             selectedListCandidate: candidate,
         })
     }
 
+    onDirectFilterChanged(filter: string) {
+        this.setState({
+            directFilterText: filter,
+        })
+    }
+
+    onListFilterChanged(filter: string) {
+        this.setState({
+            listFilterText: filter,
+        })
+    }
+
     handleSubmit() {
-        this.props.onVoted(
-            this.state.selectedDirectCandidate,
-            this.state.selectedListCandidate,
+        let direct_confirm = this.state.selectedDirectCandidate ? (
+            "Sie haben " + this.state.selectedDirectCandidate.first_name + " " + this.state.selectedDirectCandidate.last_name + " " + this.state.selectedDirectCandidate.party_name + " als Direkt-Kandidat gewählt"
+        ) : (
+            "Sie haben kein Direkt-Kandidaten gewählt"
+        )
+        let list_confirm = this.state.selectedListCandidate ? (
+            "Sie haben " + this.state.selectedListCandidate.first_name + " " + this.state.selectedListCandidate.last_name + " " + this.state.selectedListCandidate.party_name + " als List-Kandidat gewählt"
+        ) : (
+            "Sie haben kein List-Kandidaten gewählt"
+        )
+
+        let is_confirmed = window.confirm(
+            direct_confirm + "\n" + list_confirm + "\n" + "Klicken Sie \"OK\" um ihre Stimme abzugeben, oder \"Cancel\" um mehr Änderungen zu machen. Sobald Sie abgeben, können Sie keine Änderungen mehr machen"
         );
+
+        if (is_confirmed) {
+            this.props.onVoted(
+                this.state.selectedDirectCandidate,
+                this.state.selectedListCandidate,
+            );
+        }
     }
 
     render() {
@@ -52,32 +86,72 @@ export class Ballot extends React.Component<Props> {
                             <h3>
                                 Select a Direct Candidate
                             </h3>
-                            {this.props.ballotInfo.direct_candidates.map(candidate =>
-                                <Row>
-                                    <label><input type="radio" name="direct" onClick={() => this.handleDirectCandidateSelected(candidate)}/>
-                                        ({candidate.party_name}) {candidate.first_name} {candidate.last_name}
-                                    </label>
-                                </Row>
-                            )}
+                            <Form>
+                                <Form.Control
+                                    className={'mb-2'}
+                                    type="text"
+                                    placeholder="Search for Candidate or Party..."
+                                    onChange={(event) => {
+                                        this.onDirectFilterChanged(event.target.value);
+                                    }}
+                                />
+                            </Form>
+                            <div className={"overflow-auto"} style={{height: "500px"}}>
+                                <DirectCandidateSelector
+                                    candidates={this.props.ballotInfo.direct_candidates}
+                                    onCandidateSelected={(candidate: BallotCandidate) => {
+                                        this.handleDirectCandidateSelected(candidate)
+                                    }}
+                                    selectedCandidate={this.state.selectedDirectCandidate}
+                                    filterText={this.state.directFilterText}
+                                />
+                            </div>
+                            <h5>
+                                {this.state.selectedDirectCandidate ? (
+                                    <span>Direkt-Kandidat: {this.state.selectedDirectCandidate.first_name} {this.state.selectedDirectCandidate.last_name}, {this.state.selectedDirectCandidate.party_name}</span>
+                                ) : (
+                                    <span>Kein Direkt-Kandidat gewählt</span>
+                                )}
+                            </h5>
                         </Col>
                         <Col>
                             <h3>
                                 Select a List Candidate
                             </h3>
-                            {this.props.ballotInfo.list_candidates.map(candidate =>
-                                <Row>
-                                    <label><input type="radio" name="list" onClick={() => this.handleListCandidateSelected(candidate)}/>
-                                        ({candidate.party_name}) {candidate.first_name} {candidate.last_name}
-                                    </label>
-                                </Row>
-                            )}
+                            <Form>
+                                <Form.Control
+                                    className={'mb-2'}
+                                    type="text"
+                                    placeholder="Search for Candidate or Party..."
+                                    onChange={(event) => {
+                                        this.onListFilterChanged(event.target.value);
+                                    }}
+                                />
+                            </Form>
+                            <div className={"overflow-auto"} style={{height: "500px"}}>
+                                <ListCandidateSelector
+                                    candidates={this.props.ballotInfo.list_candidates}
+                                    onCandidateSelected={(candidate: BallotCandidate) => {
+                                        this.handleListCandidateSelected(candidate)
+                                    }}
+                                    selectedCandidate={this.state.selectedListCandidate}
+                                    filterText={this.state.listFilterText}
+                                />
+                            </div>
+                            <h5>
+                                {this.state.selectedListCandidate ? (
+                                    <span>List-Kandidat: {this.state.selectedListCandidate.first_name} {this.state.selectedListCandidate.last_name}, {this.state.selectedListCandidate.party_name}</span>
+                                ) : (
+                                    <span>Kein List-Kandidat gewählt</span>
+                                )}
+                            </h5>
                         </Col>
                     </Row>
                     <div className="buttonBar clearfix">
                         <Button
                             className="button float-right"
                             id="submit-button"
-                            variant="primary"
+                            variant="success"
                             onClick={() => this.handleSubmit()}
                         >
                             Submit
@@ -88,6 +162,3 @@ export class Ballot extends React.Component<Props> {
         )
     }
 }
-
-
-

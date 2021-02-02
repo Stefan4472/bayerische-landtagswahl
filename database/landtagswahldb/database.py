@@ -1,6 +1,8 @@
 import psycopg2
+import psycopg2.pool
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import typing
+import hashlib
 from . import util
 from . import database_dtos as dto
 
@@ -12,14 +14,24 @@ class Database:
             user: str,
             password: str,
             database_name: str,
+            secret_key: str,
+            conn=None,
     ):
-        """Postgres database utility class."""
-        self._conn = psycopg2.connect(
-            host=host,
-            user=user,
-            password=password,
-            database=database_name,
-        )
+        """Postgres database utility class.
+
+        Note: automatically hashes voter keys, using the provided secret_key
+        for "encryption".
+        """
+        if conn:
+            self._conn = conn
+        else:
+            self._conn = psycopg2.connect(
+                host=host,
+                user=user,
+                password=password,
+                database=database_name,
+            )
+        self._secret_key = secret_key
         self._cursor = self._conn.cursor()
 
     def get_cursor(self) -> psycopg2.extensions.cursor:
@@ -77,6 +89,12 @@ class Database:
         use the `create_database()` or `drop_database() methods.
         """
         self._cursor.execute(script)
+
+    def _hash_voterkey(
+            self,
+            voterkey: str,
+    ) -> str:
+        return hashlib.sha1((voterkey + self._secret_key).encode('utf-8')).hexdigest()
 
     def has_wahl(
             self,
@@ -526,7 +544,6 @@ class Database:
                 'WHERE WahlID = %s'
         values = (wahl_id,)
         self._cursor.execute(query, values)
-        # print([d[0] for d in self._cursor.description])
         result = self._cursor.fetchall()
         if result:
             return [dto.KnappsteSieger(rec[0], int(rec[1]), rec[2], rec[3], rec[4], int(rec[5]))
@@ -538,26 +555,43 @@ class Database:
             self,
             voter_key: str,
             wahl_id: int,
-            stimmkreis_nr: int,
+            stimmkreis_id: int,
     ):
-        # TODO
-        return
+        query = 'INSERT INTO VoteRecords (Key, Wahl, Stimmkreis) ' \
+                'VALUES (%s, %s, %s)'
+        values = (self._hash_voterkey(voter_key), wahl_id, stimmkreis_id)
+        self._cursor.execute(query, values)
+        self.commit()
 
     def get_voter_info(
             self,
             voter_key: str,
     ) -> dto.VoterInfo:
-        # Key varchar(64) NOT NULL UNIQUE,
-        #     HasVoted bool DEFAULT false,
-        #     Stimmkreis int NOT NULL,
-        # 	Wahl int NOT NULL,
-        query = 'SELECT HasVoted, Stimmkreis, Wahl ' \
+        query = 'SELECT Wahl, Stimmkreis, HasVoted ' \
                 'FROM VoteRecords ' \
                 'WHERE Key = %s'
-        values = (voter_key,)
-        self._cursor.execute()
-        print(self._cursor.fetchone())
-        return dto.VoterInfo(1, 101, False)
+        values = (self._hash_voterkey(voter_key),)
+        self._cursor.execute(query, values)
+        result = self._cursor.fetchone()
+        if result:
+            return dto.VoterInfo(result[0], result[1], result[2])
+        else:
+            raise ValueError('Provided `voter_key` ({}) does not exist in database'.format(voter_key))
+
+    def has_voted(
+            self,
+            voter_key: str,
+    ) -> bool:
+        query = 'SELECT HasVoted ' \
+                'FROM VoteRecords ' \
+                'WHERE Key = %s'
+        values = (self._hash_voterkey(voter_key),)
+        self._cursor.execute(query, values)
+        result = self._cursor.fetchone()
+        if result:
+            return bool(result[0])
+        else:
+            raise ValueError('Provided `voter_key` ({}) does not exist in database'.format(voter_key))
 
     def submit_vote(
             self,
@@ -565,8 +599,44 @@ class Database:
             dcandidate_id: typing.Optional[int],
             lcandidate_id: typing.Optional[int],
     ):
-        
-        return True, 'success'
+        voter_info = self.get_voter_info(voter_key)
+        if voter_info.has_voted:
+            raise ValueError('A vote has already been submitted for this voter key ({})'.format(voter_key))
+        else:
+            # Register direct vote
+            if dcandidate_id:
+                query = 'INSERT INTO Erststimme (Kandidat, Stimmkreis, Wahl) ' \
+                        'VALUES (%s, %s, %s)'
+                values = (
+                    dcandidate_id,
+                    voter_info.stimmkreis_id,
+                    voter_info.wahl_id,
+                )
+                self._cursor.execute(query, values)
+            # else:
+                # TODO: ALLOW `KANDIDAT` TO BE NULL
+                # No candidate provided: register invalid vote
+                # query = 'INSERT INTO Erststimme (Kandidat, Stimmkreis, Wahl, IsValid) ' \
+                #         'VALUES (%s, %s, %s, %s, %s)'
+                # values = (dcandidate_id, voter_info.stimmkreis_id, voter_info.wahl_id, False)
+                # self._cursor.execute(query, values)
+            # Register list vote
+            if lcandidate_id:
+                query = 'INSERT INTO Zweitstimme (Kandidat, Stimmkreis, Wahl) ' \
+                        'VALUES (%s, %s, %s)'
+                values = (
+                    lcandidate_id,
+                    voter_info.stimmkreis_id,
+                    voter_info.wahl_id,
+                )
+                self._cursor.execute(query, values)
+            # Mark the voterkey as having voted
+            query = 'UPDATE VoteRecords ' \
+                    'SET HasVoted = %s ' \
+                    'WHERE Key = %s'
+            values = (True, self._hash_voterkey(voter_key))
+            self._cursor.execute(query, values)
+            self.commit()
 
     def get_dcandidates(
             self,
@@ -575,13 +645,17 @@ class Database:
     ) -> list[dto.BallotKandidat]:
         """Return all direct candidates running for election in
         the specified election and Stimmkreis"""
-        # TODO
-        return [
-            dto.BallotKandidat(1, 'CSU', 'Sebastian', 'Wahl'),
-            dto.BallotKandidat(2, 'SPD', 'Adrian', 'Hemmer'),
-            dto.BallotKandidat(3, 'FDP', 'Max', 'Mustermann'),
-            dto.BallotKandidat(4, 'Gruene', 'Maximiliana', 'Handlemine'),
-        ]
+        query = 'SELECT KandidatID, Parteiname, Vorname, Nachname ' \
+                'FROM erststimmeWahlzettel(%s, %s)'
+        values = (2018, stimmkreis_id)
+        self._cursor.execute(query, values)
+        # print([d[0] for d in self._cursor.description])
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.BallotKandidat(rec[0], rec[1], rec[2], rec[3])
+                    for rec in result]
+        else:
+            raise ValueError()
 
     def get_lcandidates(
             self,
@@ -590,10 +664,73 @@ class Database:
     ) -> list[dto.BallotKandidat]:
         """Return all list candidates running for election in
         the specified election and Stimmkreis"""
-        # TODO
-        return [
-            dto.BallotKandidat(1, 'CSU', 'Sebastian', 'Wahl'),
-            dto.BallotKandidat(2, 'SPD', 'Adrian', 'Hemmer'),
-            dto.BallotKandidat(3, 'FDP', 'Max', 'Mustermann'),
-            dto.BallotKandidat(4, 'Gruene', 'Maximiliana', 'Handlemine'),
-        ]
+        query = 'SELECT KandidatID, Parteiname, Vorname, Nachname ' \
+                'FROM zweitstimmeWahlzettel(%s, %s)'
+        values = (2018, stimmkreis_id)
+        self._cursor.execute(query, values)
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.BallotKandidat(rec[0], rec[1], rec[2], rec[3])
+                    for rec in result]
+        else:
+            raise ValueError()
+
+
+# class SimpleDatabaseConnection:
+#     def __init__(
+#             self,
+#             host: str,
+#             user: str,
+#             password: str,
+#             database_name: str,
+#             secret_key: str,
+#     ):
+#         self._conn = psycopg2.connect(
+#             host=host,
+#             user=user,
+#             password=password,
+#             database=database_name,
+#         )
+#
+#     def open_conn(self):
+#         return Database(self._conn)
+#
+#     def close_conn(self, db: Database):
+#         db.close()
+
+
+class PooledDatabaseConnection:
+    def __init__(
+            self,
+            host: str,
+            user: str,
+            password: str,
+            database_name: str,
+            secret_key: str,
+    ):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.db_name = database_name
+        self.secret_key = secret_key
+        self._pool = psycopg2.pool.SimpleConnectionPool(
+            1,
+            100,
+            host=host,
+            user=user,
+            password=password,
+            database=database_name,
+        )
+
+    def open_conn(self) -> Database:
+        return Database(
+            self.host,
+            self.user,
+            self.password,
+            self.db_name,
+            self.secret_key,
+            conn=self._pool.getconn(),
+        )
+
+    def close_conn(self, db: Database):
+        self._pool.putconn(db._conn)

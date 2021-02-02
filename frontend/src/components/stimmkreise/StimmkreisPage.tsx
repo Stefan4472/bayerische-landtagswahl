@@ -4,6 +4,7 @@ import React from "react";
 import {StimmkreisTable} from "./StimmkreisTable";
 import {StimmkreisChart} from "./StimmkreisChart";
 import StimmkreisEndpoints, {Stimmkreis, StimmkreisInfo} from "../../rest_client/StimmkreisEndpoints";
+import {orderParties} from "../../PartyDisplay";
 
 
 interface Props {
@@ -46,7 +47,7 @@ export class StimmkreisPage extends React.Component<Props> {
                     'name': stimmkreisInfo.name,
                     'number': stimmkreisInfo.number,
                     'turnout_percent': data.turnout_percent,
-                    'results': data.results,
+                    'results': orderParties(data.results),
                 }
             })
         });

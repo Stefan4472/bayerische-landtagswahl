@@ -13,7 +13,7 @@ export class StimmkreisTable extends React.Component<Props> {
         return results.map((result) => {
             return {
                 'party_name': result.party_name,
-                'candidate': result.candidate_lname + ', ' + result.candidate_lname,
+                'candidate': result.candidate_lname + ', ' + result.candidate_fname,
                 'erststimmen': result.erst_stimmen,
                 'gesamtstimmen': result.gesamt_stimmen,
             }

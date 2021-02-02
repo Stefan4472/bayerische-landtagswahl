@@ -110,9 +110,9 @@ CREATE TABLE ZweitstimmePartei (
 
 CREATE TABLE VoteRecords (
     Key varchar(64) NOT NULL UNIQUE,
-    HasVoted bool DEFAULT false,
-    Stimmkreis int NOT NULL,
 	Wahl int NOT NULL,
+    Stimmkreis int NOT NULL,
+    HasVoted bool DEFAULT false,
     Primary key (Key, Wahl),
     FOREIGN KEY (Stimmkreis) REFERENCES Stimmkreis(ID) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (Wahl) REFERENCES Wahl(ID) ON UPDATE CASCADE ON DELETE CASCADE
