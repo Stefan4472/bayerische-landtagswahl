@@ -3,7 +3,7 @@ SELECT * FROM Sitzverteilung;
 
 -- Q2 Mitglieder des Landtages
 SELECT * FROM Mitglieder_des_LandtagesUI
-ORDER BY nachname;
+ORDER BY jahr DESC , nachname;
 
 -- Q3 Stimmkreisuebersicht
 

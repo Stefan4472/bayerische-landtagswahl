@@ -4,7 +4,6 @@ DROP FUNCTION IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP FUNCTION IF EXISTS Sitze_Partei_Wahlkreis CASCADE;
 DROP TABLE IF EXISTS Sitze_Wahlkreise CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Kandidat CASCADE;
-DROP MATERIALIZED VIEW IF EXISTS Anzhal_Zweitstimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
@@ -64,16 +63,6 @@ SELECT wahlID       as Wahl,
        kandidatID   as kandidat,
        anzahl
 FROM Erststimme_Kandidat();
-
-
--- Anzahl an Zweitstimme für jeden Kandidat in Wahlkreis
-CREATE MATERIALIZED VIEW Anzhal_Zweitstimme_Kandidat AS
-SELECT Wahl, Wahlkreis, Partei, Kandidat, count(StimmeID) as Anzahl
-FROM zweitstimme s
-         INNER JOIN Kandidat k ON k.ID = s.Kandidat
-WHERE isValid = 1
-GROUP BY Wahl, Wahlkreis, Partei, Kandidat
-ORDER BY Wahl, Wahlkreis, Partei, Anzahl DESC;
 
 
 -- Die prozentuale und absolute Anzahl an Stimmen fuer jede Partei.
@@ -344,26 +333,35 @@ SELECT wahlID                   as wahl,
 FROM Sitze_Partei_Wahlkreis();
 
 
--- Alle Gewählte.
+-- Mitglieder_des_Landtages.
 CREATE MATERIALIZED VIEW Mitglieder_des_Landtages AS
--- Alle gewählte Listkandidaten.
-WITH Listkandidaten AS (
-    SELECT *
-    FROM (SELECT *,
-                 RANK() OVER (PARTITION BY Wahl, Wahlkreis, Partei ORDER BY Wahl, Wahlkreis, Partei, Anzahl DESC) AS Nr
-          FROM Anzhal_Zweitstimme_Kandidat azk
-          WHERE azk.Kandidat NOT IN (SELECT Kandidat FROM Erststimme_Gewinner_Pro_Stimmkreis)) AS azk
-    WHERE Nr <= (SELECT Listmandate
-                 FROM Gesamtstimmen_und_Sitze_Partei gsp
-                 WHERE gsp.Wahl = azk.Wahl
-                   AND gsp.Wahlkreis = azk.Wahlkreis
-                   AND gsp.Partei = azk.Partei)
-)
+-- Anzahl an Zweitstimme für jeden Kandidat in Wahlkreis
+WITH Zweitstimme_Kandidat AS
+         (SELECT Wahl, Kandidat, count(StimmeID) as Anzahl
+          FROM zweitstimme s
+          WHERE isValid = 1
+          GROUP BY Wahl, Kandidat),
+     List_kand AS
+         (SELECT zw.*,
+                 k.wahlkreis,
+                 k.partei,
+                 RANK()
+                 OVER (PARTITION BY zw.Wahl, k.Wahlkreis, k.Partei ORDER BY zw.Wahl, k.Wahlkreis, k.Partei, COALESCE(zw.Anzahl, 0) + COALESCE(ek.anzahl, 0) DESC) AS Nr
+          FROM Zweitstimme_Kandidat zw
+                   LEFT JOIN Erststimme_Kandidat ek ON ek.wahl = zw.wahl AND ek.kandidat = zw.kandidat
+                   INNER JOIN kandidat k ON zw.kandidat = k.id
+          WHERE zw.kandidat NOT IN (SELECT e.Kandidat FROM Erststimme_Gewinner_Pro_Stimmkreis e WHERE e.wahl = zw.wahl))
+-- Alle Gewaelte.
 SELECT eg.Kandidat, eg.Partei, eg.Wahlkreis, eg.Stimmkreis, eg.Wahl, true as Direktkandidat
 FROM Erststimme_Gewinner_Pro_Stimmkreis eg
 UNION
 SELECT lk.Kandidat, lk.Partei, lk.Wahlkreis, null, lk.Wahl, false as Direktkandidat
-FROM Listkandidaten lk;
+FROM List_kand lk
+WHERE Nr <= (SELECT Listmandate
+             FROM Gesamtstimmen_und_Sitze_Partei gsp
+             WHERE gsp.Wahl = lk.Wahl
+               AND gsp.Wahlkreis = lk.Wahlkreis
+               AND gsp.Partei = lk.Partei);
 
 
 -- Q6 Knappste Sieger
