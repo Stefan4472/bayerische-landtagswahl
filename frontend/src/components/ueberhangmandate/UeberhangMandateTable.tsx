@@ -14,7 +14,9 @@ export class UeberhangMandateTable extends React.Component<Props> {
                 'id': index,
                 'party_name': mandat.party_name,
                 'wahlkreis_name': mandat.wahlkreis_name,
-                'num_mandates': mandat.num_mandates,
+                'sitze': mandat.sitze,
+                'ueberhangmandate': mandat.ueberhangmandate,
+                'ausgleichsmandate': mandat.ausgleichsmandate
             }
         });
     }
@@ -26,20 +28,30 @@ export class UeberhangMandateTable extends React.Component<Props> {
                 keyField={'id'}
                 columns={[
                     {
-                        dataField: 'party_name',
-                        text: 'Partei',
-                        sort: true,
-                    },
-                    {
                         dataField: 'wahlkreis_name',
                         text: 'Wahlkreis',
                         sort: true,
                     },
                     {
-                        dataField: 'num_mandates',
-                        text: 'Mandate',
+                        dataField: 'party_name',
+                        text: 'Partei',
                         sort: true,
                     },
+                    {
+                        dataField: 'sitze',
+                        text: 'Sitze',
+                        sort: true,
+                    },
+                    {
+                        dataField: 'ueberhangmandate',
+                        text: 'Überhangmandate',
+                        sort: true,
+                    },
+                    {
+                        dataField: 'ausgleichsmandate',
+                        text: 'Ausgleichsmandate',
+                        sort: true,
+                    }
                 ]}
                 data={this.formatData(this.props.mandates)}
                 striped

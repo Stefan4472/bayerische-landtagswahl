@@ -51,7 +51,9 @@ class Mitglied:
 class Ueberhangmandat:
     party_name: str
     wahlkreis_name: str
-    num_mandates: int
+    sitze: int
+    ueberhangmandate: int
+    ausgleichsmandate: int
 
 
 @dc.dataclass
