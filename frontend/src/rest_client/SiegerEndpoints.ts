@@ -1,11 +1,13 @@
 import http from "./CommonHTTP";
 
 export interface StimmkreisSieger {
+    wahlkreis: string;
     stimmkreis_name: string;
     stimmkreis_num: number;
     party_name: string;
     num_erststimmen: number;
     num_zweitstimmen:  number;
+    percent: number;
 }
 
 export interface KnappsteSieger {

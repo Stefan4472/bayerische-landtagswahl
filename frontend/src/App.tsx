@@ -77,11 +77,11 @@ export const App: React.FC = () => {
                             {/*TODO: USE REACT-ROUTER-DOM LINK TAGS*/}
                             <Nav>
                                 <Nav.Link href="/">Sitzverteilung</Nav.Link>
+                                <Nav.Link href="#mitglieder">Mitglieder</Nav.Link>
                                 <Nav.Link href="#stimmkreise">Stimmkreise</Nav.Link>
                                 <NavDropdown title="Daten" id={"data-dropdown"}>
-                                    <NavDropdown.Item href="#mitglieder">Mitglieder</NavDropdown.Item>
                                     <NavDropdown.Item href="#ueberhangmandate">Überhangmandate</NavDropdown.Item>
-                                    <NavDropdown.Item href="#sieger">Sieger</NavDropdown.Item>
+                                    <NavDropdown.Item href="#sieger">Stimmkreis Sieger</NavDropdown.Item>
                                     <NavDropdown.Item href={"#knappste-sieger"}>Knappste Sieger</NavDropdown.Item>
                                     <NavDropdown.Item href={"#knappste-verlierer"}>Knappste Verlierer </NavDropdown.Item>
                                 </NavDropdown>
