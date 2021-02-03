@@ -1,6 +1,6 @@
 import React from "react";
 import {BallotCandidate} from "../../rest_client/StimmabgabeEndpoints";
-import {orderParties} from "../../PartyDisplay";
+import {orderParties} from "../util/PartyDisplay";
 import {ListGroup} from "react-bootstrap";
 
 interface Props {

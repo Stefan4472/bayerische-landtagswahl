@@ -4,7 +4,7 @@ import React from "react";
 import {StimmkreisTable} from "./StimmkreisTable";
 import {StimmkreisChart} from "./StimmkreisChart";
 import StimmkreisEndpoints, {Stimmkreis, StimmkreisInfo} from "../../rest_client/StimmkreisEndpoints";
-import {orderParties} from "../../PartyDisplay";
+import {orderParties} from "../util/PartyDisplay";
 
 
 interface Props {

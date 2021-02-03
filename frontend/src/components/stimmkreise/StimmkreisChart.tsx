@@ -1,7 +1,7 @@
 import React from "react";
 import { ResponsivePie } from '@nivo/pie'
 import {Stimmkreis} from "../../rest_client/StimmkreisEndpoints";
-import {MAIN_PARTIES, MAIN_PARTY_COLORS} from "../../PartyDisplay";
+import {MAIN_PARTIES, MAIN_PARTY_COLORS} from "../util/PartyDisplay";
 
 interface Props {
     stimmkreis?: Stimmkreis,

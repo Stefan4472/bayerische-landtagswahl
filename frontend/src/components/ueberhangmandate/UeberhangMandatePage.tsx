@@ -36,7 +36,7 @@ export class UeberhangMandatePage extends React.Component<Props> {
     fetchDataAndSetState(year: number) {
         UeberhangMandateEndpoints.getAll(year).then(data => {
             // Sort the data alphabetically by party name
-            // data.sort((a, b) => (a.party_name > b.party_name) ? 1 : -1);
+            data.sort((a, b) => (a.party_name > b.party_name) ? 1 : -1);
             this.setState({
                 mandates: data,
             });

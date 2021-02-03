@@ -62,17 +62,6 @@ CREATE TABLE DKandidatZuStimmkreis (
     FOREIGN KEY (Stimmkreis) REFERENCES Stimmkreis(ID) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
---/*TODO (this has been removed for now for simplification... will be added back next week when we have more time.
---CREATE TABLE KandidatZuWahl (
---	ID int NOT NULL AUTO_INCREMENT,
---	Kandidat int NOT NULL,
---	WahlID int,
---	PRIMARY KEY (ID),
---	FOREIGN KEY (Kandidat) REFERENCES Kandidat(ID) on update cascade on delete cascade,
---	FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade
---)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
---*/
-
 -- NOTE: FOR SOME REASON, PSYCOPG2 DOESN'T ALLOW BOOLEANS
 CREATE TABLE Erststimme (
 	StimmeID SERIAL,
