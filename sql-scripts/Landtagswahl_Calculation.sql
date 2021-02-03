@@ -3,6 +3,8 @@ DROP FUNCTION IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP FUNCTION IF EXISTS Sitze_Partei_Wahlkreis CASCADE;
 DROP FUNCTION IF EXISTS erststimmeWahlzettel CASCADE;
 DROP FUNCTION IF EXISTS zweitstimmeWahlzettel CASCADE;
+DROP FUNCTION IF EXISTS create_sitze_wahlkreise_table CASCADE;
+DROP FUNCTION IF EXISTS calculate_mandate CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahlkreis CASCADE;
@@ -200,10 +202,25 @@ FROM Kandidat_Mit_Partei_Ueber_5Proz k
 WHERE k.rank = 1;
 
 
-CREATE TABLE IF NOT EXISTS sitze_wahlkreise AS
-SELECT w.id as wahl, wk.id as wahlkreis, wk.mandate
-FROM wahlkreis wk,
-     wahl w;
+CREATE OR REPLACE FUNCTION create_sitze_wahlkreise_table()
+    RETURNS VOID AS
+$func$
+BEGIN
+    DROP TABLE IF EXISTS sitze_wahlkreise;
+
+    CREATE TABLE sitze_wahlkreise AS
+    SELECT w.id as wahl, wk.id as wahlkreis, wk.mandate
+    FROM wahlkreis wk,
+         wahl w;
+END
+$func$ LANGUAGE plpgsql;
+
+do
+$$
+    begin
+        perform create_sitze_wahlkreise_table();
+    end
+$$;
 
 -- sitze pro partei in wahlkreis
 CREATE OR REPLACE FUNCTION Sitze_Partei_Wahlkreis()
@@ -311,26 +328,34 @@ FROM Sitze_Partei_Wahlkreis();
 
 
 -- berechnen Überhang- und ggf. Ausgleichsmandat
+CREATE OR REPLACE FUNCTION calculate_mandate()
+    RETURNS VOID AS
+$func$
+BEGIN
+    PERFORM spw.wahlkreisID
+    FROM Sitze_Partei_Wahlkreis() spw
+    WHERE spw.anz_sitze < spw.direct_sitze;
+
+    while FOUND
+        loop
+            UPDATE sitze_wahlkreise
+            SET mandate = mandate + 1
+            WHERE wahlkreis IN (SELECT distinct spw.wahlkreisID
+                                FROM Sitze_Partei_Wahlkreis() spw
+                                WHERE spw.anz_sitze < spw.direct_sitze
+                                  and spw.wahlID = wahl);
+
+            PERFORM spw.wahlkreisID
+            FROM Sitze_Partei_Wahlkreis() spw
+            WHERE spw.anz_sitze < spw.direct_sitze;
+        end loop;
+END
+$func$ LANGUAGE plpgsql;
+
 do
 $$
     begin
-        PERFORM spw.wahlkreisID
-        FROM Sitze_Partei_Wahlkreis() spw
-        WHERE spw.anz_sitze < spw.direct_sitze;
-
-        while FOUND
-            loop
-                UPDATE sitze_wahlkreise
-                SET mandate = mandate + 1
-                WHERE wahlkreis IN (SELECT distinct spw.wahlkreisID
-                                    FROM Sitze_Partei_Wahlkreis() spw
-                                    WHERE spw.anz_sitze < spw.direct_sitze
-                                      and spw.wahlID = wahl);
-
-                PERFORM spw.wahlkreisID
-                FROM Sitze_Partei_Wahlkreis() spw
-                WHERE spw.anz_sitze < spw.direct_sitze;
-            end loop;
+        perform calculate_mandate();
     end
 $$;
 
