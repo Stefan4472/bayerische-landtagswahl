@@ -70,6 +70,10 @@ def get_stimmkreis_overview(year: int, stimmkreis_nr: int):
             stimmkreis_nr,
         )
 
+        winner = db.get_stimmkreis_winner(
+            wahl_id,
+            stimmkreis_nr,
+        )
         turnout_pct = db.get_stimmkreis_turnout(
             wahl_id,
             stimmkreis_id,
@@ -84,13 +88,18 @@ def get_stimmkreis_overview(year: int, stimmkreis_nr: int):
         # and second-votes by party
         return jsonify({
             'turnout_percent': turnout_pct,
+            'winner_fname': winner.first_name,
+            'winner_lname': winner.last_name,
+            'winner_party': winner.party_name,
             'results': [
                 {
                     'party_name': party_name,
                     'candidate_fname': erst_by_party[party_name].candidate_fname,
                     'candidate_lname': erst_by_party[party_name].candidate_lname,
                     'erst_stimmen': erst_by_party[party_name].num_erststimmen,
+                    'zweit_stimmen': gesamt_by_party[party_name].num_gesamtstimmen - erst_by_party[party_name].num_erststimmen,
                     'gesamt_stimmen': gesamt_by_party[party_name].num_gesamtstimmen,
+                    'gesamt_percent': gesamt_by_party[party_name].percent,
                 } for party_name in erst_by_party.keys()
             ],
         })

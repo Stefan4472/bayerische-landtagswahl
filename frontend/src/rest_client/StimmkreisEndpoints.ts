@@ -11,7 +11,17 @@ export interface StimmkreisPartyResult {
     candidate_fname: string;
     candidate_lname: string;
     erst_stimmen: number;
+    zweit_stimmen: number;
     gesamt_stimmen: number;
+    gesamt_percent: number;
+}
+
+export interface StimmkreisRaw {
+    'turnout_percent': number
+    'winner_fname': string
+    'winner_lname': string
+    'winner_party': string
+    'results': StimmkreisPartyResult[]
 }
 
 export interface Stimmkreis {
@@ -19,6 +29,9 @@ export interface Stimmkreis {
     name: string;
     number: number;
     turnout_percent: number;
+    winner_fname: string;
+    winner_lname: string;
+    winner_party: string;
     results: StimmkreisPartyResult[];
 }
 
@@ -29,8 +42,9 @@ class StimmkreisEndpoints {
         return result.data as StimmkreisInfo[];
     }
 
-    async getResults(year: number, stimmkreisNr: number) : Promise<Stimmkreis> {
+    async getResults(year: number, stimmkreisNr: number) : Promise<StimmkreisRaw> {
         const result = await http.get(`/results/${year}/stimmkreis/${stimmkreisNr}`)
+        console.log(result.data);
         return result.data as Stimmkreis;
     }
 }

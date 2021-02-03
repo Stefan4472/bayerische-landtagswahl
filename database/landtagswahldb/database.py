@@ -231,16 +231,16 @@ class Database:
     def get_stimmkreis_winner(
             self,
             wahl_id: int,
-            stimmkreis_id: int,
+            stimmkreis_nr: int,
     ) -> dto.StimmkreisWinner:
-        query = 'SELECT vorname, nachname ' \
+        query = 'SELECT vorname, nachname, parteiname ' \
                 'FROM DirektkandidatenUI ' \
-                'WHERE WahlID = %s AND StimmkreisID = %s'
-        values = (wahl_id, stimmkreis_id)
+                'WHERE WahlID = %s AND StimmkreisNr = %s'
+        values = (wahl_id, stimmkreis_nr)
         self._cursor.execute(query, values)
         result = self._cursor.fetchone()
         if result:
-            return dto.StimmkreisWinner(result[0], result[1])
+            return dto.StimmkreisWinner(result[0], result[1], result[2])
         else:
             raise ValueError('Provided `wahl_id`, `stimmkreis_id` pair ({}, {}) does not exist in database'.format(wahl_id, stimmkreis_id))
 
@@ -266,14 +266,14 @@ class Database:
             wahl_id: int,
             stimmkreis_id: int,
     ) -> list[dto.StimmkreisGesamtstimmen]:
-        query = 'SELECT parteiname, gesamtstimmen ' \
+        query = 'SELECT parteiname, gesamtstimmen, prozent ' \
                 'FROM Gesamtstimmen_Partei_StimmkreisUI ' \
                 'WHERE WahlID = %s AND StimmkreisID = %s'
         values = (wahl_id, stimmkreis_id)
         self._cursor.execute(query, values)
         result = self._cursor.fetchall()
         if result:
-            return [dto.StimmkreisGesamtstimmen(rec[0], int(rec[1]))
+            return [dto.StimmkreisGesamtstimmen(rec[0], int(rec[1]), float(rec[2]))
                     for rec in result]
         else:
             raise ValueError('Provided `wahl_id`, `stimmkreis_id` pair ({}, {}) does not exist in database'.format(wahl_id, stimmkreis_id))

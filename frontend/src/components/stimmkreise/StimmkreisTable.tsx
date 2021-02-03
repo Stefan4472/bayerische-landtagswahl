@@ -15,7 +15,9 @@ export class StimmkreisTable extends React.Component<Props> {
                 'party_name': result.party_name,
                 'candidate': result.candidate_lname + ', ' + result.candidate_fname,
                 'erststimmen': result.erst_stimmen,
+                'zweitstimmen': result.zweit_stimmen,
                 'gesamtstimmen': result.gesamt_stimmen,
+                'gesamtpercent': result.gesamt_percent,
             }
         });
     }
@@ -33,12 +35,20 @@ export class StimmkreisTable extends React.Component<Props> {
                     },
                     {
                         dataField: 'candidate',
-                        text: 'Kandidat',
+                        text: 'Direkt Kandidat',
                         sort: true,
                     },
                     {
                         dataField: 'erststimmen',
-                        text: 'Erststimmen',
+                        text: 'Erst',
+                        sort: true,
+                        formatter: (value) => (
+                            <span>{value.toLocaleString()}</span>
+                        )
+                    },
+                    {
+                        dataField: 'zweitstimmen',
+                        text: 'Zweit',
                         sort: true,
                         formatter: (value) => (
                             <span>{value.toLocaleString()}</span>
@@ -46,10 +56,18 @@ export class StimmkreisTable extends React.Component<Props> {
                     },
                     {
                         dataField: 'gesamtstimmen',
-                        text: 'Gesamtstimmen',
+                        text: 'Gesamt',
                         sort: true,
                         formatter: (value) => (
                             <span>{value.toLocaleString()}</span>
+                        )
+                    },
+                    {
+                        dataField: 'gesamtpercent',
+                        text: '%',
+                        sort: true,
+                        formatter: (value) => (
+                            <span>{value.toFixed(2) + "%"}</span>
                         )
                     }
                 ]}

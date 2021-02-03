@@ -543,6 +543,7 @@ SELECT w.id    as WahlID,
        wk.name as Wahlkreis,
        s.id    as StimmkreisID,
        s.name  as Stimmkreis,
+       s.nummer as StimmkreisNr,
        k.vorname,
        k.nachname,
        p.parteiname,
@@ -558,6 +559,7 @@ ORDER BY w.jahr, s.id;
 -- die Entwicklung der Stimmen in 2018 im Vergleich zum 2013
 CREATE MATERIALIZED VIEW Entwicklung_Stimmen_2018_zum_2013UI AS
 SELECT g1.jahr,
+       g1.WahlID,
        g1.wahlkreis,
        g1.stimmkreisnr,
        g1.stimmkreis,
