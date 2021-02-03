@@ -10,6 +10,7 @@ import WahlEndpoints from "./rest_client/WahlEndpoints";
 import {UeberhangMandatePage} from "./components/ueberhangmandate/UeberhangMandatePage";
 import {SiegerPage} from "./components/sieger/SiegerPage";
 import {StimmabgabePage} from "./components/stimmabgabe/StimmabgabePage";
+import {KnappsteSiegerPage} from "./components/knappste_sieger/KnappsteSiegerPage";
 
 
 export const App: React.FC = () => {
@@ -80,6 +81,7 @@ export const App: React.FC = () => {
                                     <NavDropdown.Item href="#mitglieder">Mitglieder</NavDropdown.Item>
                                     <NavDropdown.Item href="#ueberhangmandate">Überhangmandate</NavDropdown.Item>
                                     <NavDropdown.Item href="#sieger">Sieger</NavDropdown.Item>
+                                    <NavDropdown.Item href={"#knappste-sieger"}>Knappste Sieger</NavDropdown.Item>
                                 </NavDropdown>
                                 <Nav.Link href="#stimmabgabe">Stimmabgabe</Nav.Link>
                             </Nav>
@@ -147,6 +149,9 @@ export const App: React.FC = () => {
                     </Route>
                     <Route exact path={"/sieger"}>
                         {selectedYear && <SiegerPage selectedYear={selectedYear}/>}
+                    </Route>
+                    <Route exact path={"/knappste-sieger"}>
+                        {selectedYear && <KnappsteSiegerPage selectedYear={selectedYear}/>}
                     </Route>
                     <Route path={"/:year?"}>
                         {selectedYear && <SitzverteilungPage selectedYear={selectedYear}/>}
