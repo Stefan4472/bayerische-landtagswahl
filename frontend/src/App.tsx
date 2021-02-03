@@ -11,6 +11,7 @@ import {UeberhangMandatePage} from "./components/ueberhangmandate/UeberhangManda
 import {SiegerPage} from "./components/sieger/SiegerPage";
 import {StimmabgabePage} from "./components/stimmabgabe/StimmabgabePage";
 import {KnappsteSiegerPage} from "./components/knappste_sieger/KnappsteSiegerPage";
+import {KnappsteVerliererPage} from "./components/knappste_verlierer/KnappsteVerliererPage";
 
 
 export const App: React.FC = () => {
@@ -20,6 +21,7 @@ export const App: React.FC = () => {
     // Sets `selectedYear` and saves to local storage.
     // Use this, rather than `_setSelectedYear`!
     function setSelectedYear(year: number) {
+        console.log('Setting selected year');
         saveSelectedYear(year);
         _setSelectedYear(year);
     }
@@ -27,17 +29,16 @@ export const App: React.FC = () => {
     // Save year to storage
     function saveSelectedYear(year: number) {
         localStorage.setItem('SELECTED_YEAR', year.toString());
-        console.log("Saved selected year to storage ", year);
     }
 
     // Restore year from storage
     function restoreSelectedYear() : number|undefined {
         let saved = localStorage.getItem('SELECTED_YEAR');
-        console.log("Restored selected year ", saved);
         return saved === undefined ? undefined : Number(saved);
     }
 
     useEffect(() => {
+        console.log('Using effect');
         // Retrieve all years
         WahlEndpoints.getAllYears().then(data => {
             setPossibleYears(data)
@@ -52,7 +53,7 @@ export const App: React.FC = () => {
                 setSelectedYear(saved_year);
             }
         })
-    })
+    }, [])
 
     return (
         <HashRouter>
@@ -82,6 +83,7 @@ export const App: React.FC = () => {
                                     <NavDropdown.Item href="#ueberhangmandate">Überhangmandate</NavDropdown.Item>
                                     <NavDropdown.Item href="#sieger">Sieger</NavDropdown.Item>
                                     <NavDropdown.Item href={"#knappste-sieger"}>Knappste Sieger</NavDropdown.Item>
+                                    <NavDropdown.Item href={"#knappste-verlierer"}>Knappste Verlierer </NavDropdown.Item>
                                 </NavDropdown>
                                 <Nav.Link href="#stimmabgabe">Stimmabgabe</Nav.Link>
                             </Nav>
@@ -152,6 +154,9 @@ export const App: React.FC = () => {
                     </Route>
                     <Route exact path={"/knappste-sieger"}>
                         {selectedYear && <KnappsteSiegerPage selectedYear={selectedYear}/>}
+                    </Route>
+                    <Route exact path={"/knappste-verlierer"}>
+                        {selectedYear && <KnappsteVerliererPage selectedYear={selectedYear}/>}
                     </Route>
                     <Route path={"/:year?"}>
                         {selectedYear && <SitzverteilungPage selectedYear={selectedYear}/>}
