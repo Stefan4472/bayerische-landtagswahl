@@ -553,6 +553,22 @@ class Database:
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
 
+    def get_knappste_verlierer(
+            self,
+            wahl_id: int,
+    ):
+        query = 'SELECT Stimmkreis, StimmkreisNr, ParteiName, Vorname, Nachname, Rueckstand ' \
+                'FROM KnappsteVerliererUI ' \
+                'WHERE WahlID = %s'
+        values = (wahl_id,)
+        self._cursor.execute(query, values)
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.KnappsteVerlierer(rec[0], int(rec[1]), rec[2], rec[3], rec[4], int(rec[5]))
+                    for rec in result]
+        else:
+            raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
+
     def add_voter(
             self,
             voter_key: str,

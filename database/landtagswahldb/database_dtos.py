@@ -81,6 +81,16 @@ class KnappsteSieger:
 
 
 @dc.dataclass
+class KnappsteVerlierer:
+    stimmkreis_name: str
+    stimmkreis_num: int
+    party_name: str
+    candidate_fname: str
+    candidate_lname: str
+    lose_margin: int
+
+
+@dc.dataclass
 class VoterInfo:
     wahl_id: int
     stimmkreis_id: int

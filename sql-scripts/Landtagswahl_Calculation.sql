@@ -634,12 +634,14 @@ ORDER BY ksv.wahl DESC, ksv.partei, rk;
 
 -- Knappste Verlierer
 CREATE MATERIALIZED VIEW KnappsteVerliererUI AS
-SELECT w.jahr,
+SELECT w.id    as WahlID,
+       w.jahr,
        p.parteiname,
        rk      as Nr,
        wk.name as Wahlkreis,
        s.id    as StimmkreisID,
        s.name  as Stimmkreis,
+       s.nummer       as StimmkreisNr,
        k.vorname,
        k.nachname,
        ksv.erststimmen,
