@@ -11,7 +11,6 @@ export interface Mitglied {
 }
 
 class MitlgliederEndpoints {
-
     async getAll(year: number) : Promise<Mitglied[]> {
         const result = await http.get(`/results/${year}/mitglieder`);
         return result.data as Mitglied[];

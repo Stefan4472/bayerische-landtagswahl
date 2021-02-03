@@ -1,6 +1,6 @@
 import React from "react";
 import {Container} from "react-bootstrap";
-import StimmkreisEndpoints, {StimmkreisSieger} from "../../rest_client/StimmkreisEndpoints";
+import SiegerEndpoints, {StimmkreisSieger} from "../../rest_client/SiegerEndpoints";
 import {SiegerTable} from "./SiegerTable";
 
 interface Props {
@@ -33,7 +33,7 @@ export class SiegerPage extends React.Component<Props> {
     }
 
     fetchDataAndSetState(year: number) {
-        StimmkreisEndpoints.getAllSieger(year).then(data => {
+        SiegerEndpoints.getAllSieger(year).then(data => {
             console.log(data);
             this.setState({
                 sieger: data,

@@ -43,11 +43,6 @@ class StimmkreisEndpoints {
         const result = await http.get(`/results/${year}/stimmkreis/${stimmkreisNr}`)
         return result.data as Stimmkreis;
     }
-
-    async getAllSieger(year: number) : Promise<StimmkreisSieger> {
-        const result = await http.get(`/results/${year}/stimmkreis-sieger`)
-        return result.data as StimmkreisSieger;
-    }
 }
 
 export default new StimmkreisEndpoints();
