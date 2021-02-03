@@ -1,22 +1,21 @@
 import React from "react";
 import BootstrapTable from "react-bootstrap-table-next";
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
-import {KnappsteSieger} from "../../rest_client/SiegerEndpoints";
+import {KnappsteVerlierer} from "../../rest_client/SiegerEndpoints";
 
 interface Props {
-    sieger: KnappsteSieger[],
+    verlierer: KnappsteVerlierer[],
 }
 
-export class KnappsteSiegerTable extends React.Component<Props> {
-    formatData(sieger: KnappsteSieger[]) {
-        console.log('hi');
-        return sieger.map((sieger, index) => {
+export class KnappsteVerliererTable extends React.Component<Props> {
+    formatData(verlierer: KnappsteVerlierer[]) {
+        return verlierer.map((verlierer, index) => {
             return {
                 'id': index,
-                'stimmkreis': '(' + sieger.stimmkreis_num + ') ' + sieger.stimmkreis_name,
-                'party_name': sieger.party_name,
-                'candidate': sieger.candidate_fname + ' ' + sieger.candidate_lname,
-                'margin': sieger.win_margin,
+                'stimmkreis': '(' + verlierer.stimmkreis_num + ') ' + verlierer.stimmkreis_name,
+                'party_name': verlierer.party_name,
+                'candidate': verlierer.candidate_fname + ' ' + verlierer.candidate_lname,
+                'margin': verlierer.lose_margin,
             }
         });
     }
@@ -34,7 +33,7 @@ export class KnappsteSiegerTable extends React.Component<Props> {
                     },
                     {
                         dataField: 'party_name',
-                        text: 'Sieger Partei',
+                        text: 'Verlierer  Partei',
                         sort: true,
                     },
                     {
@@ -44,14 +43,14 @@ export class KnappsteSiegerTable extends React.Component<Props> {
                     },
                     {
                         dataField: 'margin',
-                        text: 'Vorsprung',
+                        text: 'Rückstand',
                         sort: true,
                         formatter: (value) => (
                             <span>{value.toLocaleString()}</span>
                         )
                     },
                 ]}
-                data={this.formatData(this.props.sieger)}
+                data={this.formatData(this.props.verlierer)}
                 striped
             />
         )
