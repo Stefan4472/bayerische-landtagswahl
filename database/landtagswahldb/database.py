@@ -491,14 +491,15 @@ class Database:
     ) -> list[dto.Mitglied]:
         """Returns party name -> number of seats. Only lists those parties
         that won at least one seat."""
-        query = 'SELECT vorname, nachname, partei, wahlkreis ' \
+        query = 'SELECT vorname, nachname, partei, wahlkreis, direktkandidat, stimmkreisid, stimmkreis ' \
                 'FROM Mitglieder_des_LandtagesUI ' \
-                'WHERE WahlID = %s'
+                'WHERE WahlID = %s' \
+                'ORDER BY nachname'
         vals = (wahl_id,)
         self._cursor.execute(query, vals)
         result = self._cursor.fetchall()
         if result:
-            return [dto.Mitglied(rec[0], rec[1], rec[2], rec[3]) for rec in result]
+            return [dto.Mitglied(rec[0], rec[1], rec[2], rec[3], bool(rec[4]), rec[5], rec[6]) for rec in result]
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
 
@@ -506,15 +507,15 @@ class Database:
             self,
             wahl_id: int,
     ):
-        query = 'SELECT ParteiName, Wahlkreis, ueberhangmandate ' \
+        query = 'SELECT ParteiName, Wahlkreis, sitze, ueberhangmandate, ausgleichsmandate ' \
                 'FROM UeberhangmandateUI ' \
                 'WHERE WahlID = %s ' \
-                'ORDER BY ParteiName ASC'
+                'ORDER BY Wahlkreisid, sitze DESC'
         vals = (wahl_id,)
         self._cursor.execute(query, vals)
         result = self._cursor.fetchall()
         if result:
-            return [dto.Ueberhangmandat(rec[0], rec[1], int(rec[2])) for rec in result]
+            return [dto.Ueberhangmandat(rec[0], rec[1], int(rec[2]), int(rec[3]), int(rec[4])) for rec in result]
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
 
@@ -522,15 +523,16 @@ class Database:
             self,
             wahl_id: int,
     ) -> list[dto.StimmkreisSieger]:
-        query = 'SELECT Stimmkreis, StimmkreisNr, ParteiName, Erststimmen, Zweitstimmen ' \
+        query = 'SELECT Wahlkreis, Stimmkreis, StimmkreisNr, ParteiName, Erststimmen, Zweitstimmen, Prozent ' \
                 'FROM StimmkreissiegerUI ' \
-                'WHERE WahlID = %s'
+                'WHERE WahlID = %s' \
+                'ORDER BY StimmkreisNr'
         vals = (wahl_id,)
         self._cursor.execute(query, vals)
         # print([d[0] for d in self._cursor.description])
         result = self._cursor.fetchall()
         if result:
-            return [dto.StimmkreisSieger(rec[0], int(rec[1]), rec[2], int(rec[3]), int(rec[4]))
+            return [dto.StimmkreisSieger(rec[0], rec[1], int(rec[2]), rec[3], int(rec[4]), int(rec[5]), float(round(rec[6], 1)))
                     for rec in result]
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))

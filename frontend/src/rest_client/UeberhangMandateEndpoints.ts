@@ -3,7 +3,9 @@ import http from "./CommonHTTP";
 export interface UeberhangMandat {
     party_name: string,
     wahlkreis_name: string,
-    num_mandates: number,
+    sitze: number,
+    ueberhangmandate: number,
+    ausgleichsmandate: number
 }
 
 class UeberhangMandateEndpoints {

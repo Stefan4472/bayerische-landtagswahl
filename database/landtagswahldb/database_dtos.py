@@ -45,22 +45,29 @@ class Mitglied:
     last_name: str
     party_name: str
     wahlkreis_name: str
+    is_direct_candidate: bool
+    stimmkreis_num: int
+    stimmkreis_name: str
 
 
 @dc.dataclass
 class Ueberhangmandat:
     party_name: str
     wahlkreis_name: str
-    num_mandates: int
+    sitze: int
+    ueberhangmandate: int
+    ausgleichsmandate: int
 
 
 @dc.dataclass
 class StimmkreisSieger:
+    wahlkreis: str
     stimmkreis_name: str
     stimmkreis_num: int
     party_name: str
     num_erststimmen: int
     num_zweitstimmen: int
+    percent: float
 
 
 @dc.dataclass

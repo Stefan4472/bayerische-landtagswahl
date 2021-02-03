@@ -12,10 +12,12 @@ export class SiegerTable extends React.Component<Props> {
         return sieger.map((sieger, index) => {
             return {
                 'id': index,
+                'wahlkreis': sieger.wahlkreis,
                 'stimmkreis': '(' + sieger.stimmkreis_num + ') ' + sieger.stimmkreis_name,
                 'party_name': sieger.party_name,
                 'erststimmen': sieger.num_erststimmen,
                 'zweitstimmen': sieger.num_zweitstimmen,
+                'percent': sieger.percent,
             }
         });
     }
@@ -27,6 +29,11 @@ export class SiegerTable extends React.Component<Props> {
                 bootstrap4
                 keyField={'id'}
                 columns={[
+                    {
+                        dataField: 'wahlkreis',
+                        text: 'Wahlkreis',
+                        sort: true,
+                    },
                     {
                         dataField: 'stimmkreis',
                         text: 'Stimmkreis',
@@ -53,6 +60,11 @@ export class SiegerTable extends React.Component<Props> {
                             <span>{value.toLocaleString()}</span>
                         )
                     },
+                    {
+                        dataField: 'percent',
+                        text: 'Gesamtstimmenanteil',
+                        sort: true
+                    }
                 ]}
                 data={this.formatData(this.props.sieger)}
                 striped

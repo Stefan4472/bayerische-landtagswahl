@@ -3,15 +3,18 @@ DROP FUNCTION IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP FUNCTION IF EXISTS Sitze_Partei_Wahlkreis CASCADE;
 DROP FUNCTION IF EXISTS erststimmeWahlzettel CASCADE;
 DROP FUNCTION IF EXISTS zweitstimmeWahlzettel CASCADE;
-DROP TABLE IF EXISTS Sitze_Wahlkreise CASCADE;
+DROP FUNCTION IF EXISTS create_sitze_wahlkreise_table CASCADE;
+DROP FUNCTION IF EXISTS calculate_mandate CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Kandidat CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahlkreis CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_Partei_Wahl CASCADE;
-DROP MATERIALIZED VIEW IF EXISTS Sitze_Partei_Vor_Ausgleich CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Erststimme_Gewinner_Pro_Stimmkreis CASCADE;
-DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis CASCADE;
+DROP TABLE IF EXISTS Sitze_Wahlkreise CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Sitze_Partei_Vor_Ausgleich CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Gesamtstimmen_und_Sitze_Partei CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Mitglieder_des_Landtages CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Knappste_Sieger_Verlierer CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Sitzverteilung CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Mitglieder_des_LandtagesUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS WahlbeteiligungUI CASCADE;
@@ -20,9 +23,9 @@ DROP MATERIALIZED VIEW IF EXISTS DirektkandidatenUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Entwicklung_Stimmen_2018_zum_2013UI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS StimmkreissiegerUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS UeberhangmandateUI CASCADE;
-DROP MATERIALIZED VIEW IF EXISTS Knappste_Sieger_Verlierer CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteSiegerUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS KnappsteVerliererUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS ErststimmenKandidatStimmkreisUI CASCADE;
 DROP VIEW IF EXISTS Wahlbeteiligung_EinzelstimmenUI CASCADE;
 DROP VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis_EinzelstimmenUI CASCADE;
 DROP VIEW IF EXISTS Direktkandidaten_EinzelstimmenUI CASCADE;
@@ -199,10 +202,25 @@ FROM Kandidat_Mit_Partei_Ueber_5Proz k
 WHERE k.rank = 1;
 
 
-CREATE TABLE IF NOT EXISTS sitze_wahlkreise AS
-SELECT w.id as wahl, wk.id as wahlkreis, wk.mandate
-FROM wahlkreis wk,
-     wahl w;
+CREATE OR REPLACE FUNCTION create_sitze_wahlkreise_table()
+    RETURNS VOID AS
+$func$
+BEGIN
+    DROP TABLE IF EXISTS sitze_wahlkreise;
+
+    CREATE TABLE sitze_wahlkreise AS
+    SELECT w.id as wahl, wk.id as wahlkreis, wk.mandate
+    FROM wahlkreis wk,
+         wahl w;
+END
+$func$ LANGUAGE plpgsql;
+
+do
+$$
+    begin
+        perform create_sitze_wahlkreise_table();
+    end
+$$;
 
 -- sitze pro partei in wahlkreis
 CREATE OR REPLACE FUNCTION Sitze_Partei_Wahlkreis()
@@ -310,26 +328,34 @@ FROM Sitze_Partei_Wahlkreis();
 
 
 -- berechnen Überhang- und ggf. Ausgleichsmandat
+CREATE OR REPLACE FUNCTION calculate_mandate()
+    RETURNS VOID AS
+$func$
+BEGIN
+    PERFORM spw.wahlkreisID
+    FROM Sitze_Partei_Wahlkreis() spw
+    WHERE spw.anz_sitze < spw.direct_sitze;
+
+    while FOUND
+        loop
+            UPDATE sitze_wahlkreise
+            SET mandate = mandate + 1
+            WHERE wahlkreis IN (SELECT distinct spw.wahlkreisID
+                                FROM Sitze_Partei_Wahlkreis() spw
+                                WHERE spw.anz_sitze < spw.direct_sitze
+                                  and spw.wahlID = wahl);
+
+            PERFORM spw.wahlkreisID
+            FROM Sitze_Partei_Wahlkreis() spw
+            WHERE spw.anz_sitze < spw.direct_sitze;
+        end loop;
+END
+$func$ LANGUAGE plpgsql;
+
 do
 $$
     begin
-        PERFORM spw.wahlkreisID
-        FROM Sitze_Partei_Wahlkreis() spw
-        WHERE spw.anz_sitze < spw.direct_sitze;
-
-        while FOUND
-            loop
-                UPDATE sitze_wahlkreise
-                SET mandate = mandate + 1
-                WHERE wahlkreis IN (SELECT distinct spw.wahlkreisID
-                                    FROM Sitze_Partei_Wahlkreis() spw
-                                    WHERE spw.anz_sitze < spw.direct_sitze
-                                      and spw.wahlID = wahl);
-
-                PERFORM spw.wahlkreisID
-                FROM Sitze_Partei_Wahlkreis() spw
-                WHERE spw.anz_sitze < spw.direct_sitze;
-            end loop;
+        perform calculate_mandate();
     end
 $$;
 
@@ -464,7 +490,7 @@ SELECT k.vorname,
        w.id         as WahlID,
        w.jahr,
        wk.name      as Wahlkreis,
-       s.id         as StimmkreisID,
+       s.nummer     as StimmkreisID,
        s.name       as Stimmkreis
 FROM Mitglieder_des_Landtages mdl
          LEFT JOIN stimmkreis s ON mdl.stimmkreis = s.id
