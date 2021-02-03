@@ -35,7 +35,7 @@ export class MitgliederTable extends React.Component<Props> {
     fetchDataAndSetState(year: number) {
         MitgliederEndpoints.getAll(year).then(data => {
             // Sort the data alphabetically by first name
-            data.sort((a, b) => (a.first_name > b.first_name) ? 1 : -1);
+            // data.sort((a, b) => (a.first_name > b.first_name) ? 1 : -1);
             this.setState({
                 mitglieder: data,
             });
@@ -51,6 +51,7 @@ export class MitgliederTable extends React.Component<Props> {
                 'last_name': mitglied.last_name,
                 'party_name': mitglied.party_name,
                 'wahlkreis_name': mitglied.wahlkreis_name,
+                'stimmkreis': (mitglied.stimmkreis_num != null) ? '(' + mitglied.stimmkreis_num + ') ' + mitglied.stimmkreis_name : '',
             }
         });
     }
@@ -79,6 +80,11 @@ export class MitgliederTable extends React.Component<Props> {
                     {
                         dataField: 'wahlkreis_name',
                         text: 'Wahlkreis',
+                        sort: true,
+                    },
+                    {
+                        dataField: 'stimmkreis',
+                        text: 'Stimmkreis',
                         sort: true,
                     }
                 ]}

@@ -464,7 +464,7 @@ SELECT k.vorname,
        w.id         as WahlID,
        w.jahr,
        wk.name      as Wahlkreis,
-       s.id         as StimmkreisID,
+       s.nummer     as StimmkreisID,
        s.name       as Stimmkreis
 FROM Mitglieder_des_Landtages mdl
          LEFT JOIN stimmkreis s ON mdl.stimmkreis = s.id

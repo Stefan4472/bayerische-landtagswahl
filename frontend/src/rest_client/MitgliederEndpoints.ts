@@ -5,6 +5,9 @@ export interface Mitglied {
     last_name: string,
     party_name: string,
     wahlkreis_name: string,
+    is_direct_candidate: boolean,
+    stimmkreis_name: string,
+    stimmkreis_num: string
 }
 
 class MitlgliederEndpoints {

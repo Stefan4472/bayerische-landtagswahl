@@ -45,6 +45,9 @@ class Mitglied:
     last_name: str
     party_name: str
     wahlkreis_name: str
+    is_direct_candidate: bool
+    stimmkreis_num: int
+    stimmkreis_name: str
 
 
 @dc.dataclass

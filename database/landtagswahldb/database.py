@@ -491,14 +491,15 @@ class Database:
     ) -> list[dto.Mitglied]:
         """Returns party name -> number of seats. Only lists those parties
         that won at least one seat."""
-        query = 'SELECT vorname, nachname, partei, wahlkreis ' \
+        query = 'SELECT vorname, nachname, partei, wahlkreis, direktkandidat, stimmkreisid, stimmkreis ' \
                 'FROM Mitglieder_des_LandtagesUI ' \
-                'WHERE WahlID = %s'
+                'WHERE WahlID = %s' \
+                'ORDER BY nachname'
         vals = (wahl_id,)
         self._cursor.execute(query, vals)
         result = self._cursor.fetchall()
         if result:
-            return [dto.Mitglied(rec[0], rec[1], rec[2], rec[3]) for rec in result]
+            return [dto.Mitglied(rec[0], rec[1], rec[2], rec[3], bool(rec[4]), rec[5], rec[6]) for rec in result]
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
 
