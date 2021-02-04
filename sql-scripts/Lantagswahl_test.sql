@@ -58,3 +58,6 @@ SELECT * FROM zweitstimmeWahlzettel(2018, 94);
 
 -- 10 beste Stimmkreise für alle Parteien, wo sie größte prozentuale Anzahl an Stimmen haben.
 SELECT * FROM beste_stimmkreise_parteiui;
+
+--Veränderung der Anteil von linken und rechten Parteien zwischen 2018 und 2013
+SELECT * FROM Partei_Einordnung_AnalyseUI;

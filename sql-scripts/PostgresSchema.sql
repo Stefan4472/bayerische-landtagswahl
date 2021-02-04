@@ -27,7 +27,9 @@ CREATE TABLE Stimmkreis (
 CREATE TABLE Partei (
     ID SERIAL,
     ParteiName varchar(255) NOT NULL UNIQUE,
-    PRIMARY KEY (ID)
+    Einordnung varchar(1) NOT NULL DEFAULT 'n',
+    PRIMARY KEY (ID),
+    CHECK (Einordnung IN ('n', 'l', 'r'))
 );
 
 -- Map Partei to Wahl in which the party took part
@@ -62,21 +64,10 @@ CREATE TABLE DKandidatZuStimmkreis (
     FOREIGN KEY (Stimmkreis) REFERENCES Stimmkreis(ID) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
---/*TODO (this has been removed for now for simplification... will be added back next week when we have more time.
---CREATE TABLE KandidatZuWahl (
---	ID int NOT NULL AUTO_INCREMENT,
---	Kandidat int NOT NULL,
---	WahlID int,
---	PRIMARY KEY (ID),
---	FOREIGN KEY (Kandidat) REFERENCES Kandidat(ID) on update cascade on delete cascade,
---	FOREIGN KEY (WahlID) REFERENCES Wahl(ID) on update cascade on delete cascade
---)ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
---*/
-
 -- NOTE: FOR SOME REASON, PSYCOPG2 DOESN'T ALLOW BOOLEANS
 CREATE TABLE Erststimme (
 	StimmeID SERIAL,
-    Kandidat int NOT NULL,
+    Kandidat int,
     Stimmkreis int NOT NULL,
     Wahl int NOT NULL,
     IsValid int NOT NULL DEFAULT 1,
@@ -88,7 +79,7 @@ CREATE TABLE Erststimme (
 
 CREATE TABLE Zweitstimme (
 	StimmeID SERIAL,
-    Kandidat int NOT NULL,
+    Kandidat int,
     Stimmkreis int NOT NULL,
     Wahl int NOT NULL,
     IsValid int NOT NULL DEFAULT 1,
