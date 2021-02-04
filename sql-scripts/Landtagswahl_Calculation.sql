@@ -31,6 +31,7 @@ DROP VIEW IF EXISTS Gesamtstimmen_Partei_Stimmkreis_EinzelstimmenUI CASCADE;
 DROP VIEW IF EXISTS Direktkandidaten_EinzelstimmenUI CASCADE;
 DROP VIEW IF EXISTS Entwicklung_Stimmen_2018_zum_2013_EinzelstimmenUI CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS Beste_Stimmkreise_ParteiUI CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS Partei_Einordnung_AnalyseUI CASCADE;
 
 -- Anzahl Erststimme für jeden Kandidat
 CREATE OR REPLACE FUNCTION Erststimme_Kandidat()
@@ -526,6 +527,7 @@ SELECT w.id     as WahlID,
        s.name   as Stimmkreis,
        s.nummer as StimmkreisNr,
        p.parteiname,
+       p.einordnung,
        gps.gesamtstimmen,
        gps.prozent,
        gps.Erststimmen,
@@ -844,3 +846,54 @@ FROM Gesamtstimmen_Partei_Rank gps
          INNER JOIN stimmkreis s ON s.id = gps.stimmkreis
          INNER JOIN Partei p ON p.ID = gps.partei
 WHERE nr <= 10;
+
+
+--Veränderung der Anteil von linken und rechten Parteien zwischen 2018 und 2013
+UPDATE partei
+SET einordnung = 'l'
+WHERE parteiname IN ('GRÜNE', 'DIE LINKE', 'SPD', 'ÖDP');
+
+UPDATE partei
+SET einordnung = 'r'
+WHERE parteiname IN ('FDP', 'CSU', 'CDU', 'AfD');
+
+CREATE MATERIALIZED VIEW Partei_Einordnung_AnalyseUI AS
+WITH data AS
+         (SELECT wahlid,
+                 wahlkreis,
+                 stimmkreisnr,
+                 stimmkreis,
+                 einordnung,
+                 sum(prozent) as prozent
+          FROM Gesamtstimmen_Partei_StimmkreisUI
+          WHERE einordnung IN ('l', 'r')
+          GROUP BY wahlid, wahlkreis, stimmkreisnr, stimmkreis, einordnung),
+     differenz_2018_2013 AS
+         (SELECT d1.wahlkreis,
+                 d1.stimmkreisnr,
+                 d1.stimmkreis,
+                 d1.einordnung,
+                 d1.prozent - d2.prozent as differenz
+          FROM data d1
+                   INNER JOIN data d2 ON d1.wahlid = 2
+              AND d2.wahlid = 1
+              AND d1.stimmkreisnr = d2.stimmkreisnr AND d1.einordnung = d2.einordnung),
+     differenz_r_l AS
+         (SELECT d1.Wahlkreis,
+                 d1.StimmkreisNr,
+                 d1.Stimmkreis,
+                 d1.differenz                                                 as Change_Left,
+                 d2.differenz                                                 as Change_Right,
+                 abs(d1.differenz - d2.differenz)                             as change,
+                 rank() over (ORDER BY abs(d1.differenz - d2.differenz) DESC) as rk,
+                 CASE
+                     WHEN d1.differenz < d2.differenz
+                         THEN 'Swing from left to right'
+                     ELSE 'Swing from right to left'
+                     END
+          FROM differenz_2018_2013 d1
+                   INNER JOIN differenz_2018_2013 d2
+                              ON d1.StimmkreisNr = d2.StimmkreisNr AND d1.einordnung = 'l' AND d2.einordnung = 'r')
+SELECT *
+FROM differenz_r_l
+WHERE rk <= 10;

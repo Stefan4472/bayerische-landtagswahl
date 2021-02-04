@@ -27,7 +27,9 @@ CREATE TABLE Stimmkreis (
 CREATE TABLE Partei (
     ID SERIAL,
     ParteiName varchar(255) NOT NULL UNIQUE,
-    PRIMARY KEY (ID)
+    Einordnung varchar(1) NOT NULL DEFAULT 'n',
+    PRIMARY KEY (ID),
+    CHECK (Einordnung IN ('n', 'l', 'r'))
 );
 
 -- Map Partei to Wahl in which the party took part
