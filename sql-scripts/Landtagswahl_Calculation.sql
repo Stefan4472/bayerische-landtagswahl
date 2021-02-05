@@ -873,11 +873,12 @@ WITH data AS
                  wahlkreis,
                  stimmkreisnr,
                  stimmkreis,
+                 StimmkreisID,
                  einordnung,
                  sum(prozent) as prozent
           FROM Gesamtstimmen_Partei_StimmkreisUI
           WHERE einordnung IN ('l', 'r')
-          GROUP BY wahlid, wahlkreis, stimmkreisnr, stimmkreis, einordnung),
+          GROUP BY wahlid, wahlkreis, stimmkreisnr, stimmkreis, StimmkreisID, einordnung),
      differenz_2018_2013 AS
          (SELECT d1.wahlkreis,
                  d1.stimmkreisnr,
@@ -905,5 +906,5 @@ WITH data AS
                    INNER JOIN differenz_2018_2013 d2
                               ON d1.StimmkreisNr = d2.StimmkreisNr AND d1.einordnung = 'l' AND d2.einordnung = 'r')
 SELECT *
-FROM differenz_r_l
-WHERE rk <= 10;
+FROM differenz_r_l;
+-- WHERE rk <= 10;

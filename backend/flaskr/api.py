@@ -182,6 +182,15 @@ def get_party_bests(year: int):
         raise NotFound(description=e.args[0])
 
 
+@API_BLUEPRINT.route('/results/<int:year>/swings')
+def get_biggest_swings(year: int):
+    db = db_context.get_db()
+    try:
+        return jsonify(db.get_biggest_swings(year))
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
+
+
 @API_BLUEPRINT.route('/voting/', methods=['POST'])
 def add_voter_key():
     voter_key = request.json['key']

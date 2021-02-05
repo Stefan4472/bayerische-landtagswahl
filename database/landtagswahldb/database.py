@@ -607,6 +607,23 @@ class Database:
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
 
+    def get_biggest_swings(
+            self,
+            wahl_jahr: int,
+    ) -> typing.Optional[list[dto.StimmkreisSwing]]:
+        # TODO: DON'T HARDCODE THE YEARS
+        if wahl_jahr == 2018:
+            query = 'SELECT Stimmkreis, StimmkreisNr, change_left, change_right ' \
+                    'FROM Partei_Einordnung_AnalyseUI'
+            self._cursor.execute(query)
+            result = self._cursor.fetchall()
+            if result:
+                return [dto.StimmkreisSwing(rec[0], int(rec[1]), float(rec[2]), float(rec[3])) for rec in result]
+            else:
+                raise ValueError('Database error')
+        else:
+            return []
+
     def add_voter(
             self,
             voter_key: str,
