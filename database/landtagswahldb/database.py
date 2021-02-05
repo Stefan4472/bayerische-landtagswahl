@@ -231,16 +231,16 @@ class Database:
     def get_stimmkreis_winner(
             self,
             wahl_id: int,
-            stimmkreis_id: int,
+            stimmkreis_nr: int,
     ) -> dto.StimmkreisWinner:
-        query = 'SELECT vorname, nachname ' \
+        query = 'SELECT vorname, nachname, parteiname ' \
                 'FROM DirektkandidatenUI ' \
-                'WHERE WahlID = %s AND StimmkreisID = %s'
-        values = (wahl_id, stimmkreis_id)
+                'WHERE WahlID = %s AND StimmkreisNr = %s'
+        values = (wahl_id, stimmkreis_nr)
         self._cursor.execute(query, values)
         result = self._cursor.fetchone()
         if result:
-            return dto.StimmkreisWinner(result[0], result[1])
+            return dto.StimmkreisWinner(result[0], result[1], result[2])
         else:
             raise ValueError('Provided `wahl_id`, `stimmkreis_id` pair ({}, {}) does not exist in database'.format(wahl_id, stimmkreis_id))
 
@@ -266,17 +266,37 @@ class Database:
             wahl_id: int,
             stimmkreis_id: int,
     ) -> list[dto.StimmkreisGesamtstimmen]:
-        query = 'SELECT parteiname, gesamtstimmen ' \
+        query = 'SELECT parteiname, gesamtstimmen, prozent ' \
                 'FROM Gesamtstimmen_Partei_StimmkreisUI ' \
                 'WHERE WahlID = %s AND StimmkreisID = %s'
         values = (wahl_id, stimmkreis_id)
         self._cursor.execute(query, values)
         result = self._cursor.fetchall()
         if result:
-            return [dto.StimmkreisGesamtstimmen(rec[0], int(rec[1]))
+            return [dto.StimmkreisGesamtstimmen(rec[0], int(rec[1]), float(rec[2]))
                     for rec in result]
         else:
             raise ValueError('Provided `wahl_id`, `stimmkreis_id` pair ({}, {}) does not exist in database'.format(wahl_id, stimmkreis_id))
+
+    def get_stimmkreis_change(
+            self,
+            wahl_jahr: int,
+            stimmkreis_id: int,
+    ) -> typing.Optional[dict[str, float]]:
+        # TODO: DON'T HARDCODE THE YEARS
+        if wahl_jahr == 2018:
+            query = 'SELECT ParteiName, Diferenz ' \
+                    'FROM Entwicklung_Stimmen_2018_zum_2013UI ' \
+                    'WHERE StimmkreisID = %s'
+            values = (stimmkreis_id,)
+            self._cursor.execute(query, values)
+            result = self._cursor.fetchall()
+            if result:
+                return {rec[0]: float(rec[1]) for rec in result}
+            else:
+                raise ValueError('Provided `stimmkreis_id` ({}) does not exist in database'.format(stimmkreis_id))
+        else:
+            return None
 
     def has_party(
             self,
@@ -491,7 +511,9 @@ class Database:
     ) -> list[dto.Mitglied]:
         """Returns party name -> number of seats. Only lists those parties
         that won at least one seat."""
-        query = 'SELECT vorname, nachname, partei, wahlkreis, direktkandidat, stimmkreisid, stimmkreis ' \
+        self._cursor.execute('SELECT * FROM Mitglieder_des_LandtagesUI')
+        # print([d[0] for d in self._cursor.description])
+        query = 'SELECT Vorname, Nachname, Partei, Wahlkreis, Direktkandidat, StimmkreisNr, Stimmkreis ' \
                 'FROM Mitglieder_des_LandtagesUI ' \
                 'WHERE WahlID = %s' \
                 'ORDER BY nachname'
@@ -549,6 +571,22 @@ class Database:
         result = self._cursor.fetchall()
         if result:
             return [dto.KnappsteSieger(rec[0], int(rec[1]), rec[2], rec[3], rec[4], int(rec[5]))
+                    for rec in result]
+        else:
+            raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
+
+    def get_knappste_verlierer(
+            self,
+            wahl_id: int,
+    ):
+        query = 'SELECT Stimmkreis, StimmkreisNr, ParteiName, Vorname, Nachname, Rueckstand ' \
+                'FROM KnappsteVerliererUI ' \
+                'WHERE WahlID = %s'
+        values = (wahl_id,)
+        self._cursor.execute(query, values)
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.KnappsteVerlierer(rec[0], int(rec[1]), rec[2], rec[3], rec[4], int(rec[5]))
                     for rec in result]
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))

@@ -70,6 +70,10 @@ def get_stimmkreis_overview(year: int, stimmkreis_nr: int):
             stimmkreis_nr,
         )
 
+        winner = db.get_stimmkreis_winner(
+            wahl_id,
+            stimmkreis_nr,
+        )
         turnout_pct = db.get_stimmkreis_turnout(
             wahl_id,
             stimmkreis_id,
@@ -80,17 +84,27 @@ def get_stimmkreis_overview(year: int, stimmkreis_nr: int):
         gesamt_by_party = {
             rec.party_name: rec for rec in db.get_stimmkreis_gesamtstimmen(wahl_id, stimmkreis_id)
         }
+        change_by_party = db.get_stimmkreis_change(
+            year,
+            stimmkreis_id,
+        )
         # Form response. The 'results' dictionary requires coalescing first-
         # and second-votes by party
         return jsonify({
             'turnout_percent': turnout_pct,
+            'winner_fname': winner.first_name,
+            'winner_lname': winner.last_name,
+            'winner_party': winner.party_name,
             'results': [
                 {
                     'party_name': party_name,
                     'candidate_fname': erst_by_party[party_name].candidate_fname,
                     'candidate_lname': erst_by_party[party_name].candidate_lname,
                     'erst_stimmen': erst_by_party[party_name].num_erststimmen,
+                    'zweit_stimmen': gesamt_by_party[party_name].num_gesamtstimmen - erst_by_party[party_name].num_erststimmen,
                     'gesamt_stimmen': gesamt_by_party[party_name].num_gesamtstimmen,
+                    'gesamt_percent': gesamt_by_party[party_name].percent,
+                    'change_percent': change_by_party[party_name] if change_by_party and party_name in change_by_party else None,
                 } for party_name in erst_by_party.keys()
             ],
         })
@@ -144,6 +158,16 @@ def get_knappste_sieger(year: int):
     try:
         wahl_id = db.get_wahl_id(year)
         return jsonify(db.get_knappste_sieger(wahl_id))
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
+
+
+@API_BLUEPRINT.route('/results/<int:year>/knappste-verlierer')
+def get_knappste_verlierer(year: int):
+    db = db_context.get_db()
+    try:
+        wahl_id = db.get_wahl_id(year)
+        return jsonify(db.get_knappste_verlierer(wahl_id))
     except ValueError as e:
         raise NotFound(description=e.args[0])
 

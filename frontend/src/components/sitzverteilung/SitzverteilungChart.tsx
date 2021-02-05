@@ -1,7 +1,7 @@
 import React from "react";
 import { ResponsivePie } from '@nivo/pie'
 import {SitzVerteilung} from "../../rest_client/SitzverteilungEndpoints";
-import {MAIN_PARTY_COLORS} from "../../PartyDisplay";
+import {MAIN_PARTY_COLORS} from "../util/PartyDisplay";
 
 
 interface Props {

@@ -42,7 +42,6 @@ export class MitgliederTable extends React.Component<Props> {
         });
     }
 
-    // TODO: THIS ONLY HAS TO BE DONE ONCE
     formatData(mitglieder: Mitglied[]) {
         return mitglieder.map((mitglied, index) => {
             return {
@@ -78,13 +77,13 @@ export class MitgliederTable extends React.Component<Props> {
                         sort: true,
                     },
                     {
-                        dataField: 'wahlkreis_name',
-                        text: 'Wahlkreis',
+                        dataField: 'stimmkreis',
+                        text: 'Stimmkreis',
                         sort: true,
                     },
                     {
-                        dataField: 'stimmkreis',
-                        text: 'Stimmkreis',
+                        dataField: 'wahlkreis_name',
+                        text: 'Wahlkreis',
                         sort: true,
                     }
                 ]}

@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Jumbotron, Container, Navbar, Nav, Form, NavDropdown, Button, OverlayTrigger, Tooltip} from "react-bootstrap";
-import {Switch, Route, HashRouter, useParams, useHistory} from "react-router-dom"
+import {Switch, Route, HashRouter} from "react-router-dom"
 import RefreshIcon from '@material-ui/icons/Refresh';
 import {StimmkreisPage} from "./components/stimmkreise/StimmkreisPage";
 import {MitgliederPage} from "./components/mitglieder/MitgliederPage";
@@ -10,34 +10,50 @@ import WahlEndpoints from "./rest_client/WahlEndpoints";
 import {UeberhangMandatePage} from "./components/ueberhangmandate/UeberhangMandatePage";
 import {SiegerPage} from "./components/sieger/SiegerPage";
 import {StimmabgabePage} from "./components/stimmabgabe/StimmabgabePage";
+import {KnappsteSiegerPage} from "./components/knappste_sieger/KnappsteSiegerPage";
+import {KnappsteVerliererPage} from "./components/knappste_verlierer/KnappsteVerliererPage";
 
 
 export const App: React.FC = () => {
-    const [selectedYear, setSelectedYear] = useState<number>(2018);
-    const [possibleYears, setPossibleYears] = useState<number[]>([2018,]);
-    const history = useHistory();
+    const [selectedYear, _setSelectedYear] = useState<number>();
+    const [possibleYears, setPossibleYears] = useState<number[]>([]);
 
-    // Fetch the list of supported election years
+    // Sets `selectedYear` and saves to local storage.
+    // Use this, rather than `_setSelectedYear`!
+    function setSelectedYear(year: number) {
+        console.log('Setting selected year');
+        saveSelectedYear(year);
+        _setSelectedYear(year);
+    }
+
+    // Save year to storage
+    function saveSelectedYear(year: number) {
+        localStorage.setItem('SELECTED_YEAR', year.toString());
+    }
+
+    // Restore year from storage
+    function restoreSelectedYear() : number|undefined {
+        let saved = localStorage.getItem('SELECTED_YEAR');
+        return saved === undefined ? undefined : Number(saved);
+    }
+
     useEffect(() => {
-        // console.log(urlYear);
-
+        console.log('Using effect');
+        // Retrieve all years
         WahlEndpoints.getAllYears().then(data => {
             setPossibleYears(data)
+
+            // Get selected year from storage
+            let saved_year = restoreSelectedYear();
+            if (saved_year === undefined) {
+                // No year saved: set to the max possible year
+                setSelectedYear(Math.max(...data));
+            }
+            else {
+                setSelectedYear(saved_year);
+            }
         })
     }, [])
-
-    // Handle user changing the year they want to view data from
-    function onYearChanged(newYear: number) {
-        setSelectedYear(newYear);
-    }
-
-    const reportYear = (year: number) => {
-        console.log('Got year ', year);
-        // if (year === undefined) {
-        //     history.push('/2018')
-        // }
-        setSelectedYear(year);
-    }
 
     return (
         <HashRouter>
@@ -61,22 +77,25 @@ export const App: React.FC = () => {
                             {/*TODO: USE REACT-ROUTER-DOM LINK TAGS*/}
                             <Nav>
                                 <Nav.Link href="/">Sitzverteilung</Nav.Link>
+                                <Nav.Link href="#mitglieder">Mitglieder</Nav.Link>
                                 <Nav.Link href="#stimmkreise">Stimmkreise</Nav.Link>
                                 <NavDropdown title="Daten" id={"data-dropdown"}>
-                                    <NavDropdown.Item href="#mitglieder">Mitglieder</NavDropdown.Item>
                                     <NavDropdown.Item href="#ueberhangmandate">Überhangmandate</NavDropdown.Item>
-                                    <NavDropdown.Item href="#sieger">Sieger</NavDropdown.Item>
+                                    <NavDropdown.Item href="#sieger">Stimmkreis Sieger</NavDropdown.Item>
+                                    <NavDropdown.Item href={"#knappste-sieger"}>Knappste Sieger</NavDropdown.Item>
+                                    <NavDropdown.Item href={"#knappste-verlierer"}>Knappste Verlierer </NavDropdown.Item>
                                 </NavDropdown>
                                 <Nav.Link href="#stimmabgabe">Stimmabgabe</Nav.Link>
                             </Nav>
                             <Nav className={"ml-auto"}>
                                 <Form inline className={"mr-2"}>
                                     <Form.Label><Navbar.Text>Wahljahr Auswahl</Navbar.Text></Form.Label>
+                                    {/*Provide selector with all supported election years*/}
                                     <Form.Control
                                         as="select"
                                         custom
                                         className={"ml-2"}
-                                        onChange={(event: { target: { value: any; }; }) => {onYearChanged(event.target.value)}}
+                                        onChange={(event: { target: { value: any; }; }) => {setSelectedYear(event.target.value)}}
                                     >
                                         {possibleYears.map(year => {
                                             if (year === selectedYear) {
@@ -119,58 +138,31 @@ export const App: React.FC = () => {
                 {/*Content*/}
                 <Switch>
                     <Route exact path={"/mitglieder"}>
-                        <MitgliederPage selectedYear={selectedYear}/>
+                        {selectedYear && <MitgliederPage selectedYear={selectedYear}/>}
                     </Route>
                     <Route exact path={"/stimmkreise"}>
-                        <StimmkreisPage selectedYear={selectedYear}/>
+                        {selectedYear && <StimmkreisPage selectedYear={selectedYear}/>}
                     </Route>
                     <Route exact path={"/ueberhangmandate"}>
-                        <UeberhangMandatePage selectedYear={selectedYear}/>
+                        {selectedYear && <UeberhangMandatePage selectedYear={selectedYear}/>}
                     </Route>
                     <Route exact path={"/stimmabgabe"}>
-                        <StimmabgabePage/>
+                        {selectedYear && <StimmabgabePage/>}
                     </Route>
                     <Route exact path={"/sieger"}>
-                        <SiegerPage selectedYear={selectedYear}/>
+                        {selectedYear && <SiegerPage selectedYear={selectedYear}/>}
+                    </Route>
+                    <Route exact path={"/knappste-sieger"}>
+                        {selectedYear && <KnappsteSiegerPage selectedYear={selectedYear}/>}
+                    </Route>
+                    <Route exact path={"/knappste-verlierer"}>
+                        {selectedYear && <KnappsteVerliererPage selectedYear={selectedYear}/>}
                     </Route>
                     <Route path={"/:year?"}>
-                        <Child reportYear={(year: number) => reportYear(year)}/>
-                        {/*<SitzverteilungPage selectedYear={selectedYear}/>*/}
+                        {selectedYear && <SitzverteilungPage selectedYear={selectedYear}/>}
                     </Route>
                 </Switch>
             </div>
         </HashRouter>
     )
-}
-
-interface ChildProps {
-    reportYear: (year: number) => void
-}
-
-const Child : React.FC<ChildProps> = (props: ChildProps) => {
-    let urlParams: {year?: string|undefined} = useParams();
-    const history = useHistory();
-
-    useEffect(() => {
-        console.log(urlParams);
-        // No year set: redirect to the latest year in the database
-        if (urlParams.year === undefined) {
-            WahlEndpoints.getAllYears().then((years) => {
-                history.push('/' + years[1])
-            })
-        }
-        else {
-            props.reportYear(Number(urlParams.year));
-        }
-    }, [urlParams])
-
-    return (
-        <div>
-            {urlParams.year ? (
-                <SitzverteilungPage selectedYear={Number(urlParams.year)}/>
-            ) : (
-                <div/>
-            )}
-        </div>
-    );
 }

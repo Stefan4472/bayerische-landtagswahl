@@ -1,39 +1,32 @@
 import React from "react";
 import BootstrapTable from "react-bootstrap-table-next";
-import {StimmkreisSieger} from "../../rest_client/SiegerEndpoints";
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
+import {KnappsteSieger} from "../../rest_client/SiegerEndpoints";
 
 interface Props {
-    sieger: StimmkreisSieger[],
+    sieger: KnappsteSieger[],
 }
 
-export class SiegerTable extends React.Component<Props> {
-    formatData(sieger: StimmkreisSieger[]) {
+export class KnappsteSiegerTable extends React.Component<Props> {
+    formatData(sieger: KnappsteSieger[]) {
+        console.log('hi');
         return sieger.map((sieger, index) => {
             return {
                 'id': index,
-                'wahlkreis': sieger.wahlkreis,
                 'stimmkreis': '(' + sieger.stimmkreis_num + ') ' + sieger.stimmkreis_name,
                 'party_name': sieger.party_name,
-                'erststimmen': sieger.num_erststimmen,
-                'zweitstimmen': sieger.num_zweitstimmen,
-                'percent': sieger.percent + '%',
+                'candidate': sieger.candidate_fname + ' ' + sieger.candidate_lname,
+                'margin': sieger.win_margin,
             }
         });
     }
 
     render() {
-        // TODO: NEED ERST- AND ZWEIT- PERCENTAGES
         return (
             <BootstrapTable
                 bootstrap4
                 keyField={'id'}
                 columns={[
-                    {
-                        dataField: 'wahlkreis',
-                        text: 'Wahlkreis',
-                        sort: true,
-                    },
                     {
                         dataField: 'stimmkreis',
                         text: 'Stimmkreis',
@@ -45,26 +38,18 @@ export class SiegerTable extends React.Component<Props> {
                         sort: true,
                     },
                     {
-                        dataField: 'erststimmen',
-                        text: 'Num. Erststimmen',
-                        sort: true,
-                        formatter: (value) => (
-                            <span>{value.toLocaleString()}</span>
-                        )
-                    },
-                    {
-                        dataField: 'zweitstimmen',
-                        text: 'Num. Zweitstimmen',
-                        sort: true,
-                        formatter: (value) => (
-                            <span>{value.toLocaleString()}</span>
-                        )
-                    },
-                    {
-                        dataField: 'percent',
-                        text: 'Gesamtstimmen-\nanteil',
+                        dataField: 'candidate',
+                        text: 'Kandidat',
                         sort: true
-                    }
+                    },
+                    {
+                        dataField: 'margin',
+                        text: 'Vorsprung',
+                        sort: true,
+                        formatter: (value) => (
+                            <span>{value.toLocaleString()}</span>
+                        )
+                    },
                 ]}
                 data={this.formatData(this.props.sieger)}
                 striped

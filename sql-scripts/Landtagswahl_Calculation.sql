@@ -40,6 +40,7 @@ CREATE OR REPLACE FUNCTION Erststimme_Kandidat()
                 wahlID       integer,
                 wahlkreisID  integer,
                 stimmkreisID integer,
+                stimmkreisNr integer,
                 kandidatID   integer,
                 parteiID     integer,
                 anzahl       numeric
@@ -53,9 +54,10 @@ BEGIN
                   FROM erststimme s
                   WHERE IsValid = 1
                   GROUP BY Wahl, Kandidat, Stimmkreis)
-        SELECT es.wahl, k.wahlkreis, es.stimmkreis, es.kandidat, k.partei, es.Anzahl
+        SELECT es.wahl, k.wahlkreis, es.stimmkreis, sk.nummer, es.kandidat, k.partei, es.Anzahl
         FROM erststimme_kand as es
-                 INNER JOIN Kandidat k ON k.ID = es.Kandidat;
+                 INNER JOIN Kandidat k ON k.ID = es.Kandidat
+                 INNER JOIN Stimmkreis sk ON sk.ID = es.stimmkreis;
 END
 $func$ LANGUAGE plpgsql;
 
@@ -64,6 +66,7 @@ CREATE MATERIALIZED VIEW Erststimme_Kandidat AS
 SELECT wahlID       as Wahl,
        wahlkreisID  as wahlkreis,
        stimmkreisID as stimmkreis,
+       stimmkreisNr as stimmkreisNr,
        parteiID     as partei,
        kandidatID   as kandidat,
        anzahl
@@ -198,7 +201,7 @@ WITH Kandidat_Mit_Partei_Ueber_5Proz AS
                  FROM Gesamtstimmen_Partei_Wahl gwp
                  WHERE gwp.wahl = kse.wahl
                    AND gwp.partei = kse.partei) >= 5)
-SELECT Wahl, wahlkreis, stimmkreis, kandidat, partei, anzahl as Erststimme
+SELECT Wahl, wahlkreis, stimmkreis, stimmkreisNr, kandidat, partei, anzahl as Erststimme
 FROM Kandidat_Mit_Partei_Ueber_5Proz k
 WHERE k.rank = 1;
 
@@ -396,10 +399,10 @@ WITH Zweitstimme_Kandidat AS
                    INNER JOIN kandidat k ON zw.kandidat = k.id
           WHERE zw.kandidat NOT IN (SELECT e.Kandidat FROM Erststimme_Gewinner_Pro_Stimmkreis e WHERE e.wahl = zw.wahl))
 -- Alle Gewaelte.
-SELECT eg.Kandidat, eg.Partei, eg.Wahlkreis, eg.Stimmkreis, eg.Wahl, true as Direktkandidat
+SELECT eg.Kandidat, eg.Partei, eg.Wahlkreis, eg.Stimmkreis, eg.stimmkreisNr, eg.Wahl, true as Direktkandidat
 FROM Erststimme_Gewinner_Pro_Stimmkreis eg
 UNION
-SELECT lk.Kandidat, lk.Partei, lk.Wahlkreis, null, lk.Wahl, false as Direktkandidat
+SELECT lk.Kandidat, lk.Partei, lk.Wahlkreis, null, null, lk.Wahl, false as Direktkandidat
 FROM List_kand lk
 WHERE Nr <= (SELECT Listmandate
              FROM Gesamtstimmen_und_Sitze_Partei gsp
@@ -491,7 +494,7 @@ SELECT k.vorname,
        w.id         as WahlID,
        w.jahr,
        wk.name      as Wahlkreis,
-       s.nummer     as StimmkreisID,
+       s.nummer     as StimmkreisNr,
        s.name       as Stimmkreis
 FROM Mitglieder_des_Landtages mdl
          LEFT JOIN stimmkreis s ON mdl.stimmkreis = s.id
@@ -545,6 +548,7 @@ SELECT w.id    as WahlID,
        wk.name as Wahlkreis,
        s.id    as StimmkreisID,
        s.name  as Stimmkreis,
+       s.nummer as StimmkreisNr,
        k.vorname,
        k.nachname,
        p.parteiname,
@@ -560,8 +564,10 @@ ORDER BY w.jahr, s.id;
 -- die Entwicklung der Stimmen in 2018 im Vergleich zum 2013
 CREATE MATERIALIZED VIEW Entwicklung_Stimmen_2018_zum_2013UI AS
 SELECT g1.jahr,
+       g1.WahlID,
        g1.wahlkreis,
        g1.stimmkreisnr,
+       g1.StimmkreisID,
        g1.stimmkreis,
        g1.parteiname,
        g1.gesamtstimmen,
@@ -636,12 +642,14 @@ ORDER BY ksv.wahl DESC, ksv.partei, rk;
 
 -- Knappste Verlierer
 CREATE MATERIALIZED VIEW KnappsteVerliererUI AS
-SELECT w.jahr,
+SELECT w.id    as WahlID,
+       w.jahr,
        p.parteiname,
        rk      as Nr,
        wk.name as Wahlkreis,
        s.id    as StimmkreisID,
        s.name  as Stimmkreis,
+       s.nummer       as StimmkreisNr,
        k.vorname,
        k.nachname,
        ksv.erststimmen,

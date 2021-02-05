@@ -4,7 +4,7 @@ import React from "react";
 import {StimmkreisTable} from "./StimmkreisTable";
 import {StimmkreisChart} from "./StimmkreisChart";
 import StimmkreisEndpoints, {Stimmkreis, StimmkreisInfo} from "../../rest_client/StimmkreisEndpoints";
-import {orderParties} from "../../PartyDisplay";
+import {orderParties} from "../util/PartyDisplay";
 
 
 interface Props {
@@ -47,6 +47,9 @@ export class StimmkreisPage extends React.Component<Props> {
                     'name': stimmkreisInfo.name,
                     'number': stimmkreisInfo.number,
                     'turnout_percent': data.turnout_percent,
+                    'winner_fname': data.winner_fname,
+                    'winner_lname': data.winner_lname,
+                    'winner_party': data.winner_party,
                     'results': orderParties(data.results),
                 }
             })
@@ -70,7 +73,7 @@ export class StimmkreisPage extends React.Component<Props> {
                                 onChange={(event) => {this.onFilterChanged(event.target.value);}}
                             />
                         </Form>
-                        <div className={"overflow-auto"} style={{height: "420px"}}>
+                        <div className={"overflow-auto"} style={{height: "416px"}}>
                             <StimmkreisSelector
                                 selectedYear={this.props.selectedYear}
                                 filterText={this.state.filterText}
@@ -92,15 +95,21 @@ export class StimmkreisPage extends React.Component<Props> {
                                 <StimmkreisChart
                                     stimmkreis={this.state.currStimmkreis}
                                 />
-                                <div className={"float-right"}>
-                                    {this.state.currStimmkreis && (
-                                        <span>Wahlbeteiligung: {this.state.currStimmkreis?.turnout_percent.toFixed(2)}%</span>
-                                    )}
-                                </div>
+                                {this.state.currStimmkreis && (
+                                    <div>
+                                        <Row className={"float-left ml-2"}>
+                                            Gewinner: {this.state.currStimmkreis?.winner_fname} {this.state.currStimmkreis?.winner_lname} ({this.state.currStimmkreis?.winner_party})
+                                        </Row>
+                                        <Row className={"float-right mr-2"}>
+                                            Wahlbeteiligung: {this.state.currStimmkreis?.turnout_percent.toFixed(2)}%
+                                        </Row>
+                                    </div>
+                                )}
                             </div>
                         </Card>
                     </Col>
                 </Row>
+                <hr/>
                 <StimmkreisTable
                     stimmkreis={this.state.currStimmkreis}
                 />

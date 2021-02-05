@@ -1,17 +1,17 @@
 import React from "react";
 import {Container} from "react-bootstrap";
-import SiegerEndpoints, {StimmkreisSieger} from "../../rest_client/SiegerEndpoints";
-import {SiegerTable} from "./SiegerTable";
+import SiegerEndpoints, {KnappsteSieger} from "../../rest_client/SiegerEndpoints";
+import {KnappsteSiegerTable} from "./KnappsteSiegerTable";
 
 interface Props {
     selectedYear: number,
 }
 
 interface State {
-    sieger: StimmkreisSieger[];
+    sieger: KnappsteSieger[];
 }
 
-export class SiegerPage extends React.Component<Props> {
+export class KnappsteSiegerPage extends React.Component<Props> {
     state: State;
 
     constructor(props: Props) {
@@ -33,7 +33,7 @@ export class SiegerPage extends React.Component<Props> {
     }
 
     fetchDataAndSetState(year: number) {
-        SiegerEndpoints.getAllSieger(year).then(data => {
+        SiegerEndpoints.getKnappsteSieger(year).then(data => {
             console.log(data);
             this.setState({
                 sieger: data,
@@ -44,7 +44,7 @@ export class SiegerPage extends React.Component<Props> {
     render() {
         return (
             <Container>
-                <SiegerTable sieger={this.state.sieger}/>
+                <KnappsteSiegerTable sieger={this.state.sieger}/>
             </Container>
         )
     }

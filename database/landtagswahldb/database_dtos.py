@@ -17,6 +17,7 @@ class StimmkreisInfo:
 class StimmkreisWinner:
     first_name: str
     last_name: str
+    party_name: str
 
 
 @dc.dataclass
@@ -31,6 +32,8 @@ class StimmkreisErststimmen:
 class StimmkreisGesamtstimmen:
     party_name: str
     num_gesamtstimmen: int
+    percent: float
+    # pct_change: float TODO
 
 
 @dc.dataclass
@@ -81,6 +84,16 @@ class KnappsteSieger:
 
 
 @dc.dataclass
+class KnappsteVerlierer:
+    stimmkreis_name: str
+    stimmkreis_num: int
+    party_name: str
+    candidate_fname: str
+    candidate_lname: str
+    lose_margin: int
+
+
+@dc.dataclass
 class VoterInfo:
     wahl_id: int
     stimmkreis_id: int
@@ -93,11 +106,3 @@ class BallotKandidat:
     party_name: str
     first_name: str
     last_name: str
-
-
-# @dc.dataclass
-# class BallotInfo:
-#     stimmkreis: str
-#     stimmkreis_nr: int
-#     direct_candidates: list[BallotKandidat]
-#     list_candidates: list[BallotKandidat]
