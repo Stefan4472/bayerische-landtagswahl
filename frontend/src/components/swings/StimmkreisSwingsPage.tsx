@@ -1,23 +1,23 @@
 import React from "react";
 import {Container} from "react-bootstrap";
-import SiegerEndpoints, {StimmkreisSieger} from "../../rest_client/SiegerEndpoints";
-import {SiegerTable} from "./SiegerTable";
+import WahlEndpoints, {StimmkreisSwing} from "../../rest_client/WahlEndpoints";
+import {StimmkreisSwingsTable} from "./StimmkreisSwingsTable";
 
 interface Props {
     selectedYear: number,
 }
 
 interface State {
-    sieger: StimmkreisSieger[];
+    stimmkreise: StimmkreisSwing[];
 }
 
-export class SiegerPage extends React.Component<Props> {
+export class StimmkreisSwingsPage extends React.Component<Props> {
     state: State;
 
     constructor(props: Props) {
         super(props);
         this.state = {
-            sieger: [],
+            stimmkreise: [],
         };
     }
 
@@ -33,9 +33,9 @@ export class SiegerPage extends React.Component<Props> {
     }
 
     fetchDataAndSetState(year: number) {
-        SiegerEndpoints.getAllSieger(year).then(data => {
+        WahlEndpoints.getStimmkreisSwings(year).then(data => {
             this.setState({
-                sieger: data,
+                stimmkreise: data,
             })
         });
     }
@@ -43,7 +43,7 @@ export class SiegerPage extends React.Component<Props> {
     render() {
         return (
             <Container>
-                <SiegerTable sieger={this.state.sieger}/>
+                <StimmkreisSwingsTable stimmkreise={this.state.stimmkreise}/>
             </Container>
         )
     }

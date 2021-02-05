@@ -906,5 +906,6 @@ WITH data AS
                    INNER JOIN differenz_2018_2013 d2
                               ON d1.StimmkreisNr = d2.StimmkreisNr AND d1.einordnung = 'l' AND d2.einordnung = 'r')
 SELECT *
-FROM differenz_r_l;
+FROM differenz_r_l
+ORDER BY stimmkreisnr;
 -- WHERE rk <= 10;

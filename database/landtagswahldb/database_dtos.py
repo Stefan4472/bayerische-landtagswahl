@@ -105,7 +105,7 @@ class PartyBestStimmkreis:
 @dc.dataclass
 class StimmkreisSwing:
     stimmkreis_name: str
-    sitmmkreis_num: int
+    stimmkreis_num: int
     pct_change_left: float
     pct_change_right: float
 

@@ -8,6 +8,13 @@ export interface PartyBestStimmkreis {
     pct_gesamtstimmen: number
 }
 
+export interface StimmkreisSwing {
+    stimmkreis_name: string
+    stimmkreis_num: number
+    pct_change_left: number
+    pct_change_right: number
+}
+
 class WahlEndpoints {
 
     async getAllYears() : Promise<number[]> {
@@ -22,6 +29,11 @@ class WahlEndpoints {
     async getPartyBestStimmkreise(year: number) : Promise<PartyBestStimmkreis[]> {
         const result = await http.get(`/results/${year}/party-bests`);
         return result.data as PartyBestStimmkreis[];
+    }
+
+    async getStimmkreisSwings(year: number) : Promise<StimmkreisSwing[]> {
+        const result = await http.get(`/results/${year}/swings`);
+        return result.data as StimmkreisSwing[];
     }
 }
 
