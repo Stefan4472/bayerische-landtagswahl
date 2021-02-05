@@ -12,6 +12,7 @@ import {SiegerPage} from "./components/sieger/SiegerPage";
 import {StimmabgabePage} from "./components/stimmabgabe/StimmabgabePage";
 import {KnappsteSiegerPage} from "./components/knappste_sieger/KnappsteSiegerPage";
 import {KnappsteVerliererPage} from "./components/knappste_verlierer/KnappsteVerliererPage";
+import {PartyBestsPage} from "./components/party_bests/PartyBestsPage";
 
 
 export const App: React.FC = () => {
@@ -84,6 +85,7 @@ export const App: React.FC = () => {
                                     <NavDropdown.Item href="#sieger">Stimmkreis Sieger</NavDropdown.Item>
                                     <NavDropdown.Item href={"#knappste-sieger"}>Knappste Sieger</NavDropdown.Item>
                                     <NavDropdown.Item href={"#knappste-verlierer"}>Knappste Verlierer </NavDropdown.Item>
+                                    <NavDropdown.Item href={"#party-bests"}>Party Bests</NavDropdown.Item>
                                 </NavDropdown>
                                 <Nav.Link href="#stimmabgabe">Stimmabgabe</Nav.Link>
                             </Nav>
@@ -157,6 +159,9 @@ export const App: React.FC = () => {
                     </Route>
                     <Route exact path={"/knappste-verlierer"}>
                         {selectedYear && <KnappsteVerliererPage selectedYear={selectedYear}/>}
+                    </Route>
+                    <Route exact path={"/party-bests"}>
+                        {selectedYear && <PartyBestsPage selectedYear={selectedYear}/>}
                     </Route>
                     <Route path={"/:year?"}>
                         {selectedYear && <SitzverteilungPage selectedYear={selectedYear}/>}
