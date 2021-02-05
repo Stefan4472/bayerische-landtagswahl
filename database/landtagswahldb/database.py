@@ -591,6 +591,22 @@ class Database:
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
 
+    def get_party_beststimmkreise(
+        self,
+        wahl_id: int,
+    ):
+        query = 'SELECT ParteiName, Stimmkreis, StimmkreisNr, Gesamtstimmen, Prozent ' \
+                'FROM Beste_Stimmkreise_ParteiUI ' \
+                'WHERE WahlID = %s'
+        values = (wahl_id,)
+        self._cursor.execute(query, values)
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.PartyBestStimmkreis(rec[0], rec[1], int(rec[2]), int(rec[3]), float(rec[4]))
+                    for rec in result]
+        else:
+            raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
+
     def add_voter(
             self,
             voter_key: str,

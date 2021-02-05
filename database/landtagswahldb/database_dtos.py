@@ -94,6 +94,15 @@ class KnappsteVerlierer:
 
 
 @dc.dataclass
+class PartyBestStimmkreis:
+    party_name: str
+    stimmkreis_name: str
+    stimmkreis_num: int
+    num_gesamtstimmen: int
+    pct_gesamtstimmen: float
+
+
+@dc.dataclass
 class VoterInfo:
     wahl_id: int
     stimmkreis_id: int

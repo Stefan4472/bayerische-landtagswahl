@@ -172,6 +172,16 @@ def get_knappste_verlierer(year: int):
         raise NotFound(description=e.args[0])
 
 
+@API_BLUEPRINT.route('/results/<int:year>/party-bests')
+def get_party_bests(year: int):
+    db = db_context.get_db()
+    try:
+        wahl_id = db.get_wahl_id(year)
+        return jsonify(db.get_party_beststimmkreise(wahl_id))
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
+
+
 @API_BLUEPRINT.route('/voting/', methods=['POST'])
 def add_voter_key():
     voter_key = request.json['key']

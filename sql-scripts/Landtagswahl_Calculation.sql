@@ -842,9 +842,11 @@ WITH Gesamtstimmen_Partei_Rank AS
           ORDER BY gps.Wahl DESC)
 SELECT nr,
        w.jahr,
+       w.id as WahlID,
        p.parteiname,
        s.id   as stimmkreisID,
        s.name as stimmkreis,
+       s.nummer as stimmkreisNr,
        gps.Erststimmen,
        gps.Zweitstimmen,
        gps.Gesamtstimmen,
