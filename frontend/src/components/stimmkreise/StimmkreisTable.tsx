@@ -40,7 +40,7 @@ export class StimmkreisTable extends React.Component<Props> {
                     },
                     {
                         dataField: 'erststimmen',
-                        text: 'Erst',
+                        text: 'Erststimmen',
                         sort: true,
                         formatter: (value) => (
                             <span>{value.toLocaleString()}</span>
@@ -48,7 +48,7 @@ export class StimmkreisTable extends React.Component<Props> {
                     },
                     {
                         dataField: 'zweitstimmen',
-                        text: 'Zweit',
+                        text: 'Zweitstimmen',
                         sort: true,
                         formatter: (value) => (
                             <span>{value.toLocaleString()}</span>
@@ -56,7 +56,7 @@ export class StimmkreisTable extends React.Component<Props> {
                     },
                     {
                         dataField: 'gesamtstimmen',
-                        text: 'Gesamt',
+                        text: 'Gesamtstimmen',
                         sort: true,
                         formatter: (value) => (
                             <span>{value.toLocaleString()}</span>

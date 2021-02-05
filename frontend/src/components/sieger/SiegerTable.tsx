@@ -17,7 +17,7 @@ export class SiegerTable extends React.Component<Props> {
                 'party_name': sieger.party_name,
                 'erststimmen': sieger.num_erststimmen,
                 'zweitstimmen': sieger.num_zweitstimmen,
-                'percent': sieger.percent + ' %',
+                'percent': sieger.percent + '%',
             }
         });
     }

@@ -491,7 +491,10 @@ class Database:
     ) -> list[dto.Mitglied]:
         """Returns party name -> number of seats. Only lists those parties
         that won at least one seat."""
-        query = 'SELECT vorname, nachname, partei, wahlkreis, direktkandidat, stimmkreisid, stimmkreis ' \
+        self._cursor.execute('SELECT * FROM Mitglieder_des_LandtagesUI')
+        print([d[0] for d in self._cursor.description])
+
+        query = 'SELECT Vorname, Nachname, Partei, Wahlkreis, Direktkandidat, StimmkreisNr, Stimmkreis ' \
                 'FROM Mitglieder_des_LandtagesUI ' \
                 'WHERE WahlID = %s' \
                 'ORDER BY nachname'
