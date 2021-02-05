@@ -613,12 +613,12 @@ class Database:
     ) -> typing.Optional[list[dto.StimmkreisSwing]]:
         # TODO: DON'T HARDCODE THE YEARS
         if wahl_jahr == 2018:
-            query = 'SELECT Stimmkreis, StimmkreisNr, change_left, change_right ' \
+            query = 'SELECT Stimmkreis, StimmkreisNr, Wahlkreis, change_left, change_right ' \
                     'FROM Partei_Einordnung_AnalyseUI'
             self._cursor.execute(query)
             result = self._cursor.fetchall()
             if result:
-                return [dto.StimmkreisSwing(rec[0], int(rec[1]), float(rec[2]), float(rec[3])) for rec in result]
+                return [dto.StimmkreisSwing(rec[0], int(rec[1]), rec[2], float(rec[3]), float(rec[4])) for rec in result]
             else:
                 raise ValueError('Database error')
         else:

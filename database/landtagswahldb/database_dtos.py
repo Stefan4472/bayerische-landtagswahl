@@ -106,6 +106,7 @@ class PartyBestStimmkreis:
 class StimmkreisSwing:
     stimmkreis_name: str
     stimmkreis_num: int
+    wahlkreis_name: str
     pct_change_left: float
     pct_change_right: float
 

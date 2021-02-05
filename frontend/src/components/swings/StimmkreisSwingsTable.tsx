@@ -13,6 +13,7 @@ export class StimmkreisSwingsTable extends React.Component<Props> {
             return {
                 'id': index,
                 'stimmkreis': '(' + stimmkreis.stimmkreis_num + ') ' + stimmkreis.stimmkreis_name,
+                'wahlkreis': stimmkreis.wahlkreis_name,
                 'change_left': stimmkreis.pct_change_left,
                 'change_right': stimmkreis.pct_change_right,
             }
@@ -31,6 +32,11 @@ export class StimmkreisSwingsTable extends React.Component<Props> {
                         sort: true,
                     },
                     {
+                        dataField: 'wahlkreis',
+                        text: 'Wahlkreis',
+                        sort: true,
+                    },
+                    {
                         dataField: 'change_left',
                         text: 'Änderung Links',
                         sort: true,
@@ -43,7 +49,7 @@ export class StimmkreisSwingsTable extends React.Component<Props> {
                         text: 'Änderung Rechts',
                         sort: true,
                         formatter: (value) => (
-                            <span>{value.toFixed(2)}%</span>
+                            <span>{value ? (value > 0 ? '+' : '') + value.toFixed(2) + "%" : ''}</span>
                         )
                     },
                 ]}

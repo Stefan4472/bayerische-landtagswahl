@@ -11,6 +11,7 @@ export interface PartyBestStimmkreis {
 export interface StimmkreisSwing {
     stimmkreis_name: string
     stimmkreis_num: number
+    wahlkreis_name: string
     pct_change_left: number
     pct_change_right: number
 }
