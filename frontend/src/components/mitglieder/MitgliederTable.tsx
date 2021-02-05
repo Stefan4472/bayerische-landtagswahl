@@ -42,7 +42,6 @@ export class MitgliederTable extends React.Component<Props> {
         });
     }
 
-    // TODO: THIS ONLY HAS TO BE DONE ONCE
     formatData(mitglieder: Mitglied[]) {
         return mitglieder.map((mitglied, index) => {
             return {

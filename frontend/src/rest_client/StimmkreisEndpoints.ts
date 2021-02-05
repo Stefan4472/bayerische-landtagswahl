@@ -14,6 +14,7 @@ export interface StimmkreisPartyResult {
     zweit_stimmen: number;
     gesamt_stimmen: number;
     gesamt_percent: number;
+    change_percent: number|null;
 }
 
 export interface StimmkreisRaw {

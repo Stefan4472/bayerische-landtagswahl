@@ -278,6 +278,26 @@ class Database:
         else:
             raise ValueError('Provided `wahl_id`, `stimmkreis_id` pair ({}, {}) does not exist in database'.format(wahl_id, stimmkreis_id))
 
+    def get_stimmkreis_change(
+            self,
+            wahl_jahr: int,
+            stimmkreis_id: int,
+    ) -> typing.Optional[dict[str, float]]:
+        # TODO: DON'T HARDCODE THE YEARS
+        if wahl_jahr == 2018:
+            query = 'SELECT ParteiName, Diferenz ' \
+                    'FROM Entwicklung_Stimmen_2018_zum_2013UI ' \
+                    'WHERE StimmkreisID = %s'
+            values = (stimmkreis_id,)
+            self._cursor.execute(query, values)
+            result = self._cursor.fetchall()
+            if result:
+                return {rec[0]: float(rec[1]) for rec in result}
+            else:
+                raise ValueError('Provided `stimmkreis_id` ({}) does not exist in database'.format(stimmkreis_id))
+        else:
+            return None
+
     def has_party(
             self,
             party_name: str,
@@ -492,8 +512,7 @@ class Database:
         """Returns party name -> number of seats. Only lists those parties
         that won at least one seat."""
         self._cursor.execute('SELECT * FROM Mitglieder_des_LandtagesUI')
-        print([d[0] for d in self._cursor.description])
-
+        # print([d[0] for d in self._cursor.description])
         query = 'SELECT Vorname, Nachname, Partei, Wahlkreis, Direktkandidat, StimmkreisNr, Stimmkreis ' \
                 'FROM Mitglieder_des_LandtagesUI ' \
                 'WHERE WahlID = %s' \

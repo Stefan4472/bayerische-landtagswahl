@@ -84,6 +84,10 @@ def get_stimmkreis_overview(year: int, stimmkreis_nr: int):
         gesamt_by_party = {
             rec.party_name: rec for rec in db.get_stimmkreis_gesamtstimmen(wahl_id, stimmkreis_id)
         }
+        change_by_party = db.get_stimmkreis_change(
+            year,
+            stimmkreis_id,
+        )
         # Form response. The 'results' dictionary requires coalescing first-
         # and second-votes by party
         return jsonify({
@@ -100,6 +104,7 @@ def get_stimmkreis_overview(year: int, stimmkreis_nr: int):
                     'zweit_stimmen': gesamt_by_party[party_name].num_gesamtstimmen - erst_by_party[party_name].num_erststimmen,
                     'gesamt_stimmen': gesamt_by_party[party_name].num_gesamtstimmen,
                     'gesamt_percent': gesamt_by_party[party_name].percent,
+                    'change_percent': change_by_party[party_name] if change_by_party and party_name in change_by_party else None,
                 } for party_name in erst_by_party.keys()
             ],
         })
