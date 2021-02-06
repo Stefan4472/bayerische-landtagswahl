@@ -678,21 +678,27 @@ class Database:
         else:
             # Register direct vote
             if dcandidate_id:
-                query = 'INSERT INTO Erststimme (Kandidat, Stimmkreis, Wahl) ' \
-                        'VALUES (%s, %s, %s)'
+                query = 'INSERT INTO Erststimme (Kandidat, Stimmkreis, Wahl, IsValid) ' \
+                        'VALUES (%s, %s, %s, %s)'
                 values = (
                     dcandidate_id,
                     voter_info.stimmkreis_id,
                     voter_info.wahl_id,
+                    1,
                 )
                 self._cursor.execute(query, values)
-            # else:
-                # TODO: ALLOW `KANDIDAT` TO BE NULL
+                print('Inserted dcandidate values: {}'.format(values))
+            else:
                 # No candidate provided: register invalid vote
-                # query = 'INSERT INTO Erststimme (Kandidat, Stimmkreis, Wahl, IsValid) ' \
-                #         'VALUES (%s, %s, %s, %s, %s)'
-                # values = (dcandidate_id, voter_info.stimmkreis_id, voter_info.wahl_id, False)
-                # self._cursor.execute(query, values)
+                query = 'INSERT INTO Erststimme (Stimmkreis, Wahl, IsValid) ' \
+                        'VALUES (%s, %s, %s)'
+                values = (
+                    voter_info.stimmkreis_id,
+                    voter_info.wahl_id,
+                    0,
+                )
+                self._cursor.execute(query, values)
+                print('Registered invalid Erststimme')
             # Register list vote
             if lcandidate_id:
                 query = 'INSERT INTO Zweitstimme (Kandidat, Stimmkreis, Wahl) ' \
@@ -703,11 +709,28 @@ class Database:
                     voter_info.wahl_id,
                 )
                 self._cursor.execute(query, values)
+                print('Inserted lcandidate values: {}'.format(values))
+            else:
+                # No candidate provided: register invalid vote
+                query = 'INSERT INTO Zweitstimme (Stimmkreis, Wahl, IsValid) ' \
+                        'VALUES (%s, %s, %s)'
+                values = (
+                    voter_info.stimmkreis_id,
+                    voter_info.wahl_id,
+                    0,
+                )
+                self._cursor.execute(query, values)
+                print('Registered invalid Zweitstimme')
+            # TODO: SUPPORT PARTY-LIST VOTE
+
             # Mark the voterkey as having voted
             query = 'UPDATE VoteRecords ' \
                     'SET HasVoted = %s ' \
                     'WHERE Key = %s'
-            values = (True, self._hash_voterkey(voter_key))
+            values = (
+                True,
+                self._hash_voterkey(voter_key),
+            )
             self._cursor.execute(query, values)
             self.commit()
 

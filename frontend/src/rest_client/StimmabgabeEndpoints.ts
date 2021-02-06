@@ -28,12 +28,16 @@ class StimmabgabeEndpoints {
     }
 
     async submitVote(voterKey: string, directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) : Promise<VoteResult> {
+        let data: any = {};
+        if (directCandidate) {
+            data["directID"] = directCandidate.id;
+        }
+        if (listCandidate) {
+            data["listID"] = listCandidate.id;
+        }
         const result = await http.post(
             '/voting/' + voterKey,
-            {
-                    'directID': directCandidate ? directCandidate.id : -1,
-                    'listID': listCandidate ? listCandidate.id : -1,
-            }
+            data,
         )
         return result.data as VoteResult;
     }
