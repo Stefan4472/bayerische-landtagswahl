@@ -7,11 +7,17 @@ export interface BallotCandidate {
     id: number,
 }
 
+export interface BallotParty {
+    party_name: string
+    id: number
+}
+
 export interface BallotInfo {
     stimmkreis: string,
     stimmkreis_nr: number,
     direct_candidates: BallotCandidate[],
     list_candidates: BallotCandidate[],
+    parties: BallotParty[],
 }
 
 export interface VoteResult {
@@ -23,7 +29,6 @@ class StimmabgabeEndpoints {
 
     async getWahlInfo(voterKey: string) : Promise<BallotInfo[]> {
         const result = await http.get('/voting/' + voterKey);
-        console.log(result);
         return result.data as BallotInfo[];
     }
 

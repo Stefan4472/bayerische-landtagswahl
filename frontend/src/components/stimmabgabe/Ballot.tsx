@@ -1,8 +1,9 @@
 import React from "react";
 import {Button, Card, Col, Form, Row} from "react-bootstrap";
-import {BallotCandidate, BallotInfo} from "../../rest_client/StimmabgabeEndpoints";
+import {BallotCandidate, BallotInfo, BallotParty} from "../../rest_client/StimmabgabeEndpoints";
 import {DirectCandidateSelector} from "./DirectCandidateSelector";
 import {ListCandidateSelector} from "./ListCandidateSelector";
+import {PartySelector} from "./PartySelector";
 
 interface Props {
     ballotInfo: BallotInfo,
@@ -14,6 +15,7 @@ interface State {
     listFilterText: string;
     selectedDirectCandidate?: BallotCandidate,
     selectedListCandidate?: BallotCandidate,
+    selectedParty?: BallotParty,
 }
 
 export class Ballot extends React.Component<Props> {
@@ -36,6 +38,14 @@ export class Ballot extends React.Component<Props> {
     handleListCandidateSelected(candidate: BallotCandidate) {
         this.setState({
             selectedListCandidate: candidate,
+            selectedParty: undefined,
+        })
+    }
+
+    handlePartySelected(party: BallotParty) {
+        this.setState({
+            selectedParty: party,
+            selectedListCandidate: undefined,
         })
     }
 
@@ -137,7 +147,18 @@ export class Ballot extends React.Component<Props> {
                                     filterText={this.state.listFilterText}
                                 />
                             </div>
-                            <h4>Oder: Partei Stimme</h4>
+                            <h4 className={"text-center"}>
+                                Oder: Partei Stimme
+                            </h4>
+                            <div className={"overflow-auto"} style={{height: "300px"}}>
+                                <PartySelector
+                                    parties={this.props.ballotInfo.parties}
+                                    onPartySelected={(party: BallotParty) => {
+                                        this.handlePartySelected(party);
+                                    }}
+                                    selectedParty={this.state.selectedParty}
+                                />
+                            </div>
                             <h5>
                                 {this.state.selectedListCandidate ? (
                                     <span>List-Kandidat: {this.state.selectedListCandidate.first_name} {this.state.selectedListCandidate.last_name}, {this.state.selectedListCandidate.party_name}</span>
