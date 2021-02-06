@@ -95,7 +95,7 @@ export class Ballot extends React.Component<Props> {
                                     }}
                                 />
                             </Form>
-                            <div className={"overflow-auto"} style={{height: "500px"}}>
+                            <div className={"overflow-auto"} style={{height: "800px"}}>
                                 <DirectCandidateSelector
                                     candidates={this.props.ballotInfo.direct_candidates}
                                     onCandidateSelected={(candidate: BallotCandidate) => {
@@ -127,7 +127,7 @@ export class Ballot extends React.Component<Props> {
                                     }}
                                 />
                             </Form>
-                            <div className={"overflow-auto"} style={{height: "500px"}}>
+                            <div className={"overflow-auto"} style={{height: "400px"}}>
                                 <ListCandidateSelector
                                     candidates={this.props.ballotInfo.list_candidates}
                                     onCandidateSelected={(candidate: BallotCandidate) => {
@@ -137,6 +137,7 @@ export class Ballot extends React.Component<Props> {
                                     filterText={this.state.listFilterText}
                                 />
                             </div>
+                            <h4>Oder: Partei Stimme</h4>
                             <h5>
                                 {this.state.selectedListCandidate ? (
                                     <span>List-Kandidat: {this.state.selectedListCandidate.first_name} {this.state.selectedListCandidate.last_name}, {this.state.selectedListCandidate.party_name}</span>

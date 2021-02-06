@@ -223,11 +223,15 @@ def get_wahl_info(voterkey: str):
         stimmkreis_info = db.get_stimmkreis(
             voter_info.stimmkreis_id,
         )
+        partei_info = db.get_parties(
+            voter_info.wahl_id,
+        )
         return jsonify({
             'stimmkreis': stimmkreis_info.name,
             'stimmkreis_nr': stimmkreis_info.number,
             'direct_candidates': d_candidates,
             'list_candidates': l_candidates,
+            'parties': partei_info,
         })
     except ValueError as e:
         raise NotFound(description=e.args[0])

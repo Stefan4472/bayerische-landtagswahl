@@ -771,6 +771,23 @@ class Database:
         else:
             raise ValueError()
 
+    def get_parties(
+            self,
+            wahl_id: int,
+    ) -> list[dto.BallotPartei]:
+        # TODO: ADD AS MATERIALIZED VIEW
+        query = 'SELECT Partei.ID, Partei.ParteiName ' \
+                'FROM Partei ' \
+                'JOIN ParteiZuWahl ON Partei.ID = ParteiZuWahl.Partei ' \
+                'WHERE WahlID = %s'
+        values = (wahl_id,)
+        self._cursor.execute(query, values)
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.BallotPartei(int(rec[0]), rec[1]) for rec in result]
+        else:
+            raise ValueError()
+
 
 # class SimpleDatabaseConnection:
 #     def __init__(

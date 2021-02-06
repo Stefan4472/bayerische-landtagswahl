@@ -124,3 +124,9 @@ class BallotKandidat:
     party_name: str
     first_name: str
     last_name: str
+
+
+@dc.dataclass
+class BallotPartei:
+    id: int
+    party_name: str
