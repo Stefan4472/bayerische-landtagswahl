@@ -1,7 +1,11 @@
 import React from "react";
 import {Container, Form} from "react-bootstrap";
 import {Ballot} from "./Ballot";
-import StimmabgabeEndpoints, {BallotCandidate, BallotInfo} from "../../rest_client/StimmabgabeEndpoints";
+import StimmabgabeEndpoints, {
+    BallotCandidate,
+    BallotInfo,
+    CompletedBallot
+} from "../../rest_client/StimmabgabeEndpoints";
 
 interface Props {
 }
@@ -55,11 +59,10 @@ export class StimmabgabePage extends React.Component<Props> {
         }
     }
 
-    submitVote(directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) {
+    submitVote(completedBallot: CompletedBallot) {
         StimmabgabeEndpoints.submitVote(
             this.state.voterKey,
-            directCandidate,
-            listCandidate,
+            completedBallot,
         ).then(result => {
             if (result.success) {
                 alert('You have successfully voted');
@@ -111,8 +114,8 @@ export class StimmabgabePage extends React.Component<Props> {
                 {(this.state.isKeyValid && this.state.ballotInfo) && (
                     <Ballot
                         ballotInfo={this.state.ballotInfo}
-                        onVoted={(directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) =>
-                            this.submitVote(directCandidate, listCandidate)
+                        onVoted={(completedBallot) =>
+                            this.submitVote(completedBallot)
                         }
                     />
                 )}

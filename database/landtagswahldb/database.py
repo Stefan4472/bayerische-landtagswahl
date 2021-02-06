@@ -671,7 +671,11 @@ class Database:
             voter_key: str,
             dcandidate_id: typing.Optional[int],
             lcandidate_id: typing.Optional[int],
+            party_id: typing.Optional[int],
     ):
+        if lcandidate_id and party_id:
+            raise ValueError('Can\'t vote for a list candidate AND a party')
+
         voter_info = self.get_voter_info(voter_key)
         if voter_info.has_voted:
             raise ValueError('A vote has already been submitted for this voter key ({})'.format(voter_key))
@@ -699,8 +703,19 @@ class Database:
                 )
                 self._cursor.execute(query, values)
                 print('Registered invalid Erststimme')
+            # Register party vote
+            if party_id:
+                query = 'INSERT INTO ZweitstimmePartei (Partei, Stimmkreis, Wahl) ' \
+                        'VALUES (%s, %s, %s)'
+                values = (
+                    party_id,
+                    voter_info.stimmkreis_id,
+                    voter_info.wahl_id,
+                )
+                self._cursor.execute(query, values)
+                print('Inserted party vote: {}'.format(values))
             # Register list vote
-            if lcandidate_id:
+            elif lcandidate_id:
                 query = 'INSERT INTO Zweitstimme (Kandidat, Stimmkreis, Wahl) ' \
                         'VALUES (%s, %s, %s)'
                 values = (

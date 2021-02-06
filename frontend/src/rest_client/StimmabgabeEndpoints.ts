@@ -25,6 +25,12 @@ export interface VoteResult {
     message: string,
 }
 
+export interface CompletedBallot {
+    directCandidate?: BallotCandidate
+    listCandidate?: BallotCandidate
+    listParty?: BallotParty
+}
+
 class StimmabgabeEndpoints {
 
     async getWahlInfo(voterKey: string) : Promise<BallotInfo[]> {
@@ -32,13 +38,16 @@ class StimmabgabeEndpoints {
         return result.data as BallotInfo[];
     }
 
-    async submitVote(voterKey: string, directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) : Promise<VoteResult> {
+    async submitVote(voterKey: string, completedBallot: CompletedBallot) : Promise<VoteResult> {
         let data: any = {};
-        if (directCandidate) {
-            data["directID"] = directCandidate.id;
+        if (completedBallot.directCandidate) {
+            data["directID"] = completedBallot.directCandidate.id;
         }
-        if (listCandidate) {
-            data["listID"] = listCandidate.id;
+        if (completedBallot.listCandidate) {
+            data["listID"] = completedBallot.listCandidate.id;
+        }
+        if (completedBallot.listParty) {
+            data["partyID"] = completedBallot.listParty.id;
         }
         const result = await http.post(
             '/voting/' + voterKey,

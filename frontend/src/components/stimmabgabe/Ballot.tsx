@@ -1,13 +1,13 @@
 import React from "react";
 import {Button, Card, Col, Form, Row} from "react-bootstrap";
-import {BallotCandidate, BallotInfo, BallotParty} from "../../rest_client/StimmabgabeEndpoints";
+import {BallotCandidate, BallotInfo, BallotParty, CompletedBallot} from "../../rest_client/StimmabgabeEndpoints";
 import {DirectCandidateSelector} from "./DirectCandidateSelector";
 import {ListCandidateSelector} from "./ListCandidateSelector";
 import {PartySelector} from "./PartySelector";
 
 interface Props {
     ballotInfo: BallotInfo,
-    onVoted: (directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) => void,
+    onVoted: (ballot: CompletedBallot) => void,
 }
 
 interface State {
@@ -78,10 +78,11 @@ export class Ballot extends React.Component<Props> {
         );
 
         if (is_confirmed) {
-            this.props.onVoted(
-                this.state.selectedDirectCandidate,
-                this.state.selectedListCandidate,
-            );
+            this.props.onVoted({
+                directCandidate: this.state.selectedDirectCandidate,
+                listCandidate: this.state.selectedListCandidate,
+                listParty: this.state.selectedParty,
+            });
         }
     }
 

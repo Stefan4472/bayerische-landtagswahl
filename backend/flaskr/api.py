@@ -244,11 +244,14 @@ def submit_vote(voterkey: str):
         request.json['directID'] if 'directID' in request.json else None
     lcandidate_id = \
         request.json['listID'] if 'listID' in request.json else None
+    party_id = \
+        request.json['partyID'] if 'partyID' in request.json else None
     try:
         db.submit_vote(
             voterkey,
             dcandidate_id,
             lcandidate_id,
+            party_id,
         )
         return {
             'success': True,
