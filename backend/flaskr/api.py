@@ -35,11 +35,12 @@ def force_update():
     # TODO: FIND A WAY TO DO THIS ASYNCHRONOUSLY
     print('Starting update...')
     # TODO: THIS IS A PRETTY BAD WORKAROUND. WE SHOULD FIND A WAY TO PROVIDE THE SCRIPTS WITH THE 'LANDTAGSWAHLDB' PACKAGE
-    sql_path = pathlib.Path(current_app.instance_path).parent.parent / 'sql-scripts' / 'Landtagswahl_Calculation.sql'
+    sql_path = pathlib.Path(current_app.instance_path).parent.parent / 'sql-scripts' / 'UpdateViews.sql'
     with open(sql_path) as sql_file:
         script = sql_file.read()
     db = db_context.get_db()
     db.run_script(script)
+    db.commit()
     return 'Success'
 
 
