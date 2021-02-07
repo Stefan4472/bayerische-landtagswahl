@@ -65,7 +65,7 @@ export class StimmabgabePage extends React.Component<Props> {
             completedBallot,
         ).then(result => {
             if (result.success) {
-                alert('You have successfully voted');
+                alert("Ihre Stimme würde erfolgreich gezählt");
                 // Now clear the ballot and key
                 this.setState({
                     voterKey: '',
@@ -91,7 +91,7 @@ export class StimmabgabePage extends React.Component<Props> {
                         <Form.Control
                             required
                             placeholder="64-character key"
-                            value={this.state.voterKey.length > 0 ? this.state.voterKey : undefined}
+                            value={this.state.voterKey}
                             disabled={this.state.isKeyValid}
                             isValid={this.state.isKeyValid}
                             isInvalid={this.state.isKeyInvalid}

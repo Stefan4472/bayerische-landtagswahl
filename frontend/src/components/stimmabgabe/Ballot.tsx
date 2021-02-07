@@ -61,17 +61,38 @@ export class Ballot extends React.Component<Props> {
         })
     }
 
+    clearErstStimme() {
+        this.setState({
+            selectedDirectCandidate: undefined,
+        })
+    }
+
+    clearZweitStimme() {
+        this.setState({
+            selectedParty: undefined,
+            selectedListCandidate: undefined,
+        })
+    }
+
     handleSubmit() {
-        let direct_confirm = this.state.selectedDirectCandidate ? (
-            "Sie haben " + this.state.selectedDirectCandidate.first_name + " " + this.state.selectedDirectCandidate.last_name + " " + this.state.selectedDirectCandidate.party_name + " als Direkt-Kandidat gewählt"
-        ) : (
-            "Sie haben kein Direkt-Kandidaten gewählt"
-        )
-        let list_confirm = this.state.selectedListCandidate ? (
-            "Sie haben " + this.state.selectedListCandidate.first_name + " " + this.state.selectedListCandidate.last_name + " " + this.state.selectedListCandidate.party_name + " als List-Kandidat gewählt"
-        ) : (
-            "Sie haben kein List-Kandidaten gewählt"
-        )
+        let direct_confirm: string;
+        if (this.state.selectedDirectCandidate) {
+            direct_confirm = "Sie haben " + this.state.selectedDirectCandidate.first_name + " " + this.state.selectedDirectCandidate.last_name + " (" + this.state.selectedDirectCandidate.party_name + ") als Direkt-Kandidat gewählt"
+        }
+        else {
+            direct_confirm = "Sie haben keine Auswahl für ErsteStimme gemacht"
+        }
+
+        let list_confirm: string;
+        if (this.state.selectedListCandidate) {
+            list_confirm = "Sie haben " + this.state.selectedListCandidate.first_name + " (" + this.state.selectedListCandidate.last_name + ") " + this.state.selectedListCandidate.party_name + " als List-Kandidat gewählt"
+        }
+        else if (this.state.selectedParty) {
+            list_confirm = "Sie haben " + this.state.selectedParty.party_name + " als Zweitstimme Partei gewählt"
+        }
+        else {
+            list_confirm = "Sie haben keine Auswahl für Zweitstimme gemacht"
+        }
 
         let is_confirmed = window.confirm(
             direct_confirm + "\n" + list_confirm + "\nKlicken Sie \"OK\" um ihre Stimme abzugeben, oder \"Cancel\" um mehr Änderungen zu machen. Sobald Sie abgeben, können Sie keine Änderungen mehr machen"
@@ -163,6 +184,9 @@ export class Ballot extends React.Component<Props> {
                                 ) : (
                                     <span>Erste Stimme noch nicht ausgewählt</span>
                                 )}
+                                <Button className="close" aria-label="Close" onClick={() => this.clearErstStimme()}>
+                                    <span aria-hidden="true">&times;</span>
+                                </Button>
                             </h5>
                         </Col>
                         <Col>
@@ -178,6 +202,9 @@ export class Ballot extends React.Component<Props> {
                                         )}
                                     </span>
                                 )}
+                                <Button className="close" aria-label="Close" onClick={() => this.clearZweitStimme()}>
+                                    <span aria-hidden="true">&times;</span>
+                                </Button>
                             </h5>
                         </Col>
                     </Row>
