@@ -880,19 +880,19 @@ WITH data AS
           WHERE einordnung IN ('l', 'r')
           GROUP BY wahlid, wahlkreis, stimmkreisnr, stimmkreis, StimmkreisID, einordnung),
      differenz_2018_2013 AS
-         (SELECT d1.wahlkreis,
-                 d1.stimmkreisnr,
-                 d1.stimmkreis,
+         (SELECT d2.wahlkreis,
+                 d2.stimmkreisnr,
+                 d2.stimmkreis,
                  d1.einordnung,
                  d1.prozent - d2.prozent as differenz
           FROM data d1
                    INNER JOIN data d2 ON d1.wahlid = 2
               AND d2.wahlid = 1
-              AND d1.stimmkreisnr = d2.stimmkreisnr AND d1.einordnung = d2.einordnung),
+              AND d1.stimmkreis = d2.stimmkreis AND d1.einordnung = d2.einordnung),
      differenz_r_l AS
-         (SELECT d1.Wahlkreis,
-                 d1.StimmkreisNr,
-                 d1.Stimmkreis,
+         (SELECT d2.Wahlkreis,
+                 d2.StimmkreisNr,
+                 d2.Stimmkreis,
                  d1.differenz                                                 as Change_Left,
                  d2.differenz                                                 as Change_Right,
                  abs(d1.differenz - d2.differenz)                             as change,
@@ -904,7 +904,7 @@ WITH data AS
                      END
           FROM differenz_2018_2013 d1
                    INNER JOIN differenz_2018_2013 d2
-                              ON d1.StimmkreisNr = d2.StimmkreisNr AND d1.einordnung = 'l' AND d2.einordnung = 'r')
+                              ON d1.Stimmkreis = d2.Stimmkreis AND d1.einordnung = 'l' AND d2.einordnung = 'r')
 SELECT *
 FROM differenz_r_l
 ORDER BY stimmkreisnr;
