@@ -1,7 +1,7 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, jsonify, current_app,
+    Blueprint, request, jsonify, current_app,
 )
-from werkzeug.exceptions import abort, NotFound, BadRequest
+from werkzeug.exceptions import NotFound, BadRequest
 import pathlib
 from . import db_context
 
@@ -30,7 +30,6 @@ def get_stimmkreise(year: int):
 @API_BLUEPRINT.route('/results/force-update', methods=['PUT'])
 def force_update():
     """Force update of materialized views"""
-    # TODO: DON'T HARDCODE THIS
     # TODO: IS THERE A WAY TO ONLY REFRESH FOR A GIVEN YEAR?
     # TODO: FIND A WAY TO DO THIS ASYNCHRONOUSLY
     print('Starting update...')

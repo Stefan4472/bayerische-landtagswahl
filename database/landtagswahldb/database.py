@@ -177,7 +177,6 @@ class Database:
                 stimmkreis_id,
             ))
 
-    # TODO: SHOULD THE OBJECT THAT GOES IN BE THE SAME AS THE OBJECT THAT COMES OUT?
     def get_stimmkreise(
             self,
             wahl_id: int,
@@ -725,8 +724,8 @@ class Database:
                 )
                 self._cursor.execute(query, values)
                 print('Inserted lcandidate values: {}'.format(values))
+            # No candidate provided: register invalid vote
             else:
-                # No candidate provided: register invalid vote
                 query = 'INSERT INTO Zweitstimme (Stimmkreis, Wahl, IsValid) ' \
                         'VALUES (%s, %s, %s)'
                 values = (
@@ -736,7 +735,6 @@ class Database:
                 )
                 self._cursor.execute(query, values)
                 print('Registered invalid Zweitstimme')
-            # TODO: SUPPORT PARTY-LIST VOTE
 
             # Mark the voterkey as having voted
             query = 'UPDATE VoteRecords ' \

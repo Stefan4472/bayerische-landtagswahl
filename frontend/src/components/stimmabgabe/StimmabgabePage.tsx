@@ -1,11 +1,7 @@
 import React from "react";
 import {Container, Form} from "react-bootstrap";
 import {Ballot} from "./Ballot";
-import StimmabgabeEndpoints, {
-    BallotCandidate,
-    BallotInfo,
-    CompletedBallot
-} from "../../rest_client/StimmabgabeEndpoints";
+import StimmabgabeEndpoints, {BallotInfo, CompletedBallot} from "../../rest_client/StimmabgabeEndpoints";
 
 interface Props {
 }

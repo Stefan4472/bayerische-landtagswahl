@@ -1,7 +1,7 @@
 import React from "react";
 import {orderParties} from "../util/PartyDisplay";
 import {ListGroup} from "react-bootstrap";
-import {BallotCandidate, BallotParty} from "../../rest_client/StimmabgabeEndpoints";
+import {BallotParty} from "../../rest_client/StimmabgabeEndpoints";
 
 interface Props {
     parties: BallotParty[];
