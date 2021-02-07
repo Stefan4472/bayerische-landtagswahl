@@ -39,7 +39,10 @@ export class PartyBestsTable extends React.Component<Props> {
                     {
                         dataField: 'gesamt_stimmen',
                         text: 'Gesamtstimmen',
-                        sort: true
+                        sort: true,
+                        formatter: (value) => (
+                            <span>{value.toLocaleString()}</span>
+                        )
                     },
                     {
                         dataField: 'percent_gesamt',

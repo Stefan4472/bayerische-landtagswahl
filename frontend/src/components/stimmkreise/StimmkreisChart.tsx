@@ -23,7 +23,7 @@ export class StimmkreisChart extends React.Component<Props> {
                 if (MAIN_PARTIES.has(stimmkreis.party_name)) {
                     results.set(stimmkreis.party_name, {
                         id: stimmkreis.party_name,
-                        value: stimmkreis.erst_stimmen,
+                        value: stimmkreis.gesamt_stimmen,
                     })
                 }
                 // Track votes of the minor parties
