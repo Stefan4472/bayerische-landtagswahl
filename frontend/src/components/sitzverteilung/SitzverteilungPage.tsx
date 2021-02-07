@@ -46,6 +46,8 @@ export class SitzverteilungPage extends React.Component<Props> {
     render() {
         return (
             <Container>
+                <h3>Sitzverteilung ({this.props.selectedYear})</h3>
+                <hr/>
                 <Card>
                     <Card.Body>
                         <SitzverteilungChart

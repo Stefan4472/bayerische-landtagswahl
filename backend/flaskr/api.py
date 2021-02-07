@@ -1,7 +1,8 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, jsonify, current_app,
+    Blueprint, request, jsonify, current_app,
 )
-from werkzeug.exceptions import abort, NotFound, BadRequest
+from werkzeug.exceptions import NotFound, BadRequest
+import pathlib
 from . import db_context
 
 
@@ -29,34 +30,16 @@ def get_stimmkreise(year: int):
 @API_BLUEPRINT.route('/results/force-update', methods=['PUT'])
 def force_update():
     """Force update of materialized views"""
-    # TODO: DON'T HARDCODE THIS
     # TODO: IS THERE A WAY TO ONLY REFRESH FOR A GIVEN YEAR?
     # TODO: FIND A WAY TO DO THIS ASYNCHRONOUSLY
+    print('Starting update...')
+    # TODO: THIS IS A PRETTY BAD WORKAROUND. WE SHOULD FIND A WAY TO PROVIDE THE SCRIPTS WITH THE 'LANDTAGSWAHLDB' PACKAGE
+    sql_path = pathlib.Path(current_app.instance_path).parent.parent / 'sql-scripts' / 'UpdateViews.sql'
+    with open(sql_path) as sql_file:
+        script = sql_file.read()
     db = db_context.get_db()
-    db.run_script(
-        '''
-        REFRESH MATERIALIZED VIEW Erststimme_Kandidat;
-        REFRESH MATERIALIZED VIEW Anzhal_Zweitstimme_Kandidat;
-        REFRESH MATERIALIZED VIEW Gesamtstimmen_Partei_Stimmkreis;
-        REFRESH MATERIALIZED VIEW Gesamtstimmen_Partei_Wahl;
-        REFRESH MATERIALIZED VIEW Gesamtstimmen_Partei_Wahl;
-        REFRESH MATERIALIZED VIEW Erststimme_Gewinner_Pro_Stimmkreis;
-        REFRESH MATERIALIZED VIEW Gesamtstimmen_und_Sitze_Partei_5Prozent_Wahlkreis;
-        REFRESH MATERIALIZED VIEW Mitglieder_des_Landtages;
-        REFRESH MATERIALIZED VIEW Sitzverteilung;
-        REFRESH MATERIALIZED VIEW Mitglieder_des_LandtagesUI;
-        REFRESH MATERIALIZED VIEW WahlbeteiligungUI;
-        REFRESH MATERIALIZED VIEW Gesamtstimmen_Partei_StimmkreisUI;
-        REFRESH MATERIALIZED VIEW DirektkandidatenUI;
-        REFRESH MATERIALIZED VIEW StimmkreissiegerUI;
-        REFRESH MATERIALIZED VIEW UeberhangmandateUI;
-        REFRESH MATERIALIZED VIEW Knappste_Sieger_Verlierer;
-        REFRESH MATERIALIZED VIEW KnappsteSiegerUI;
-        REFRESH MATERIALIZED VIEW KnappsteVerliererUI;
-        REFRESH MATERIALIZED VIEW Durchschnitt_Stimmen_Pro_VornameUI;
-        REFRESH MATERIALIZED VIEW Beste_Stimmkreise_ParteiUI;
-        '''
-    )
+    db.run_script(script)
+    db.commit()
     return 'Success'
 
 
@@ -172,6 +155,25 @@ def get_knappste_verlierer(year: int):
         raise NotFound(description=e.args[0])
 
 
+@API_BLUEPRINT.route('/results/<int:year>/party-bests')
+def get_party_bests(year: int):
+    db = db_context.get_db()
+    try:
+        wahl_id = db.get_wahl_id(year)
+        return jsonify(db.get_party_beststimmkreise(wahl_id))
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
+
+
+@API_BLUEPRINT.route('/results/<int:year>/swings')
+def get_biggest_swings(year: int):
+    db = db_context.get_db()
+    try:
+        return jsonify(db.get_biggest_swings(year))
+    except ValueError as e:
+        raise NotFound(description=e.args[0])
+
+
 @API_BLUEPRINT.route('/voting/', methods=['POST'])
 def add_voter_key():
     voter_key = request.json['key']
@@ -220,11 +222,15 @@ def get_wahl_info(voterkey: str):
         stimmkreis_info = db.get_stimmkreis(
             voter_info.stimmkreis_id,
         )
+        partei_info = db.get_parties(
+            voter_info.wahl_id,
+        )
         return jsonify({
             'stimmkreis': stimmkreis_info.name,
             'stimmkreis_nr': stimmkreis_info.number,
             'direct_candidates': d_candidates,
             'list_candidates': l_candidates,
+            'parties': partei_info,
         })
     except ValueError as e:
         raise NotFound(description=e.args[0])
@@ -237,11 +243,14 @@ def submit_vote(voterkey: str):
         request.json['directID'] if 'directID' in request.json else None
     lcandidate_id = \
         request.json['listID'] if 'listID' in request.json else None
+    party_id = \
+        request.json['partyID'] if 'partyID' in request.json else None
     try:
         db.submit_vote(
             voterkey,
             dcandidate_id,
             lcandidate_id,
+            party_id,
         )
         return {
             'success': True,

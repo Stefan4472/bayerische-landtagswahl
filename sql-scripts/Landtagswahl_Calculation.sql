@@ -842,9 +842,11 @@ WITH Gesamtstimmen_Partei_Rank AS
           ORDER BY gps.Wahl DESC)
 SELECT nr,
        w.jahr,
+       w.id as WahlID,
        p.parteiname,
        s.id   as stimmkreisID,
        s.name as stimmkreis,
+       s.nummer as stimmkreisNr,
        gps.Erststimmen,
        gps.Zweitstimmen,
        gps.Gesamtstimmen,
@@ -871,11 +873,12 @@ WITH data AS
                  wahlkreis,
                  stimmkreisnr,
                  stimmkreis,
+                 StimmkreisID,
                  einordnung,
                  sum(prozent) as prozent
           FROM Gesamtstimmen_Partei_StimmkreisUI
           WHERE einordnung IN ('l', 'r')
-          GROUP BY wahlid, wahlkreis, stimmkreisnr, stimmkreis, einordnung),
+          GROUP BY wahlid, wahlkreis, stimmkreisnr, stimmkreis, StimmkreisID, einordnung),
      differenz_2018_2013 AS
          (SELECT d1.wahlkreis,
                  d1.stimmkreisnr,
@@ -904,4 +907,5 @@ WITH data AS
                               ON d1.StimmkreisNr = d2.StimmkreisNr AND d1.einordnung = 'l' AND d2.einordnung = 'r')
 SELECT *
 FROM differenz_r_l
-WHERE rk <= 10;
+ORDER BY stimmkreisnr;
+-- WHERE rk <= 10;

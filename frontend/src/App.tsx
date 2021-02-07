@@ -12,6 +12,8 @@ import {SiegerPage} from "./components/sieger/SiegerPage";
 import {StimmabgabePage} from "./components/stimmabgabe/StimmabgabePage";
 import {KnappsteSiegerPage} from "./components/knappste_sieger/KnappsteSiegerPage";
 import {KnappsteVerliererPage} from "./components/knappste_verlierer/KnappsteVerliererPage";
+import {PartyBestsPage} from "./components/party_bests/PartyBestsPage";
+import {StimmkreisSwingsPage} from "./components/swings/StimmkreisSwingsPage";
 
 
 export const App: React.FC = () => {
@@ -76,14 +78,16 @@ export const App: React.FC = () => {
                         <Navbar.Collapse>
                             {/*TODO: USE REACT-ROUTER-DOM LINK TAGS*/}
                             <Nav>
-                                <Nav.Link href="/">Sitzverteilung</Nav.Link>
+                                <Nav.Link href="#/">Sitzverteilung</Nav.Link>
                                 <Nav.Link href="#mitglieder">Mitglieder</Nav.Link>
                                 <Nav.Link href="#stimmkreise">Stimmkreise</Nav.Link>
                                 <NavDropdown title="Daten" id={"data-dropdown"}>
                                     <NavDropdown.Item href="#ueberhangmandate">Überhangmandate</NavDropdown.Item>
                                     <NavDropdown.Item href="#sieger">Stimmkreis Sieger</NavDropdown.Item>
-                                    <NavDropdown.Item href={"#knappste-sieger"}>Knappste Sieger</NavDropdown.Item>
-                                    <NavDropdown.Item href={"#knappste-verlierer"}>Knappste Verlierer </NavDropdown.Item>
+                                    <NavDropdown.Item href="#knappste-sieger">Knappste Sieger</NavDropdown.Item>
+                                    <NavDropdown.Item href="#knappste-verlierer">Knappste Verlierer </NavDropdown.Item>
+                                    <NavDropdown.Item href="#party-bests">Partei-Best Ergebnisse</NavDropdown.Item>
+                                    <NavDropdown.Item href="#schwunge">Ideologische Schwunge</NavDropdown.Item>
                                 </NavDropdown>
                                 <Nav.Link href="#stimmabgabe">Stimmabgabe</Nav.Link>
                             </Nav>
@@ -158,7 +162,13 @@ export const App: React.FC = () => {
                     <Route exact path={"/knappste-verlierer"}>
                         {selectedYear && <KnappsteVerliererPage selectedYear={selectedYear}/>}
                     </Route>
-                    <Route path={"/:year?"}>
+                    <Route exact path={"/party-bests"}>
+                        {selectedYear && <PartyBestsPage selectedYear={selectedYear}/>}
+                    </Route>
+                    <Route exact path={"/schwunge"}>
+                        {selectedYear && <StimmkreisSwingsPage selectedYear={selectedYear}/>}
+                    </Route>
+                    <Route path={"/"}>
                         {selectedYear && <SitzverteilungPage selectedYear={selectedYear}/>}
                     </Route>
                 </Switch>

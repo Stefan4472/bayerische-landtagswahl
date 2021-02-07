@@ -44,6 +44,8 @@ export class KnappsteSiegerPage extends React.Component<Props> {
     render() {
         return (
             <Container>
+                <h3>Knappste Sieger ({this.props.selectedYear})</h3>
+                <hr/>
                 <KnappsteSiegerTable sieger={this.state.sieger}/>
             </Container>
         )

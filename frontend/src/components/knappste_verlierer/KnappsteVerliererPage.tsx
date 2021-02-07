@@ -43,6 +43,8 @@ export class KnappsteVerliererPage extends React.Component<Props> {
     render() {
         return (
             <Container>
+                <h3>Knappste Verlierer ({this.props.selectedYear})</h3>
+                <hr/>
                 <KnappsteVerliererTable verlierer={this.state.verlierer}/>
             </Container>
         )

@@ -1,24 +1,24 @@
 import React from "react";
 import {Container} from "react-bootstrap";
-import {UeberhangMandateTable} from "./UeberhangMandateTable";
-import UeberhangMandateEndpoints, {UeberhangMandat} from "../../rest_client/UeberhangMandateEndpoints";
+import WahlEndpoints, {PartyBestStimmkreis} from "../../rest_client/WahlEndpoints";
+import {PartyBestsTable} from "./PartyBestsTable";
+import {orderParties} from "../util/PartyDisplay";
 
 interface Props {
     selectedYear: number,
 }
 
 interface State {
-    mandates: UeberhangMandat[],
+    stimmkreise: PartyBestStimmkreis[];
 }
 
-// The "Ueberhangmandate" page
-export class UeberhangMandatePage extends React.Component<Props> {
+export class PartyBestsPage extends React.Component<Props> {
     state: State;
 
     constructor(props: Props) {
         super(props);
         this.state = {
-            mandates: [],
+            stimmkreise: [],
         };
     }
 
@@ -34,24 +34,23 @@ export class UeberhangMandatePage extends React.Component<Props> {
     }
 
     fetchDataAndSetState(year: number) {
-        UeberhangMandateEndpoints.getAll(year).then(data => {
-            // Sort the data alphabetically by party name
-            // data.sort((a, b) => (a.party_name > b.party_name) ? 1 : -1);
+        WahlEndpoints.getPartyBestStimmkreise(year).then(data => {
             this.setState({
-                mandates: data,
-            });
+                stimmkreise: orderParties(data),
+            })
         });
     }
 
     render() {
         return (
             <Container>
-                <h3>Überhangmandate ({this.props.selectedYear})</h3>
+                <h3>Partei-Best Ergebnisse ({this.props.selectedYear})</h3>
                 <hr/>
-                <UeberhangMandateTable
-                    mandates={this.state.mandates}
-                />
+                <PartyBestsTable stimmkreise={this.state.stimmkreise}/>
             </Container>
         )
     }
 }
+
+
+

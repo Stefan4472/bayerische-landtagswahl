@@ -1,24 +1,23 @@
 import React from "react";
 import {Container} from "react-bootstrap";
-import {UeberhangMandateTable} from "./UeberhangMandateTable";
-import UeberhangMandateEndpoints, {UeberhangMandat} from "../../rest_client/UeberhangMandateEndpoints";
+import WahlEndpoints, {StimmkreisSwing} from "../../rest_client/WahlEndpoints";
+import {StimmkreisSwingsTable} from "./StimmkreisSwingsTable";
 
 interface Props {
     selectedYear: number,
 }
 
 interface State {
-    mandates: UeberhangMandat[],
+    stimmkreise: StimmkreisSwing[];
 }
 
-// The "Ueberhangmandate" page
-export class UeberhangMandatePage extends React.Component<Props> {
+export class StimmkreisSwingsPage extends React.Component<Props> {
     state: State;
 
     constructor(props: Props) {
         super(props);
         this.state = {
-            mandates: [],
+            stimmkreise: [],
         };
     }
 
@@ -34,24 +33,23 @@ export class UeberhangMandatePage extends React.Component<Props> {
     }
 
     fetchDataAndSetState(year: number) {
-        UeberhangMandateEndpoints.getAll(year).then(data => {
-            // Sort the data alphabetically by party name
-            // data.sort((a, b) => (a.party_name > b.party_name) ? 1 : -1);
+        WahlEndpoints.getStimmkreisSwings(year).then(data => {
             this.setState({
-                mandates: data,
-            });
+                stimmkreise: data,
+            })
         });
     }
 
     render() {
         return (
             <Container>
-                <h3>Überhangmandate ({this.props.selectedYear})</h3>
+                <h3>Ideologische Schwunge ({this.props.selectedYear})</h3>
                 <hr/>
-                <UeberhangMandateTable
-                    mandates={this.state.mandates}
-                />
+                <StimmkreisSwingsTable stimmkreise={this.state.stimmkreise}/>
             </Container>
         )
     }
 }
+
+
+

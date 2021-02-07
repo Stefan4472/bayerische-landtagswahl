@@ -7,11 +7,17 @@ export interface BallotCandidate {
     id: number,
 }
 
+export interface BallotParty {
+    party_name: string
+    id: number
+}
+
 export interface BallotInfo {
     stimmkreis: string,
     stimmkreis_nr: number,
     direct_candidates: BallotCandidate[],
     list_candidates: BallotCandidate[],
+    parties: BallotParty[],
 }
 
 export interface VoteResult {
@@ -19,21 +25,33 @@ export interface VoteResult {
     message: string,
 }
 
+export interface CompletedBallot {
+    directCandidate?: BallotCandidate
+    listCandidate?: BallotCandidate
+    listParty?: BallotParty
+}
+
 class StimmabgabeEndpoints {
 
     async getWahlInfo(voterKey: string) : Promise<BallotInfo[]> {
         const result = await http.get('/voting/' + voterKey);
-        console.log(result);
         return result.data as BallotInfo[];
     }
 
-    async submitVote(voterKey: string, directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) : Promise<VoteResult> {
+    async submitVote(voterKey: string, completedBallot: CompletedBallot) : Promise<VoteResult> {
+        let data: any = {};
+        if (completedBallot.directCandidate) {
+            data["directID"] = completedBallot.directCandidate.id;
+        }
+        if (completedBallot.listCandidate) {
+            data["listID"] = completedBallot.listCandidate.id;
+        }
+        if (completedBallot.listParty) {
+            data["partyID"] = completedBallot.listParty.id;
+        }
         const result = await http.post(
             '/voting/' + voterKey,
-            {
-                    'directID': directCandidate ? directCandidate.id : -1,
-                    'listID': listCandidate ? listCandidate.id : -1,
-            }
+            data,
         )
         return result.data as VoteResult;
     }

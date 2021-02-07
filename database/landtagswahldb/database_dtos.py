@@ -94,6 +94,24 @@ class KnappsteVerlierer:
 
 
 @dc.dataclass
+class PartyBestStimmkreis:
+    party_name: str
+    stimmkreis_name: str
+    stimmkreis_num: int
+    num_gesamtstimmen: int
+    pct_gesamtstimmen: float
+
+
+@dc.dataclass
+class StimmkreisSwing:
+    stimmkreis_name: str
+    stimmkreis_num: int
+    wahlkreis_name: str
+    pct_change_left: float
+    pct_change_right: float
+
+
+@dc.dataclass
 class VoterInfo:
     wahl_id: int
     stimmkreis_id: int
@@ -106,3 +124,9 @@ class BallotKandidat:
     party_name: str
     first_name: str
     last_name: str
+
+
+@dc.dataclass
+class BallotPartei:
+    id: int
+    party_name: str

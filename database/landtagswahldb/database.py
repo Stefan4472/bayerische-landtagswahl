@@ -177,7 +177,6 @@ class Database:
                 stimmkreis_id,
             ))
 
-    # TODO: SHOULD THE OBJECT THAT GOES IN BE THE SAME AS THE OBJECT THAT COMES OUT?
     def get_stimmkreise(
             self,
             wahl_id: int,
@@ -591,6 +590,39 @@ class Database:
         else:
             raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
 
+    def get_party_beststimmkreise(
+        self,
+        wahl_id: int,
+    ):
+        query = 'SELECT ParteiName, Stimmkreis, StimmkreisNr, Gesamtstimmen, Prozent ' \
+                'FROM Beste_Stimmkreise_ParteiUI ' \
+                'WHERE WahlID = %s'
+        values = (wahl_id,)
+        self._cursor.execute(query, values)
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.PartyBestStimmkreis(rec[0], rec[1], int(rec[2]), int(rec[3]), float(rec[4]))
+                    for rec in result]
+        else:
+            raise ValueError('Provided `wahl_id` ({}) does not exist in database'.format(wahl_id))
+
+    def get_biggest_swings(
+            self,
+            wahl_jahr: int,
+    ) -> typing.Optional[list[dto.StimmkreisSwing]]:
+        # TODO: DON'T HARDCODE THE YEARS
+        if wahl_jahr == 2018:
+            query = 'SELECT Stimmkreis, StimmkreisNr, Wahlkreis, change_left, change_right ' \
+                    'FROM Partei_Einordnung_AnalyseUI'
+            self._cursor.execute(query)
+            result = self._cursor.fetchall()
+            if result:
+                return [dto.StimmkreisSwing(rec[0], int(rec[1]), rec[2], float(rec[3]), float(rec[4])) for rec in result]
+            else:
+                raise ValueError('Database error')
+        else:
+            return []
+
     def add_voter(
             self,
             voter_key: str,
@@ -638,30 +670,51 @@ class Database:
             voter_key: str,
             dcandidate_id: typing.Optional[int],
             lcandidate_id: typing.Optional[int],
+            party_id: typing.Optional[int],
     ):
+        if lcandidate_id and party_id:
+            raise ValueError('Can\'t vote for a list candidate AND a party')
+
         voter_info = self.get_voter_info(voter_key)
         if voter_info.has_voted:
             raise ValueError('A vote has already been submitted for this voter key ({})'.format(voter_key))
         else:
             # Register direct vote
             if dcandidate_id:
-                query = 'INSERT INTO Erststimme (Kandidat, Stimmkreis, Wahl) ' \
-                        'VALUES (%s, %s, %s)'
+                query = 'INSERT INTO Erststimme (Kandidat, Stimmkreis, Wahl, IsValid) ' \
+                        'VALUES (%s, %s, %s, %s)'
                 values = (
                     dcandidate_id,
                     voter_info.stimmkreis_id,
                     voter_info.wahl_id,
+                    1,
                 )
                 self._cursor.execute(query, values)
-            # else:
-                # TODO: ALLOW `KANDIDAT` TO BE NULL
+                print('Inserted dcandidate values: {}'.format(values))
+            else:
                 # No candidate provided: register invalid vote
-                # query = 'INSERT INTO Erststimme (Kandidat, Stimmkreis, Wahl, IsValid) ' \
-                #         'VALUES (%s, %s, %s, %s, %s)'
-                # values = (dcandidate_id, voter_info.stimmkreis_id, voter_info.wahl_id, False)
-                # self._cursor.execute(query, values)
+                query = 'INSERT INTO Erststimme (Stimmkreis, Wahl, IsValid) ' \
+                        'VALUES (%s, %s, %s)'
+                values = (
+                    voter_info.stimmkreis_id,
+                    voter_info.wahl_id,
+                    0,
+                )
+                self._cursor.execute(query, values)
+                print('Registered invalid Erststimme')
+            # Register party vote
+            if party_id:
+                query = 'INSERT INTO ZweitstimmePartei (Partei, Stimmkreis, Wahl) ' \
+                        'VALUES (%s, %s, %s)'
+                values = (
+                    party_id,
+                    voter_info.stimmkreis_id,
+                    voter_info.wahl_id,
+                )
+                self._cursor.execute(query, values)
+                print('Inserted party vote: {}'.format(values))
             # Register list vote
-            if lcandidate_id:
+            elif lcandidate_id:
                 query = 'INSERT INTO Zweitstimme (Kandidat, Stimmkreis, Wahl) ' \
                         'VALUES (%s, %s, %s)'
                 values = (
@@ -670,11 +723,27 @@ class Database:
                     voter_info.wahl_id,
                 )
                 self._cursor.execute(query, values)
+                print('Inserted lcandidate values: {}'.format(values))
+            # No candidate provided: register invalid vote
+            else:
+                query = 'INSERT INTO Zweitstimme (Stimmkreis, Wahl, IsValid) ' \
+                        'VALUES (%s, %s, %s)'
+                values = (
+                    voter_info.stimmkreis_id,
+                    voter_info.wahl_id,
+                    0,
+                )
+                self._cursor.execute(query, values)
+                print('Registered invalid Zweitstimme')
+
             # Mark the voterkey as having voted
             query = 'UPDATE VoteRecords ' \
                     'SET HasVoted = %s ' \
                     'WHERE Key = %s'
-            values = (True, self._hash_voterkey(voter_key))
+            values = (
+                True,
+                self._hash_voterkey(voter_key),
+            )
             self._cursor.execute(query, values)
             self.commit()
 
@@ -712,6 +781,23 @@ class Database:
         if result:
             return [dto.BallotKandidat(rec[0], rec[1], rec[2], rec[3])
                     for rec in result]
+        else:
+            raise ValueError()
+
+    def get_parties(
+            self,
+            wahl_id: int,
+    ) -> list[dto.BallotPartei]:
+        # TODO: ADD AS MATERIALIZED VIEW
+        query = 'SELECT Partei.ID, Partei.ParteiName ' \
+                'FROM Partei ' \
+                'JOIN ParteiZuWahl ON Partei.ID = ParteiZuWahl.Partei ' \
+                'WHERE WahlID = %s'
+        values = (wahl_id,)
+        self._cursor.execute(query, values)
+        result = self._cursor.fetchall()
+        if result:
+            return [dto.BallotPartei(int(rec[0]), rec[1]) for rec in result]
         else:
             raise ValueError()
 

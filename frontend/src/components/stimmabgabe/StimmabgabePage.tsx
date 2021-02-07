@@ -1,7 +1,7 @@
 import React from "react";
 import {Container, Form} from "react-bootstrap";
 import {Ballot} from "./Ballot";
-import StimmabgabeEndpoints, {BallotCandidate, BallotInfo} from "../../rest_client/StimmabgabeEndpoints";
+import StimmabgabeEndpoints, {BallotInfo, CompletedBallot} from "../../rest_client/StimmabgabeEndpoints";
 
 interface Props {
 }
@@ -55,14 +55,13 @@ export class StimmabgabePage extends React.Component<Props> {
         }
     }
 
-    submitVote(directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) {
+    submitVote(completedBallot: CompletedBallot) {
         StimmabgabeEndpoints.submitVote(
             this.state.voterKey,
-            directCandidate,
-            listCandidate,
+            completedBallot,
         ).then(result => {
             if (result.success) {
-                alert('You have successfully voted');
+                alert("Ihre Stimme würde erfolgreich gezählt");
                 // Now clear the ballot and key
                 this.setState({
                     voterKey: '',
@@ -80,15 +79,17 @@ export class StimmabgabePage extends React.Component<Props> {
     render() {
         return (
             <Container>
+                <h3>Stimmabgabe</h3>
+                <hr/>
                 <Form>
                     <Form.Group controlId="form-voterKey">
                         <Form.Label>
-                            Enter Your Voter Key
+                            Geben Sie Ihren 64-stelligen Stimm-Schlüssel ein
                         </Form.Label>
                         <Form.Control
                             required
-                            placeholder="64-character key"
-                            value={this.state.voterKey.length > 0 ? this.state.voterKey : undefined}
+                            placeholder="64-stelliger Schlüssel"
+                            value={this.state.voterKey}
                             disabled={this.state.isKeyValid}
                             isValid={this.state.isKeyValid}
                             isInvalid={this.state.isKeyInvalid}
@@ -100,19 +101,19 @@ export class StimmabgabePage extends React.Component<Props> {
                             {this.state.keyErrorMessage ? (
                                 this.state.keyErrorMessage
                             ) : (
-                                <span>Key must be 64 characters long (currently {this.state.voterKey.length})</span>
+                                <span>Der Schlüssel muss 64 Zeichen lang sein (momentan {this.state.voterKey.length})</span>
                             )}
                         </Form.Control.Feedback>
                         <Form.Control.Feedback type={"valid"}>
-                            Welcome! Key recognized
+                            Wilkommen! Ihr Schlüssel würde erfolgreich gelesen
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Form>
                 {(this.state.isKeyValid && this.state.ballotInfo) && (
                     <Ballot
                         ballotInfo={this.state.ballotInfo}
-                        onVoted={(directCandidate?: BallotCandidate, listCandidate?: BallotCandidate) =>
-                            this.submitVote(directCandidate, listCandidate)
+                        onVoted={(completedBallot) =>
+                            this.submitVote(completedBallot)
                         }
                     />
                 )}

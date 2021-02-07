@@ -11,6 +11,8 @@ export class MitgliederPage extends React.Component<Props> {
     render() {
         return (
             <Container>
+                <h3>Mitglieder ({this.props.selectedYear})</h3>
+                <hr/>
                 <MitgliederTable selectedYear={this.props.selectedYear}/>
             </Container>
         )

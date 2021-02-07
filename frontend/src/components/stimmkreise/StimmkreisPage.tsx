@@ -57,9 +57,10 @@ export class StimmkreisPage extends React.Component<Props> {
     }
 
     render() {
-        // TODO: HOW TO SET ROW HEIGHT CORRECTLY?
         return (
             <Container>
+                <h3>Stimmkreise ({this.props.selectedYear})</h3>
+                <hr/>
                 <Row className={"mb-2"}>
                     {/*Provide Stimmkreis selector on left side*/}
                     <Col md={4}>
