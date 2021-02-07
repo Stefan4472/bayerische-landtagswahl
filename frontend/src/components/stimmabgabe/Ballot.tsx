@@ -90,49 +90,41 @@ export class Ballot extends React.Component<Props> {
         return (
             <Card>
                 <Card.Body>
-                    <h3>({this.props.ballotInfo.stimmkreis_nr}) {this.props.ballotInfo.stimmkreis}</h3>
+                    <h2>Stimmzetel: ({this.props.ballotInfo.stimmkreis_nr}) {this.props.ballotInfo.stimmkreis}</h2>
+                    <hr/>
                     <Row>
-                        <Col>
+                        <Col style={{"borderRight": "1px dashed #333"}}>
                             <h3>
-                                Select a Direct Candidate
+                                Erste Stimme
                             </h3>
                             <Form>
                                 <Form.Control
                                     className={'mb-2'}
                                     type="text"
-                                    placeholder="Search for Candidate or Party..."
+                                    placeholder="Suche für Kandidat oder Partei..."
                                     onChange={(event) => {
                                         this.onDirectFilterChanged(event.target.value);
                                     }}
                                 />
                             </Form>
-                            <div className={"overflow-auto"} style={{height: "800px"}}>
-                                <DirectCandidateSelector
-                                    candidates={this.props.ballotInfo.direct_candidates}
-                                    onCandidateSelected={(candidate: BallotCandidate) => {
-                                        this.handleDirectCandidateSelected(candidate)
-                                    }}
-                                    selectedCandidate={this.state.selectedDirectCandidate}
-                                    filterText={this.state.directFilterText}
-                                />
-                            </div>
-                            <h5>
-                                {this.state.selectedDirectCandidate ? (
-                                    <span>Direkt-Kandidat: {this.state.selectedDirectCandidate.first_name} {this.state.selectedDirectCandidate.last_name}, {this.state.selectedDirectCandidate.party_name}</span>
-                                ) : (
-                                    <span>Kein Direkt-Kandidat gewählt</span>
-                                )}
-                            </h5>
+                            <DirectCandidateSelector
+                                candidates={this.props.ballotInfo.direct_candidates}
+                                onCandidateSelected={(candidate: BallotCandidate) => {
+                                    this.handleDirectCandidateSelected(candidate)
+                                }}
+                                selectedCandidate={this.state.selectedDirectCandidate}
+                                filterText={this.state.directFilterText}
+                            />
                         </Col>
                         <Col>
                             <h3>
-                                Select a List Candidate
+                                Zweite Stimme
                             </h3>
                             <Form>
                                 <Form.Control
                                     className={'mb-2'}
                                     type="text"
-                                    placeholder="Search for Candidate or Party..."
+                                    placeholder="Suche für Kandidat oder Partei..."
                                     onChange={(event) => {
                                         this.onListFilterChanged(event.target.value);
                                     }}
@@ -149,7 +141,7 @@ export class Ballot extends React.Component<Props> {
                                 />
                             </div>
                             <h4 className={"text-center"}>
-                                Oder: Partei Stimme
+                                Oder: Wähle eine Partei
                             </h4>
                             <div className={"overflow-auto"} style={{height: "300px"}}>
                                 <PartySelector
@@ -160,25 +152,47 @@ export class Ballot extends React.Component<Props> {
                                     selectedParty={this.state.selectedParty}
                                 />
                             </div>
+                        </Col>
+                    </Row>
+                    <hr/>
+                    <Row>
+                        <Col>
+                            <h5>
+                                {this.state.selectedDirectCandidate ? (
+                                    <span>Erste Stimme: {this.state.selectedDirectCandidate.first_name} {this.state.selectedDirectCandidate.last_name}, {this.state.selectedDirectCandidate.party_name}</span>
+                                ) : (
+                                    <span>Erste Stimme noch nicht ausgewählt</span>
+                                )}
+                            </h5>
+                        </Col>
+                        <Col>
                             <h5>
                                 {this.state.selectedListCandidate ? (
                                     <span>List-Kandidat: {this.state.selectedListCandidate.first_name} {this.state.selectedListCandidate.last_name}, {this.state.selectedListCandidate.party_name}</span>
                                 ) : (
-                                    <span>Kein List-Kandidat gewählt</span>
+                                    <span>
+                                        {this.state.selectedParty ? (
+                                            <span>Partei-Stimme: {this.state.selectedParty.party_name}</span>
+                                        ) : (
+                                            <span>Zweite Stimme noch nicht ausgewählt</span>
+                                        )}
+                                    </span>
                                 )}
                             </h5>
                         </Col>
                     </Row>
-                    <div className="buttonBar clearfix">
+                    <Row className={"mt-2 justify-content-center"}>
                         <Button
-                            className="button float-right"
+                            className="text-center"
                             id="submit-button"
                             variant="success"
+                            size={"lg"}
                             onClick={() => this.handleSubmit()}
                         >
-                            Submit
+                            Stimmzetel Abgeben
                         </Button>
-                    </div>
+
+                    </Row>
                 </Card.Body>
             </Card>
         )
