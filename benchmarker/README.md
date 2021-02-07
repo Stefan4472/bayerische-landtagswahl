@@ -1,4 +1,6 @@
-A simple multi-threaded benchmarking script.
+A simple multi-threaded benchmarking script. 
+
+NOTE: We are now using Locust for benchmarking. Please see the `loadtesting` directory.
 
 Usage:
 ```

@@ -1,13 +1,18 @@
 # bayerische-landtagswahl
 This is a semester-project for the Database Systems class taught by Professor Alfons Kemper, Winter 2020, in the Elite Software Engineering Master's Program at the University of Augsburg | Technical University of Munich | Ludwig Maximillian University of Munich.
 
-The goal of the project was to develop a online elections-system that could handle the Bavarian Parliamentary elections.
+The goal of the project is to develop an online elections-system for the Bavarian Parliamentary elections.
+
 # Overview
+
+The backend is written in Python Flask, and the frontend is written using ReactJS and Bootstrap. For our database, we used PostgreSQL.
+
+Directories:
 - `backend`: Code for the Flask backend
 - `benchmarker`: A benchmarking program (no longer used)
 - `data`: XML data from the 2013 and 2018 elections
 - `database`: Code for the election database. Contains a Python package called `landtagswahldb`
-- `documentation`: Contains a few documents we had to create at the beginning of the project
+- `documentation`: A few documents describing the software's requirements
 - `frontend`: Code for the React frontend
 - `loadtesting`: Locustfile definitions used for load-testing with the Python `locust` framework
 - `mockup`: HTML code from our first website mockup
@@ -20,7 +25,7 @@ The goal of the project was to develop a online elections-system that could hand
 
 # Setup
 
-*Note: It is recommended you install all Python packages into their own virtual environment.*
+*Note: It is recommended you install all Python packages into a virtual environment.*
 
 ## Install the internal database package
 
@@ -40,20 +45,21 @@ pip install .
 pip install -r requirements.txt
 ```
 
-Note: for each of the following commands, you will be prompted to enter your Postgres password. To avoid the prompt, you can provide your password as an option: `--password=[YOUR_POSTGRES_PASSWORD]`
+Use the `manage_db.py` script to set up a database with the proper schema. In this case, we'll create a new Postgres database called "bayerische_landtagswahl"
 
-Use the `manage_db.py` script to set up a database with the proper schema. In this case, we'll create a new Postgres database called "bayerische_landtagswahl":
+*Note: for each of the following commands, you will be prompted to enter your Postgres password. To avoid the prompt, you can provide your password as an option: `--password=[YOUR_POSTGRES_PASSWORD]`*
+
 ```
 python manage_db.py reset ../sql-scripts/PostgresSchema.sql --db_name=bayerische_landtagswahl
 ```
 
-Now import the XML election data and generate votes for the 2013 and 2018 elections (contained in `data/2018-info.xml` and `data/2018-results.xml`):
+Now import the XML election data and generate votes for the 2013 and 2018 elections:
 ```
 python manage_db.py import_data ../data/2013-info.xml ../data/2013-results.xml --year=2013 --db_name=bayerische_landtagswahl
 python manage_db.py import_data ../data/2018-info.xml ../data/2018-results.xml --year=2018 --db_name=bayerische_landtagswahl
 ```
 
-Now run the script to create materialized views (`sql-scripts/Landtagswahl_Calculation.sql`):
+Now run the script to crunch the election data and generate statistics (`sql-scripts/Landtagswahl_Calculation.sql`):
 ```
 python manage_db.py runscript ../sql-scripts/Landtagswahl_Calculation.sql --db_name=bayerische_landtagswahl
 ```
@@ -141,6 +147,8 @@ You can change the number of worker threads used like so:
 ```
 waitress-serve --port=5000 --threads=10 --call "flaskr:create_app"
 ```
+
+For higher performance, we recommend using a production server such as [uWSGI](https://uwsgi-docs.readthedocs.io/en/latest/index.html)
 
 ## Performance Notes
 

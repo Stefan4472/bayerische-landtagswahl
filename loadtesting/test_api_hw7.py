@@ -27,6 +27,17 @@ def randwait(avg_time: float) -> float:
 
 
 class APIUser(HttpUser):
+
+    @task(25)
+    def sitzverteilung(self):
+        time.sleep(randwait(WAIT_TIME_SEC))
+        self.client.get('/api/results/2018/sitzverteilung')
+
+    @task(10)
+    def mitglieder(self):
+        time.sleep(randwait(WAIT_TIME_SEC))
+        self.client.get('/api/results/2018/mitglieder')
+
     @task(25)
     def stimmkreis(self):
         time.sleep(randwait(WAIT_TIME_SEC))
@@ -37,23 +48,16 @@ class APIUser(HttpUser):
         )
 
     @task(10)
-    def sitzverteilung(self):
+    def stimmkreis_sieger(self):
         time.sleep(randwait(WAIT_TIME_SEC))
-        self.client.get('/api/results/2018/sitzverteilung')
-
-    @task(25)
-    def mitglieder(self):
-        time.sleep(randwait(WAIT_TIME_SEC))
-        self.client.get('/api/results/2018/mitglieder')
+        self.client.get('/api/results/2018/stimmkreis-sieger')
 
     @task(10)
     def ueberhangmandate(self):
         time.sleep(randwait(WAIT_TIME_SEC))
         self.client.get('/api/results/2018/ueberhangmandate')
 
-    @task(10)
-    def stimmkreis_sieger(self):
+    @task(20)
+    def knappste_sieger(self):
         time.sleep(randwait(WAIT_TIME_SEC))
-        self.client.get('/api/results/2018/stimmkreis-sieger')
-
-    # TODO: Q6
+        self.client.get('/api/results/2018/knappste-sieger')
