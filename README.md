@@ -152,25 +152,18 @@ For higher performance, we recommend using a production server such as [uWSGI](h
 
 ## Performance Notes
 
-Unpooled:
-Avg: 47 ms / request (1 user)
-Max: 50 requests per second
+Tested on Intel Core i5-7300HQ CPU @ 2.50 GHz, 16GB RAM on a Flask development server.
 
 
-Pooled (100 connections):
-Avg: 1 ms / request (1 user)
-100-150 requests per second (200 users simulated) with response time 250 ms
-Max: 170 requests per second (300 users simulated) with response time 1200 ms, but performance greatly suffers
+|                                     | 1 user, 1 sec. wait. n=460 | 50 users, 5 sec wait, n=2200 | 500 users, 5 sec wait, n=35000 | 250 users, 1 sec wait, n=35000 | 500 users, 1 sec wait, n=50000 |
+|-------------------------------------|----------------------------|------------------------------|--------------------------------|--------------------------------|--------------------------------|
+| Avg. RPS                            | 1.0                        | 9.6                          | 98.9                           | 160.9                          | 186.2                          |
+| Failure Rate                        | 0.0%                       | 0.001%*                      | 0.002%*                        | 0.003%*                        | 14.6%                          |
+| /api/results/2018/sitzverteilung    | 5 ms                       | 9 ms                         | 32 ms                          | 530 ms                         | 1630 ms                        |
+| /api/results/2018/mitglieder        | 13 ms                      | 20 ms                        | 42 ms                          | 539 ms                         | 1630 ms                        |
+| /api/results/2018/stimmkreis        | 5 ms                       | 10 ms                        | 37 ms                          | 535 ms                         | 1638 ms                        |
+| /api/results/2018/stimmkreis-sieger | 7 ms                       | 12 ms                        | 37 ms                          | 533 ms                         | 1619 ms                        |
+| /api/results/2018/ueberhangmandate  | 10 ms                      | 11 ms                        | 36 ms                          | 533 ms                         | 1619 ms                        |
+| /api/results/2018/knappste-sieger   | 8 ms                       | 10 ms                        | 33 ms                          | 530 ms                         | 1619 ms                        |
 
-
-+ running on Waitress (default, 4 threads)
-Avg: 0 ms / request (10 users)
-200 users: 96 RPS, median response 15 ms
-BUT starts to fail hard with 300 users, can't get above 100 RPS
-
-Running on Waitress with 10 threads
-95 RPS, 15 ms
-Waitress: Greatly-improved response time, but max RPS is about 95, no matter what.
-It starts to simply drop requests
-Evidence that thread pooling works: without, task queue depth is high, RPS maxed at ~53, median response time 750 ms
-Adding more threads doesn't seem to improve performance
+*All failures due to invalid URL during benchmarking
