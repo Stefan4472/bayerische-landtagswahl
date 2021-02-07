@@ -2,3 +2,4 @@ lxml
 beautifulsoup4
 click
 psycopg2
+requests
