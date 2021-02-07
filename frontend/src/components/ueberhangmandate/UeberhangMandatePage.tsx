@@ -46,6 +46,8 @@ export class UeberhangMandatePage extends React.Component<Props> {
     render() {
         return (
             <Container>
+                <h3>Überhangmandate ({this.props.selectedYear})</h3>
+                <hr/>
                 <UeberhangMandateTable
                     mandates={this.state.mandates}
                 />

@@ -78,16 +78,16 @@ export const App: React.FC = () => {
                         <Navbar.Collapse>
                             {/*TODO: USE REACT-ROUTER-DOM LINK TAGS*/}
                             <Nav>
-                                <Nav.Link href="/">Sitzverteilung</Nav.Link>
+                                <Nav.Link href="#/">Sitzverteilung</Nav.Link>
                                 <Nav.Link href="#mitglieder">Mitglieder</Nav.Link>
                                 <Nav.Link href="#stimmkreise">Stimmkreise</Nav.Link>
                                 <NavDropdown title="Daten" id={"data-dropdown"}>
                                     <NavDropdown.Item href="#ueberhangmandate">Überhangmandate</NavDropdown.Item>
                                     <NavDropdown.Item href="#sieger">Stimmkreis Sieger</NavDropdown.Item>
-                                    <NavDropdown.Item href={"#knappste-sieger"}>Knappste Sieger</NavDropdown.Item>
-                                    <NavDropdown.Item href={"#knappste-verlierer"}>Knappste Verlierer </NavDropdown.Item>
-                                    <NavDropdown.Item href={"#party-bests"}>Party Bests</NavDropdown.Item>
-                                    <NavDropdown.Item href={"#schwunge"}>Schwunge</NavDropdown.Item>
+                                    <NavDropdown.Item href="#knappste-sieger">Knappste Sieger</NavDropdown.Item>
+                                    <NavDropdown.Item href="#knappste-verlierer">Knappste Verlierer </NavDropdown.Item>
+                                    <NavDropdown.Item href="#party-bests">Partei-Best Ergebnisse</NavDropdown.Item>
+                                    <NavDropdown.Item href="#schwunge">Ideologische Schwunge</NavDropdown.Item>
                                 </NavDropdown>
                                 <Nav.Link href="#stimmabgabe">Stimmabgabe</Nav.Link>
                             </Nav>

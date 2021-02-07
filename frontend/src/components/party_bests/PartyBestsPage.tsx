@@ -44,6 +44,8 @@ export class PartyBestsPage extends React.Component<Props> {
     render() {
         return (
             <Container>
+                <h3>Partei-Best Ergebnisse ({this.props.selectedYear})</h3>
+                <hr/>
                 <PartyBestsTable stimmkreise={this.state.stimmkreise}/>
             </Container>
         )

@@ -43,6 +43,8 @@ export class SiegerPage extends React.Component<Props> {
     render() {
         return (
             <Container>
+                <h3>Stimmkreis Sieger ({this.props.selectedYear})</h3>
+                <hr/>
                 <SiegerTable sieger={this.state.sieger}/>
             </Container>
         )

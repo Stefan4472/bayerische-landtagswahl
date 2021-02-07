@@ -43,6 +43,8 @@ export class StimmkreisSwingsPage extends React.Component<Props> {
     render() {
         return (
             <Container>
+                <h3>Ideologische Schwunge ({this.props.selectedYear})</h3>
+                <hr/>
                 <StimmkreisSwingsTable stimmkreise={this.state.stimmkreise}/>
             </Container>
         )

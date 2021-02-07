@@ -83,14 +83,16 @@ export class StimmabgabePage extends React.Component<Props> {
     render() {
         return (
             <Container>
+                <h3>Stimmabgabe</h3>
+                <hr/>
                 <Form>
                     <Form.Group controlId="form-voterKey">
                         <Form.Label>
-                            Enter Your Voter Key
+                            Geben Sie Ihren 64-stelligen Stimm-Schlüssel ein
                         </Form.Label>
                         <Form.Control
                             required
-                            placeholder="64-character key"
+                            placeholder="64-stelliger Schlüssel"
                             value={this.state.voterKey}
                             disabled={this.state.isKeyValid}
                             isValid={this.state.isKeyValid}
@@ -103,11 +105,11 @@ export class StimmabgabePage extends React.Component<Props> {
                             {this.state.keyErrorMessage ? (
                                 this.state.keyErrorMessage
                             ) : (
-                                <span>Key must be 64 characters long (currently {this.state.voterKey.length})</span>
+                                <span>Der Schlüssel muss 64 Zeichen lang sein (momentan {this.state.voterKey.length})</span>
                             )}
                         </Form.Control.Feedback>
                         <Form.Control.Feedback type={"valid"}>
-                            Welcome! Key recognized
+                            Wilkommen! Ihr Schlüssel würde erfolgreich gelesen
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Form>
